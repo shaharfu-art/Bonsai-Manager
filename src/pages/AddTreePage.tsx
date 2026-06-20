@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
 import { useTrees } from '../hooks/useTrees'
 import { useSpecies } from '../hooks/useSpecies'
+import { supabase } from '../lib/supabase-client'
 import type { Tree } from '../hooks/useTrees'
 
 const STYLES = [
@@ -51,6 +52,12 @@ const AddTreePage: React.FC = () => {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  // New species form state
+  const [newSpeciesHe, setNewSpeciesHe] = useState('')
+  const [newSpeciesEn, setNewSpeciesEn] = useState('')
+  const [newSpeciesLatin, setNewSpeciesLatin] = useState('')
+  const [newSpeciesType, setNewSpeciesType] = useState('tropical')
+
   const filteredSpecies = species.filter((s) => {
     const q = speciesSearch.toLowerCase()
     return (
@@ -73,9 +80,29 @@ const AddTreePage: React.FC = () => {
 
     setSubmitting(true)
     try {
+      // Create new species if needed
+      let finalSpeciesId = speciesId && speciesId !== 'other' && speciesId !== 'add_new' ? speciesId : null
+
+      if (speciesId === 'add_new' && newSpeciesEn.trim()) {
+        const { data: newSpecies, error: speciesError } = await supabase
+          .from('species')
+          .insert({
+            name_he: newSpeciesHe.trim() || newSpeciesEn.trim(),
+            name_en: newSpeciesEn.trim(),
+            name_latin: newSpeciesLatin.trim() || null,
+            type: newSpeciesType,
+            is_system: false,
+          })
+          .select()
+          .single()
+
+        if (speciesError) throw speciesError
+        finalSpeciesId = newSpecies.id
+      }
+
       const treeData = {
         custom_name: customName.trim(),
-        species_id: speciesId && speciesId !== 'other' ? speciesId : null,
+        species_id: finalSpeciesId,
         species_free_text: isOther ? speciesFreeText.trim() || null : null,
         style: style || null,
         age_years: ageYears ? parseInt(ageYears, 10) : null,
@@ -166,6 +193,7 @@ const AddTreePage: React.FC = () => {
                 ))
               )}
               <option value="other">{t('style.other')}</option>
+              <option value="add_new">➕ {t('species.addNew')}</option>
             </select>
           </div>
 
@@ -182,6 +210,58 @@ const AddTreePage: React.FC = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
                 placeholder={t('tree.species')}
               />
+            </div>
+          )}
+
+          {/* Add new species form */}
+          {speciesId === 'add_new' && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-medium text-[#2d6a4f]">➕ {t('species.addNew')}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('species.nameHe')}</label>
+                  <input
+                    type="text"
+                    value={newSpeciesHe}
+                    onChange={e => setNewSpeciesHe(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
+                    placeholder="שם בעברית"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('species.nameEn')}</label>
+                  <input
+                    type="text"
+                    value={newSpeciesEn}
+                    onChange={e => setNewSpeciesEn(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
+                    placeholder="English name"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">{t('species.nameLatin')} ({t('common.optional')})</label>
+                <input
+                  type="text"
+                  value={newSpeciesLatin}
+                  onChange={e => setNewSpeciesLatin(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
+                  placeholder="Latin name"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">{t('species.type')}</label>
+                <select
+                  value={newSpeciesType}
+                  onChange={e => setNewSpeciesType(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788] bg-white"
+                >
+                  <option value="tropical">{t('species.tropical')}</option>
+                  <option value="temperate">{t('species.temperate')}</option>
+                  <option value="conifer">{t('species.conifer')}</option>
+                  <option value="deciduous">{t('species.deciduous')}</option>
+                </select>
+              </div>
             </div>
           )}
 

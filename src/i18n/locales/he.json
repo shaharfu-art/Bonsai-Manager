@@ -159,6 +159,17 @@
     "photos": "תמונות",
     "alerts": "התראות"
   },
+  "species": {
+    "addNew": "הוסף מין חדש",
+    "nameHe": "שם בעברית",
+    "nameEn": "שם באנגלית",
+    "nameLatin": "שם לטיני",
+    "type": "סוג",
+    "tropical": "טרופי",
+    "temperate": "ממוזג",
+    "conifer": "מחטני",
+    "deciduous": "נשיר"
+  },
   "admin": {
     "title": "ניהול מערכת",
     "noAccess": "אין לך הרשאה לצפות בדף זה",

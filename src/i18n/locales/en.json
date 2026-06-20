@@ -159,6 +159,17 @@
     "photos": "Photos",
     "alerts": "Alerts"
   },
+  "species": {
+    "addNew": "Add new species",
+    "nameHe": "Hebrew name",
+    "nameEn": "English name",
+    "nameLatin": "Latin name",
+    "type": "Type",
+    "tropical": "Tropical",
+    "temperate": "Temperate",
+    "conifer": "Conifer",
+    "deciduous": "Deciduous"
+  },
   "admin": {
     "title": "System Admin",
     "noAccess": "You don't have access to this page",
