@@ -194,10 +194,10 @@ const TreeProfilePage: React.FC = () => {
           {photos.length > 0 && (
             <button
               onClick={() => setShowCoverPicker(true)}
-              className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded-lg shadow transition-colors"
+              className="absolute top-3 right-3 bg-white/80 hover:bg-white w-8 h-8 rounded-full shadow flex items-center justify-center text-lg transition-colors"
               title={t('photo.changeCover')}
             >
-              📷 {t('photo.changeCover')}
+              📷
             </button>
           )}
         </div>
@@ -220,7 +220,7 @@ const TreeProfilePage: React.FC = () => {
                   <button
                     key={photo.id}
                     onClick={() => handleSetCoverFromPicker(photo.id)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors relative ${
                       photo.is_cover ? 'border-yellow-400' : 'border-transparent hover:border-[#52b788]'
                     }`}
                   >
@@ -228,6 +228,9 @@ const TreeProfilePage: React.FC = () => {
                       <img src={photo.public_url} alt={photo.caption ?? ''} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center text-2xl">🖼️</div>
+                    )}
+                    {photo.is_cover && (
+                      <span className="absolute top-1 right-1 text-sm">⭐</span>
                     )}
                   </button>
                 ))}

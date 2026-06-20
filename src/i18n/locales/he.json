@@ -151,7 +151,8 @@
     "newestFirst": "חדש ראשון",
     "oldestFirst": "ישן ראשון",
     "changeCover": "שנה תמונת שער",
-    "chooseCover": "בחר תמונת שער"
+    "chooseCover": "בחר תמונת שער",
+    "changePhoto": "שנה תמונה"
   },
   "tabs": {
     "treatments": "יומן טיפולים",

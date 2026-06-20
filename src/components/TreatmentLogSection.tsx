@@ -542,7 +542,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
                         editPhoto ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
                       }`}
                     >
-                      {editPhoto ? `📷 ${editPhoto.name}` : treatment.photo_id ? t('photo.changeCover') : t('photo.dropOrClick')}
+                      {editPhoto ? `📷 ${editPhoto.name}` : treatment.photo_id ? `📷 ${t('photo.changePhoto')}` : `📷 ${t('treatment.attachPhoto')}`}
                     </button>
                   </div>
                   {editError && (

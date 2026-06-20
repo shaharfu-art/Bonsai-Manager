@@ -151,7 +151,8 @@
     "newestFirst": "Newest first",
     "oldestFirst": "Oldest first",
     "changeCover": "Change cover",
-    "chooseCover": "Choose cover photo"
+    "chooseCover": "Choose cover photo",
+    "changePhoto": "Change photo"
   },
   "tabs": {
     "treatments": "Treatment Log",
