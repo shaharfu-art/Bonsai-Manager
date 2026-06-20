@@ -104,6 +104,28 @@ const AdminPage: React.FC = () => {
           </div>
         )}
 
+        {/* Treatment distribution */}
+        {stats && stats.treatmentDistribution.length > 0 && (
+          <div className="bg-white rounded-xl shadow p-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.treatmentDist')}</h2>
+            <div className="space-y-2">
+              {stats.treatmentDistribution.map((td, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400 w-5">{i + 1}</span>
+                  <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                    <div
+                      className="bg-amber-500 h-full rounded-full"
+                      style={{ width: `${(td.count / (stats.treatmentDistribution[0]?.count || 1)) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-700 w-28 truncate">{t(`treatment.${td.type}`)}</span>
+                  <span className="text-xs font-bold text-gray-500 w-8 text-right">{td.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Users table */}
         <div className="bg-white rounded-xl shadow overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">

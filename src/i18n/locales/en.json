@@ -175,6 +175,7 @@
     "maxTrees": "Max Trees",
     "joined": "Joined",
     "actions": "Actions",
-    "exportCSV": "Export CSV"
+    "exportCSV": "Export CSV",
+    "treatmentDist": "Treatment Distribution"
   }
 }

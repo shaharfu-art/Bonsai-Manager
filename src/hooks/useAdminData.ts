@@ -9,6 +9,7 @@ export interface AdminStats {
   newUsersThisWeek: number
   treatmentsThisWeek: number
   topSpecies: { name: string; count: number }[]
+  treatmentDistribution: { type: string; count: number }[]
 }
 
 export interface AdminUser {
@@ -34,7 +35,7 @@ export function useAdminData() {
       // Fetch counts
       const [treesRes, treatmentsRes, photosRes, profilesRes] = await Promise.all([
         supabase.from('trees').select('id, user_id, species_id', { count: 'exact', head: false }),
-        supabase.from('treatment_logs').select('id, treatment_date', { count: 'exact', head: false }),
+        supabase.from('treatment_logs').select('id, treatment_date, treatment_type', { count: 'exact', head: false }),
         supabase.from('photos').select('id', { count: 'exact', head: true }),
         supabase.from('user_profiles').select('*'),
       ])
@@ -76,6 +77,16 @@ export function useAdminData() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5)
 
+      // Treatment distribution by type
+      const treatmentTypeCount: Record<string, number> = {}
+      for (const t of treatments) {
+        const type = (t as { treatment_type?: string }).treatment_type ?? 'other'
+        treatmentTypeCount[type] = (treatmentTypeCount[type] ?? 0) + 1
+      }
+      const treatmentDistribution = Object.entries(treatmentTypeCount)
+        .map(([type, count]) => ({ type, count }))
+        .sort((a, b) => b.count - a.count)
+
       // Tree count per user
       const treeCountByUser: Record<string, number> = {}
       for (const tree of trees) {
@@ -101,6 +112,7 @@ export function useAdminData() {
         newUsersThisWeek,
         treatmentsThisWeek,
         topSpecies,
+        treatmentDistribution,
       })
 
       setUsers(adminUsers)
