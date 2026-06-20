@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import Layout from '../components/Layout'
 import { useUserProfile } from '../hooks/useUserProfile'
 import { useAdminData } from '../hooks/useAdminData'
@@ -106,22 +107,57 @@ const AdminPage: React.FC = () => {
 
         {/* Treatment distribution */}
         {stats && stats.treatmentDistribution.length > 0 && (
-          <div className="bg-white rounded-xl shadow p-4">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.treatmentDist')}</h2>
-            <div className="space-y-2">
-              {stats.treatmentDistribution.map((td, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 w-5">{i + 1}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
-                    <div
-                      className="bg-amber-500 h-full rounded-full"
-                      style={{ width: `${(td.count / (stats.treatmentDistribution[0]?.count || 1)) * 100}%` }}
-                    />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Timeline chart */}
+            <div className="bg-white rounded-xl shadow p-4">
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.treatmentTimeline')}</h2>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={stats.treatmentsTimeline}>
+                  <defs>
+                    <linearGradient id="colorTreatments" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2d6a4f" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#2d6a4f" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(val: string) => val.slice(5)}
+                  />
+                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <Tooltip
+                    labelFormatter={(label: string) => label}
+                    formatter={(value: number) => [value, t('admin.totalTreatments')]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#2d6a4f"
+                    fillOpacity={1}
+                    fill="url(#colorTreatments)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Distribution bar chart */}
+            <div className="bg-white rounded-xl shadow p-4">
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.treatmentDist')}</h2>
+              <div className="space-y-2">
+                {stats.treatmentDistribution.map((td, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-gray-400 w-5">{i + 1}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                      <div
+                        className="bg-amber-500 h-full rounded-full"
+                        style={{ width: `${(td.count / (stats.treatmentDistribution[0]?.count || 1)) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-700 w-28 truncate">{t(`treatment.${td.type}`)}</span>
+                    <span className="text-xs font-bold text-gray-500 w-8 text-right">{td.count}</span>
                   </div>
-                  <span className="text-xs text-gray-700 w-28 truncate">{t(`treatment.${td.type}`)}</span>
-                  <span className="text-xs font-bold text-gray-500 w-8 text-right">{td.count}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}

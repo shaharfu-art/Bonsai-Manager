@@ -176,6 +176,7 @@
     "joined": "Joined",
     "actions": "Actions",
     "exportCSV": "Export CSV",
-    "treatmentDist": "Treatment Distribution"
+    "treatmentDist": "Treatment Distribution",
+    "treatmentTimeline": "Treatments Over Time (30 days)"
   }
 }

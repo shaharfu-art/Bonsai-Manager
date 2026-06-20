@@ -176,6 +176,7 @@
     "joined": "הצטרף",
     "actions": "פעולות",
     "exportCSV": "ייצוא CSV",
-    "treatmentDist": "התפלגות טיפולים"
+    "treatmentDist": "התפלגות טיפולים",
+    "treatmentTimeline": "טיפולים לאורך זמן (30 יום)"
   }
 }

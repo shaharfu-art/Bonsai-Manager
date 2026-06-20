@@ -10,6 +10,7 @@ export interface AdminStats {
   treatmentsThisWeek: number
   topSpecies: { name: string; count: number }[]
   treatmentDistribution: { type: string; count: number }[]
+  treatmentsTimeline: { date: string; count: number }[]
 }
 
 export interface AdminUser {
@@ -87,6 +88,24 @@ export function useAdminData() {
         .map(([type, count]) => ({ type, count }))
         .sort((a, b) => b.count - a.count)
 
+      // Treatments timeline (last 30 days, grouped by day)
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const dayCountMap: Record<string, number> = {}
+      for (let i = 0; i < 30; i++) {
+        const d = new Date()
+        d.setDate(d.getDate() - (29 - i))
+        dayCountMap[d.toISOString().split('T')[0]] = 0
+      }
+      for (const t of treatments) {
+        const date = (t as { treatment_date: string }).treatment_date
+        if (date && dayCountMap[date] !== undefined) {
+          dayCountMap[date]++
+        }
+      }
+      const treatmentsTimeline = Object.entries(dayCountMap)
+        .map(([date, count]) => ({ date, count }))
+
       // Tree count per user
       const treeCountByUser: Record<string, number> = {}
       for (const tree of trees) {
@@ -113,6 +132,7 @@ export function useAdminData() {
         treatmentsThisWeek,
         topSpecies,
         treatmentDistribution,
+        treatmentsTimeline,
       })
 
       setUsers(adminUsers)
