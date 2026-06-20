@@ -158,5 +158,23 @@
     "treatments": "Treatment Log",
     "photos": "Photos",
     "alerts": "Alerts"
+  },
+  "admin": {
+    "title": "System Admin",
+    "noAccess": "You don't have access to this page",
+    "totalUsers": "Users",
+    "totalTrees": "Trees",
+    "totalTreatments": "Treatments",
+    "totalPhotos": "Photos",
+    "newUsersWeek": "New Users (week)",
+    "treatmentsWeek": "Treatments (week)",
+    "topSpecies": "Top Species",
+    "users": "Users",
+    "role": "Role",
+    "trees": "Trees",
+    "maxTrees": "Max Trees",
+    "joined": "Joined",
+    "actions": "Actions",
+    "exportCSV": "Export CSV"
   }
 }

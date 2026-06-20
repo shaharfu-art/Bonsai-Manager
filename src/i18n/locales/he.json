@@ -158,5 +158,23 @@
     "treatments": "יומן טיפולים",
     "photos": "תמונות",
     "alerts": "התראות"
+  },
+  "admin": {
+    "title": "ניהול מערכת",
+    "noAccess": "אין לך הרשאה לצפות בדף זה",
+    "totalUsers": "משתמשים",
+    "totalTrees": "עצים",
+    "totalTreatments": "טיפולים",
+    "totalPhotos": "תמונות",
+    "newUsersWeek": "משתמשים חדשים (שבוע)",
+    "treatmentsWeek": "טיפולים (שבוע)",
+    "topSpecies": "מינים פופולריים",
+    "users": "משתמשים",
+    "role": "תפקיד",
+    "trees": "עצים",
+    "maxTrees": "מקסימום עצים",
+    "joined": "הצטרף",
+    "actions": "פעולות",
+    "exportCSV": "ייצוא CSV"
   }
 }

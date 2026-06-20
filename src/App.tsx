@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage'
 import TreeProfilePage from './pages/TreeProfilePage'
 import AddTreePage from './pages/AddTreePage'
 import SettingsPage from './pages/SettingsPage'
+import AdminPage from './pages/AdminPage'
 
 // Auth callback page for OAuth (e.g. Google)
 const AuthCallbackPage: React.FC = () => {
@@ -67,6 +68,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             }
           />
