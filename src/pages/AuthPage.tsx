@@ -57,10 +57,23 @@ const AuthPage: React.FC = () => {
         setSuccessMsg(t('auth.resetPassword') + ' – check your email')
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : typeof err === 'object' && err !== null && 'message' in err ? String((err as { message: unknown }).message) : t('common.error')
+      let msg = t('common.error')
+      if (err && typeof err === 'object') {
+        if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
+          msg = (err as { message: string }).message
+        } else if ('error_description' in err) {
+          msg = String((err as { error_description: unknown }).error_description)
+        } else {
+          try { msg = JSON.stringify(err) } catch { /* ignore */ }
+          if (msg === '{}' || msg === '[]') msg = t('common.error')
+        }
+      } else if (typeof err === 'string') {
+        msg = err
+      }
       if (msg.includes('Invalid login credentials')) setError(t('auth.invalidCredentials'))
       else if (msg.includes('User already registered')) setError(t('auth.alreadyRegistered'))
       else if (msg.includes('Password should be at least')) setError(t('auth.passwordTooShort'))
+      else if (msg === '{}' || msg === '[]' || msg === 'null') setError(t('common.error'))
       else setError(msg)
     } finally {
       setLoading(false)
@@ -71,8 +84,12 @@ const AuthPage: React.FC = () => {
     setError('')
     try {
       await signInWithGoogle()
+      // signInWithOAuth redirects the browser, so if we get here it means something went wrong
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t('common.error')
+      let msg = t('common.error')
+      if (err && typeof err === 'object' && 'message' in err) {
+        msg = String((err as { message: unknown }).message)
+      }
       setError(msg)
     }
   }
