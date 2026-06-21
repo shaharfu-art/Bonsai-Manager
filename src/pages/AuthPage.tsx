@@ -217,8 +217,8 @@ const AuthPage: React.FC = () => {
             </div>
             <button
               type="button"
-              disabled
-              className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed opacity-60"
+              onClick={handleGoogle}
+              className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -238,7 +238,7 @@ const AuthPage: React.FC = () => {
                   fill="#EA4335"
                 />
               </svg>
-              {t('auth.continueWithGoogle')} ({t('auth.comingSoon')})
+              {t('auth.continueWithGoogle')}
             </button>
           </div>
         )}
