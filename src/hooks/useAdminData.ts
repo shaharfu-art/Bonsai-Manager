@@ -16,6 +16,8 @@ export interface AdminStats {
 export interface AdminUser {
   id: string
   email: string
+  full_name: string | null
+  display_name: string | null
   created_at: string
   last_sign_in_at: string | null
   role: string
@@ -112,15 +114,21 @@ export function useAdminData() {
         treeCountByUser[tree.user_id] = (treeCountByUser[tree.user_id] ?? 0) + 1
       }
 
-      // Build user list from profiles
-      const adminUsers: AdminUser[] = profiles.map(p => ({
-        id: p.id,
-        email: '', // Will be filled if we can access auth.users
-        created_at: p.created_at,
-        last_sign_in_at: null,
-        role: p.role,
-        tree_count: treeCountByUser[p.id] ?? 0,
-        max_trees: p.max_trees,
+      // Build user list from admin_users_view
+      const { data: viewUsers } = await supabase
+        .from('admin_users_view')
+        .select('*')
+
+      const adminUsers: AdminUser[] = (viewUsers ?? []).map((u: Record<string, unknown>) => ({
+        id: u.id as string,
+        email: (u.email as string) ?? '',
+        full_name: (u.full_name as string) ?? null,
+        display_name: (u.display_name as string) ?? null,
+        created_at: (u.created_at as string) ?? '',
+        last_sign_in_at: (u.last_sign_in_at as string) ?? null,
+        role: (u.role as string) ?? 'user',
+        tree_count: treeCountByUser[(u.id as string)] ?? 0,
+        max_trees: (u.max_trees as number) ?? 100,
       }))
 
       setStats({

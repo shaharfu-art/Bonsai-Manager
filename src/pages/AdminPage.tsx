@@ -5,12 +5,14 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import Layout from '../components/Layout'
 import { useUserProfile } from '../hooks/useUserProfile'
 import { useAdminData } from '../hooks/useAdminData'
+import { useOnlineUsers } from '../hooks/useOnlineUsers'
 
 const AdminPage: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { isAdmin, loading: profileLoading } = useUserProfile()
   const { stats, users, loading, error, updateUserRole, updateUserLimits } = useAdminData()
+  const { onlineCount, onlineUsers } = useOnlineUsers()
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [editMaxTrees, setEditMaxTrees] = useState(100)
 
@@ -80,6 +82,7 @@ const AdminPage: React.FC = () => {
             <StatCard label={t('admin.totalPhotos')} value={stats.totalPhotos} color="text-purple-600" />
             <StatCard label={t('admin.newUsersWeek')} value={stats.newUsersThisWeek} color="text-green-600" />
             <StatCard label={t('admin.treatmentsWeek')} value={stats.treatmentsThisWeek} color="text-orange-600" />
+            <StatCard label={t('admin.onlineNow')} value={onlineCount} color="text-emerald-500" />
           </div>
         )}
 
@@ -171,37 +174,32 @@ const AdminPage: React.FC = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">ID</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.name')}</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('auth.email')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.role')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.trees')}</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.maxTrees')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.joined')}</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.status')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.actions')}</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
+                {users.map(user => {
+                  const isOnline = onlineUsers.some(o => o.id === user.id)
+                  return (
                   <tr key={user.id} className="border-t border-gray-50 hover:bg-gray-50">
-                    <td className="px-4 py-2 text-xs text-gray-600 font-mono truncate max-w-[120px]">{user.id.slice(0, 8)}...</td>
+                    <td className="px-4 py-2 text-xs text-gray-700 font-medium">{user.display_name || user.full_name || '—'}</td>
+                    <td className="px-4 py-2 text-xs text-gray-600 truncate max-w-[160px]">{user.email || '—'}</td>
                     <td className="px-4 py-2">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
                         {user.role}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-xs text-gray-700">{user.tree_count}</td>
-                    <td className="px-4 py-2 text-xs text-gray-700">
-                      {editingUser === user.id ? (
-                        <input
-                          type="number"
-                          value={editMaxTrees}
-                          onChange={e => setEditMaxTrees(parseInt(e.target.value, 10) || 0)}
-                          className="w-16 border border-gray-300 rounded px-1 py-0.5 text-xs"
-                        />
-                      ) : (
-                        user.max_trees
-                      )}
-                    </td>
                     <td className="px-4 py-2 text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-2">
+                      <span className={`inline-block w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} title={isOnline ? 'Online' : 'Offline'} />
+                    </td>
                     <td className="px-4 py-2">
                       <div className="flex gap-1">
                         {editingUser === user.id ? (
@@ -233,7 +231,7 @@ const AdminPage: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>

@@ -195,6 +195,9 @@
     "actions": "Actions",
     "exportCSV": "Export CSV",
     "treatmentDist": "Treatment Distribution",
-    "treatmentTimeline": "Treatments Over Time (30 days)"
+    "treatmentTimeline": "Treatments Over Time (30 days)",
+    "onlineNow": "Online Now",
+    "name": "Name",
+    "status": "Status"
   }
 }

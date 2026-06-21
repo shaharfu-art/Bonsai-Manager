@@ -195,6 +195,9 @@
     "actions": "פעולות",
     "exportCSV": "ייצוא CSV",
     "treatmentDist": "התפלגות טיפולים",
-    "treatmentTimeline": "טיפולים לאורך זמן (30 יום)"
+    "treatmentTimeline": "טיפולים לאורך זמן (30 יום)",
+    "onlineNow": "מחוברים עכשיו",
+    "name": "שם",
+    "status": "סטטוס"
   }
 }
