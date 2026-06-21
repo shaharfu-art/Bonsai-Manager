@@ -142,12 +142,16 @@ const AuthPage: React.FC = () => {
               <input
                 type="password"
                 required
+                minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788] focus:border-transparent"
                 placeholder={t('auth.password')}
                 dir="ltr"
               />
+              {mode === 'signup' && (
+                <p className="text-xs text-gray-400 mt-1">{t('auth.passwordHint')}</p>
+              )}
             </div>
           )}
 
@@ -208,8 +212,8 @@ const AuthPage: React.FC = () => {
             </div>
             <button
               type="button"
-              onClick={handleGoogle}
-              className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed opacity-60"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -229,7 +233,7 @@ const AuthPage: React.FC = () => {
                   fill="#EA4335"
                 />
               </svg>
-              {t('auth.continueWithGoogle')}
+              {t('auth.continueWithGoogle')} ({t('auth.comingSoon')})
             </button>
           </div>
         )}

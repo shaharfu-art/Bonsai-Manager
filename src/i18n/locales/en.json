@@ -14,7 +14,9 @@
     "passwordsMismatch": "Passwords do not match",
     "invalidCredentials": "Invalid email or password",
     "alreadyRegistered": "User already registered",
-    "passwordTooShort": "Password must be at least 6 characters"
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordHint": "Minimum 6 characters",
+    "comingSoon": "coming soon"
   },
   "nav": {
     "dashboard": "Dashboard",

@@ -14,7 +14,9 @@
     "passwordsMismatch": "הסיסמאות לא תואמות",
     "invalidCredentials": "אימייל או סיסמה שגויים",
     "alreadyRegistered": "המשתמש כבר רשום",
-    "passwordTooShort": "הסיסמה חייבת להיות לפחות 6 תווים"
+    "passwordTooShort": "הסיסמה חייבת להיות לפחות 6 תווים",
+    "passwordHint": "מינימום 6 תווים",
+    "comingSoon": "בקרוב"
   },
   "nav": {
     "dashboard": "לוח בקרה",
