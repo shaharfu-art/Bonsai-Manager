@@ -10,7 +10,11 @@
     "resetPassword": "Reset Password",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "passwordsMismatch": "Passwords do not match",
+    "invalidCredentials": "Invalid email or password",
+    "alreadyRegistered": "User already registered",
+    "passwordTooShort": "Password must be at least 6 characters"
   },
   "nav": {
     "dashboard": "Dashboard",

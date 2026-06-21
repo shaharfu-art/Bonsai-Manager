@@ -46,7 +46,7 @@ const AuthPage: React.FC = () => {
         navigate('/dashboard', { replace: true })
       } else if (mode === 'signup') {
         if (password !== confirmPassword) {
-          setError('Passwords do not match')
+          setError(t('auth.passwordsMismatch'))
           setLoading(false)
           return
         }
@@ -57,11 +57,11 @@ const AuthPage: React.FC = () => {
         setSuccessMsg(t('auth.resetPassword') + ' – check your email')
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError(t('common.error'))
-      }
+      const msg = err instanceof Error ? err.message : typeof err === 'object' && err !== null && 'message' in err ? String((err as { message: unknown }).message) : t('common.error')
+      if (msg.includes('Invalid login credentials')) setError(t('auth.invalidCredentials'))
+      else if (msg.includes('User already registered')) setError(t('auth.alreadyRegistered'))
+      else if (msg.includes('Password should be at least')) setError(t('auth.passwordTooShort'))
+      else setError(msg)
     } finally {
       setLoading(false)
     }
@@ -72,11 +72,8 @@ const AuthPage: React.FC = () => {
     try {
       await signInWithGoogle()
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError(t('common.error'))
-      }
+      const msg = err instanceof Error ? err.message : t('common.error')
+      setError(msg)
     }
   }
 

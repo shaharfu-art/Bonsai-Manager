@@ -10,7 +10,11 @@
     "resetPassword": "איפוס סיסמה",
     "noAccount": "אין לך חשבון?",
     "hasAccount": "יש לך חשבון?",
-    "continueWithGoogle": "המשך עם Google"
+    "continueWithGoogle": "המשך עם Google",
+    "passwordsMismatch": "הסיסמאות לא תואמות",
+    "invalidCredentials": "אימייל או סיסמה שגויים",
+    "alreadyRegistered": "המשתמש כבר רשום",
+    "passwordTooShort": "הסיסמה חייבת להיות לפחות 6 תווים"
   },
   "nav": {
     "dashboard": "לוח בקרה",
