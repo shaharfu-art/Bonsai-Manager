@@ -11,9 +11,21 @@ import AdminPage from './pages/AdminPage'
 
 // Auth callback page for OAuth (e.g. Google)
 const AuthCallbackPage: React.FC = () => {
+  useEffect(() => {
+    // Supabase handles the token exchange automatically via onAuthStateChange
+    // Just redirect to dashboard after a short delay
+    const timer = setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <p>Authenticating...</p>
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-green-800 text-sm">Authenticating...</p>
+      </div>
     </div>
   )
 }

@@ -178,8 +178,8 @@ const AuthPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Google OAuth - disabled until configured in Supabase */}
-        {false && (mode === 'login' || mode === 'signup') && (
+        {/* Google OAuth (login + signup only) */}
+        {(mode === 'login' || mode === 'signup') && (
           <div className="mt-4">
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
