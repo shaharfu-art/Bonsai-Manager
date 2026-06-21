@@ -42,22 +42,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    if (error) throw new Error(error.message || 'Login failed')
   }
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
+    if (error) throw new Error(error.message || 'Signup failed')
   }
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    if (error) throw new Error(error.message || 'Sign out failed')
   }
 
   const resetPassword = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email)
-    if (error) throw error
+    if (error) throw new Error(error.message || 'Password reset failed')
   }
 
   const signInWithGoogle = async () => {
