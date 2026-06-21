@@ -46,8 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw new Error(error.message || 'Signup failed')
+    // If email confirmation is required, session will be null
+    if (data.user && !data.session) {
+      throw new Error('CONFIRM_EMAIL')
+    }
   }
 
   const signOut = async () => {

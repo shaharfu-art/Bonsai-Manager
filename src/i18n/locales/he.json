@@ -16,7 +16,8 @@
     "alreadyRegistered": "המשתמש כבר רשום",
     "passwordTooShort": "הסיסמה חייבת להיות לפחות 6 תווים",
     "passwordHint": "מינימום 6 תווים",
-    "comingSoon": "בקרוב"
+    "comingSoon": "בקרוב",
+    "confirmEmail": "נשלח אימייל אימות – בדוק את תיבת הדואר שלך"
   },
   "nav": {
     "dashboard": "לוח בקרה",

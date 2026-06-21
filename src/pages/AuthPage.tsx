@@ -58,6 +58,11 @@ const AuthPage: React.FC = () => {
       }
     } catch (err: unknown) {
       let msg = t('common.error')
+      if (err instanceof Error && err.message === 'CONFIRM_EMAIL') {
+        setSuccessMsg(t('auth.confirmEmail'))
+        setLoading(false)
+        return
+      }
       if (err && typeof err === 'object') {
         if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
           msg = (err as { message: string }).message

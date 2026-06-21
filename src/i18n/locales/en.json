@@ -16,7 +16,8 @@
     "alreadyRegistered": "User already registered",
     "passwordTooShort": "Password must be at least 6 characters",
     "passwordHint": "Minimum 6 characters",
-    "comingSoon": "coming soon"
+    "comingSoon": "coming soon",
+    "confirmEmail": "Verification email sent – check your inbox"
   },
   "nav": {
     "dashboard": "Dashboard",
