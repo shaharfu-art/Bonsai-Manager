@@ -217,10 +217,14 @@ const DashboardPage: React.FC = () => {
     if (trees.length === 0) { setAlertsLoading(false); return }
     const treeIds = trees.map(t => t.id)
 
-    Promise.all([
-      supabase.from('alert_configs').select('*').in('tree_id', treeIds),
-      supabase.from('treatment_logs').select('tree_id, treatment_type, treatment_date').in('tree_id', treeIds).order('treatment_date', { ascending: false }),
-    ]).then(([configsRes, logsRes]) => {
+    supabase.auth.getUser().then(({ data: userData }) => {
+      const userId = userData.user?.id
+      if (!userId) { setAlertsLoading(false); return }
+
+      Promise.all([
+        supabase.from('alert_configs').select('*').in('tree_id', treeIds).eq('user_id', userId),
+        supabase.from('treatment_logs').select('tree_id, treatment_type, treatment_date').in('tree_id', treeIds).eq('user_id', userId).order('treatment_date', { ascending: false }),
+      ]).then(([configsRes, logsRes]) => {
       const configs = configsRes.data ?? []
       const logs = logsRes.data ?? []
       const today = new Date()
@@ -268,6 +272,7 @@ const DashboardPage: React.FC = () => {
 
       setAlerts(computed)
       setAlertsLoading(false)
+    })
     })
   }, [trees])
 
