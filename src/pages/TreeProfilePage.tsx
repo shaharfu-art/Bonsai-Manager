@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
 import { supabase } from '../lib/supabase-client'
@@ -66,6 +66,7 @@ const TreeProfilePage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { getSpeciesById } = useSpecies()
   const { photos, setCoverPhoto } = usePhotos(id ?? '')
 
@@ -76,6 +77,9 @@ const TreeProfilePage: React.FC = () => {
   const [deleting, setDeleting] = useState(false)
   const [activeTab, setActiveTab] = useState<'treatments' | 'photos' | 'alerts'>('treatments')
   const [showCoverPicker, setShowCoverPicker] = useState(false)
+
+  // If navigated from alert click, get the treatment type to pre-fill
+  const openTreatmentType = (location.state as { openTreatment?: string } | null)?.openTreatment ?? null
 
   const isRtl = i18n.language === 'he'
 
@@ -327,7 +331,7 @@ const TreeProfilePage: React.FC = () => {
           </div>
           {/* Tab content */}
           <div className="p-6">
-            {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} />}
+            {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} />}
             {activeTab === 'photos' && (
               <PhotoTimelineSection
                 treeId={id!}

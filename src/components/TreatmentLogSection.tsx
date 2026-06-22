@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTreatments } from '../hooks/useTreatments'
 import { useAlertConfigs } from '../hooks/useAlertConfigs'
@@ -25,11 +25,12 @@ const TREATMENT_ICONS: Record<string, string> = {
 
 interface Props {
   treeId: string
+  initialTreatmentType?: string | null
 }
 
 const today = () => new Date().toISOString().split('T')[0]
 
-const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
+const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) => {
   const { t } = useTranslation()
   const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment } = useTreatments(treeId)
   const { getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
@@ -70,6 +71,14 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
   const [reminderFixedDate, setReminderFixedDate] = useState('')
   const [reminderSaving, setReminderSaving] = useState(false)
   const [reminderToast, setReminderToast] = useState<string | null>(null)
+
+  // Auto-open form when navigated from an alert click
+  useEffect(() => {
+    if (initialTreatmentType) {
+      setShowForm(true)
+      setFormType(initialTreatmentType)
+    }
+  }, [initialTreatmentType])
 
   const resetForm = () => {
     setFormDate(today())

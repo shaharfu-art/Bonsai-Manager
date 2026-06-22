@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, Component, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -8,6 +8,35 @@ import TreeProfilePage from './pages/TreeProfilePage'
 import AddTreePage from './pages/AddTreePage'
 import SettingsPage from './pages/SettingsPage'
 import AdminPage from './pages/AdminPage'
+
+// Global Error Boundary to catch runtime crashes
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace' }}>
+          <h1 style={{ color: 'red' }}>⚠️ Application Error</h1>
+          <pre style={{ whiteSpace: 'pre-wrap', background: '#f5f5f5', padding: 16, borderRadius: 8 }}>
+            {this.state.error?.message}
+            {'\n\n'}
+            {this.state.error?.stack}
+          </pre>
+          <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: '8px 16px', cursor: 'pointer' }}>
+            Reload
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // Auth callback page for OAuth (e.g. Google)
 const AuthCallbackPage: React.FC = () => {
@@ -42,6 +71,7 @@ function DirectionSync() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <AuthProvider>
       <BrowserRouter>
         <DirectionSync />
@@ -98,6 +128,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

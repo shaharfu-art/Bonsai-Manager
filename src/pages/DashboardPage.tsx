@@ -147,7 +147,6 @@ const DashboardPage: React.FC = () => {
     due_date: string
   }>>([])
   const [alertsLoading, setAlertsLoading] = useState(true)
-  const [creatingPendingFor, setCreatingPendingFor] = useState<string | null>(null)
 
   const isRtl = i18n.language === 'he'
 
@@ -298,62 +297,9 @@ const DashboardPage: React.FC = () => {
     return map
   }, [alerts])
 
-  // Double-click on an alert → create a pending treatment for that tree/type
-  const handleAlertDoubleClick = async (alert: { tree_id: string; treatment_type: string; due_date: string }) => {
-    const key = `${alert.tree_id}-${alert.treatment_type}`
-    setCreatingPendingFor(key)
-    try {
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData.user) return
-
-      // Check if a pending treatment already exists for this tree+type
-      const { data: existing } = await supabase
-        .from('treatment_logs')
-        .select('id')
-        .eq('tree_id', alert.tree_id)
-        .eq('treatment_type', alert.treatment_type)
-        .eq('status', 'pending')
-        .limit(1)
-
-      if (existing && existing.length > 0) {
-        // Already has a pending treatment, navigate to it
-        navigate(`/trees/${alert.tree_id}`)
-        return
-      }
-
-      // Create a pending treatment
-      const { error: insertErr } = await supabase
-        .from('treatment_logs')
-        .insert({
-          tree_id: alert.tree_id,
-          user_id: userData.user.id,
-          treatment_date: alert.due_date,
-          treatment_type: alert.treatment_type,
-          notes: null,
-          photo_id: null,
-          status: 'pending',
-        })
-
-      if (insertErr) {
-        console.error('Failed to create pending treatment:', insertErr.message)
-        return
-      }
-
-      // Add to local pending list
-      const treeName = trees.find(t => t.id === alert.tree_id)?.custom_name ?? ''
-      setPendingTreatments(prev => [...prev, {
-        id: `new-${Date.now()}`,
-        tree_id: alert.tree_id,
-        tree_name: treeName,
-        treatment_type: alert.treatment_type,
-        treatment_date: alert.due_date,
-      }])
-
-      // Navigate to tree profile
-      navigate(`/trees/${alert.tree_id}`)
-    } finally {
-      setCreatingPendingFor(null)
-    }
+  // Click on an alert → navigate to tree with pre-filled treatment type
+  const handleAlertClick = (alert: { tree_id: string; treatment_type: string }) => {
+    navigate(`/trees/${alert.tree_id}`, { state: { openTreatment: alert.treatment_type } })
   }
 
   return (
@@ -543,12 +489,8 @@ const DashboardPage: React.FC = () => {
                   {alerts.map((alert, idx) => (
                     <li
                       key={`${alert.tree_id}-${alert.treatment_type}-${idx}`}
-                      className={`flex items-start gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
-                        creatingPendingFor === `${alert.tree_id}-${alert.treatment_type}` ? 'opacity-50' : ''
-                      }`}
-                      onClick={() => navigate(`/trees/${alert.tree_id}`)}
-                      onDoubleClick={(e) => { e.preventDefault(); handleAlertDoubleClick(alert) }}
-                      title={t('treatment.markDone')}
+                      className="flex items-start gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => handleAlertClick(alert)}
                     >
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0 ${
                         alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
