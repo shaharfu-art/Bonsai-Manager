@@ -93,7 +93,11 @@
     "attachPhoto": "Attach photo",
     "attachPhotos": "Attach photos (up to 2)",
     "photosAttached": "{{count}} photo(s) attached",
-    "maxPhotosReached": "Maximum 2 photos per treatment"
+    "maxPhotosReached": "Maximum 2 photos per treatment",
+    "pending": "Pending",
+    "completed": "Completed",
+    "markDone": "Mark as done",
+    "scheduledFor": "Scheduled for"
   },
   "alert": {
     "due": "Due",

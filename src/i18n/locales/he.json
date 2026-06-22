@@ -93,7 +93,11 @@
     "attachPhoto": "צרף תמונה",
     "attachPhotos": "צרף תמונות (עד 2)",
     "photosAttached": "{{count}} תמונה/ות צורפו",
-    "maxPhotosReached": "מקסימום 2 תמונות לטיפול"
+    "maxPhotosReached": "מקסימום 2 תמונות לטיפול",
+    "pending": "ממתין",
+    "completed": "הושלם",
+    "markDone": "בוצע ✓",
+    "scheduledFor": "מתוזמן ל"
   },
   "alert": {
     "due": "דחוף",

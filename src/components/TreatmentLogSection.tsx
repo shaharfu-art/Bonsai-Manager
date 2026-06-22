@@ -31,7 +31,7 @@ const today = () => new Date().toISOString().split('T')[0]
 
 const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
   const { t } = useTranslation()
-  const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment } = useTreatments(treeId)
+  const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment } = useTreatments(treeId)
   const { getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
   const { uploadPhoto, photos: allPhotos } = usePhotos(treeId)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -107,17 +107,28 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
         await supabase.from('treatment_logs').update({ photo_id: photoIds[0] }).eq('id', result.id)
       }
 
-      // Save reminder if enabled
+      // Save reminder if enabled and create a pending treatment for next occurrence
       if (reminderEnabled) {
+        let nextDateStr: string
         if (reminderMode === 'fixed') {
+          nextDateStr = reminderFixedDate
           await setConfig(formType, 0, reminderFixedDate)
         } else {
           let totalDays = reminderValue
           if (reminderUnit === 'months') totalDays = reminderValue * 30
           if (reminderUnit === 'years') totalDays = reminderValue * 365
           await setConfig(formType, totalDays, null)
+          const nextDate = new Date()
+          nextDate.setDate(nextDate.getDate() + totalDays)
+          nextDateStr = nextDate.toISOString().split('T')[0]
         }
         await requestNotificationPermission()
+        // Create pending treatment for next time
+        await addTreatment({
+          treatment_date: nextDateStr,
+          treatment_type: formType,
+          status: 'pending',
+        })
       }
       resetForm()
       setReminderEnabled(false)
@@ -258,27 +269,49 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
     try {
       if (reminderEnabled) {
         await requestNotificationPermission()
+        let nextDateStr: string
         if (reminderMode === 'fixed') {
-          // Save as fixed date using snoozed_until field
+          nextDateStr = reminderFixedDate
           await setConfig(treatmentType, 0, reminderFixedDate)
           sendLocalNotification(
             t('treatment.reminder'),
             `${t('treatment.reminderOnDate')} ${reminderFixedDate}`
           )
         } else {
-          // Convert to days
           let totalDays = reminderValue
           if (reminderUnit === 'months') totalDays = reminderValue * 30
           if (reminderUnit === 'years') totalDays = reminderValue * 365
           await setConfig(treatmentType, totalDays, null)
+          const nextDate = new Date()
+          nextDate.setDate(nextDate.getDate() + totalDays)
+          nextDateStr = nextDate.toISOString().split('T')[0]
           const unitLabel = t(`treatment.unit_${reminderUnit}`)
           sendLocalNotification(
             t('treatment.reminder'),
             `${t('treatment.reminderEvery')} ${reminderValue} ${unitLabel}`
           )
         }
+        // Create a pending treatment for the next occurrence
+        // Check if there's already a pending treatment of this type
+        const existingPending = treatments.find(
+          tr => tr.treatment_type === treatmentType && tr.status === 'pending'
+        )
+        if (!existingPending) {
+          await addTreatment({
+            treatment_date: nextDateStr,
+            treatment_type: treatmentType,
+            status: 'pending',
+          })
+        }
       } else {
         await removeConfig(treatmentType)
+        // Also remove any pending treatments of this type
+        const pendingOfType = treatments.find(
+          tr => tr.treatment_type === treatmentType && tr.status === 'pending'
+        )
+        if (pendingOfType) {
+          await deleteTreatment(pendingOfType.id)
+        }
       }
       setReminderOpenId(null)
       setReminderToast(t('treatment.reminderSaved'))
@@ -520,7 +553,11 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
           {treatments.map(treatment => (
             <li
               key={treatment.id}
-              className="bg-gray-50 rounded-xl px-4 py-3"
+              className={`rounded-xl px-4 py-3 ${
+                treatment.status === 'pending'
+                  ? 'bg-amber-50 border border-amber-200'
+                  : 'bg-gray-50'
+              }`}
               onDoubleClick={() => { if (editingId !== treatment.id) handleEditStart(treatment.id) }}
             >
               {editingId === treatment.id ? (
@@ -735,7 +772,16 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
                         <span className="text-sm font-medium text-gray-800">
                           {t(`treatment.${treatment.treatment_type}`)}
                         </span>
-                        <span className="text-xs text-gray-400">{treatment.treatment_date}</span>
+                        {treatment.status === 'pending' && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                            {t('treatment.pending')}
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-400">
+                          {treatment.status === 'pending'
+                            ? `${t('treatment.scheduledFor')} ${treatment.treatment_date}`
+                            : treatment.treatment_date}
+                        </span>
                       </div>
                       {treatment.notes && (
                         <p className="text-xs text-gray-500 mt-0.5 truncate">{treatment.notes}</p>
@@ -795,6 +841,16 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
                     </div>
                     {/* Action buttons */}
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      {/* Mark as done (for pending treatments) */}
+                      {treatment.status === 'pending' && (
+                        <button
+                          onClick={() => completeTreatment(treatment.id)}
+                          className="text-xs bg-green-600 hover:bg-green-700 text-white font-medium px-2.5 py-1 rounded-lg transition-colors"
+                          title={t('treatment.markDone')}
+                        >
+                          ✓ {t('treatment.markDone')}
+                        </button>
+                      )}
                       {/* Reminder bell */}
                       <button
                         onClick={() => handleReminderOpen(treatment.id, treatment.treatment_type)}

@@ -7,6 +7,21 @@ import { useSpecies } from '../hooks/useSpecies'
 import { supabase } from '../lib/supabase-client'
 import type { Tree } from '../hooks/useTrees'
 
+const TREATMENT_ICONS: Record<string, string> = {
+  watering: '💧',
+  fertilizing: '🌱',
+  branch_pruning: '✂️',
+  root_pruning: '🌿',
+  wiring: '🔧',
+  wire_removal: '🔓',
+  repotting: '🪴',
+  pest_treatment: '🐛',
+  shading: '⛱️',
+  sun_exposure: '☀️',
+  winter_dormancy: '❄️',
+  other: '📝',
+}
+
 // ─── Skeleton card ─────────────────────────────────────────
 const SkeletonCard: React.FC = () => (
   <div className="bg-white rounded-xl shadow animate-pulse overflow-hidden">
@@ -116,6 +131,14 @@ const DashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [coverPhotos, setCoverPhotos] = useState<Record<string, string>>({})
+  const [pendingTreatments, setPendingTreatments] = useState<Array<{
+    id: string
+    tree_id: string
+    tree_name: string
+    treatment_type: string
+    treatment_date: string
+  }>>([])
+  const [pendingLoading, setPendingLoading] = useState(true)
   const [alerts, setAlerts] = useState<Array<{
     tree_id: string
     tree_name: string
@@ -148,6 +171,29 @@ const DashboardPage: React.FC = () => {
           })
         )
         setCoverPhotos(urls)
+      })
+  }, [trees])
+
+  // Fetch pending treatments
+  useEffect(() => {
+    if (trees.length === 0) { setPendingLoading(false); return }
+    const treeIds = trees.map(t => t.id)
+    supabase
+      .from('treatment_logs')
+      .select('id, tree_id, treatment_type, treatment_date')
+      .in('tree_id', treeIds)
+      .eq('status', 'pending')
+      .order('treatment_date', { ascending: true })
+      .then(({ data }) => {
+        const pending = (data ?? []).map(row => ({
+          id: row.id,
+          tree_id: row.tree_id,
+          tree_name: trees.find(t => t.id === row.tree_id)?.custom_name ?? '',
+          treatment_type: row.treatment_type,
+          treatment_date: row.treatment_date,
+        }))
+        setPendingTreatments(pending)
+        setPendingLoading(false)
       })
   }, [trees])
 
@@ -260,7 +306,32 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Alerts list - removed from here, moved to sidebar below */}
+        {/* Pending treatments (scheduled) */}
+        {!pendingLoading && pendingTreatments.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-amber-800 mb-3">⏳ {t('treatment.pending')} ({pendingTreatments.length})</h2>
+            <ul className="space-y-2">
+              {pendingTreatments.map(pt => (
+                <li
+                  key={pt.id}
+                  className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-amber-25 transition-colors"
+                  onClick={() => navigate(`/trees/${pt.tree_id}`)}
+                >
+                  <span className="text-lg" aria-hidden="true">
+                    {TREATMENT_ICONS[pt.treatment_type] ?? '📝'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{pt.tree_name}</p>
+                    <p className="text-xs text-gray-500">{t(`treatment.${pt.treatment_type}`)}</p>
+                  </div>
+                  <span className="text-xs text-amber-700 font-medium flex-shrink-0">
+                    {pt.treatment_date}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Two-column layout: trees + sidebar alerts */}
         <div className="flex gap-6 flex-col lg:flex-row-reverse">
