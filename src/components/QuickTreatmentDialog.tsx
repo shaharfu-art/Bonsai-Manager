@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase-client'
 import { TREATMENT_TYPES } from '../lib/treatment-validator'
+import { isImageSizeValid } from '../lib/photo-utils'
+import { requestNotificationPermission } from '../lib/push-notifications'
 
 const TREATMENT_ICONS: Record<string, string> = {
   watering: '💧',
@@ -36,12 +38,19 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
   onSaved,
 }) => {
   const { t } = useTranslation()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [formDate, setFormDate] = useState(today())
   const [formType, setFormType] = useState(treatmentType)
   const [formNotes, setFormNotes] = useState('')
+  const [formPhotos, setFormPhotos] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Reminder state
+  const [reminderEnabled, setReminderEnabled] = useState(false)
+  const [reminderValue, setReminderValue] = useState(7)
+  const [reminderUnit, setReminderUnit] = useState<'days' | 'months' | 'years'>('days')
 
   // Close on Escape
   useEffect(() => {
@@ -49,7 +58,11 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
       if (e.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = ''
+    }
   }, [onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,20 +72,84 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) throw new Error('Not authenticated')
+      const userId = userData.user.id
 
-      const { error: insertError } = await supabase
+      // 1. Create the treatment log
+      const { data: treatmentData, error: insertError } = await supabase
         .from('treatment_logs')
         .insert({
           tree_id: treeId,
-          user_id: userData.user.id,
+          user_id: userId,
           treatment_date: formDate,
           treatment_type: formType,
           notes: formNotes || null,
           photo_id: null,
           status: 'completed',
         })
+        .select()
+        .single()
 
       if (insertError) throw insertError
+      const treatmentId = treatmentData.id
+
+      // 2. Upload photos (up to 2)
+      for (const file of formPhotos.slice(0, 2)) {
+        if (!isImageSizeValid(file)) continue
+        const uuid = crypto.randomUUID()
+        const storagePath = `${userId}/${treeId}/${uuid}.jpg`
+
+        const { error: uploadErr } = await supabase.storage
+          .from('bonsai-photos')
+          .upload(storagePath, file)
+        if (uploadErr) continue
+
+        const { data: signedData } = await supabase.storage
+          .from('bonsai-photos')
+          .createSignedUrl(storagePath, 3600)
+
+        await supabase.from('photos').insert({
+          tree_id: treeId,
+          user_id: userId,
+          storage_path: storagePath,
+          public_url: signedData?.signedUrl ?? null,
+          photo_date: formDate,
+          caption: `${t(`treatment.${formType}`)} - ${formDate}`,
+          is_cover: false,
+          treatment_log_id: treatmentId,
+        })
+      }
+
+      // 3. Save reminder if enabled
+      if (reminderEnabled) {
+        let totalDays = reminderValue
+        if (reminderUnit === 'months') totalDays = reminderValue * 30
+        if (reminderUnit === 'years') totalDays = reminderValue * 365
+
+        // Upsert alert config
+        const { data: existingConfig } = await supabase
+          .from('alert_configs')
+          .select('id')
+          .eq('tree_id', treeId)
+          .eq('treatment_type', formType)
+          .single()
+
+        if (existingConfig) {
+          await supabase.from('alert_configs')
+            .update({ interval_days: totalDays, snoozed_until: null, is_manual_only: false })
+            .eq('id', existingConfig.id)
+        } else {
+          await supabase.from('alert_configs').insert({
+            tree_id: treeId,
+            user_id: userId,
+            treatment_type: formType,
+            interval_days: totalDays,
+            snoozed_until: null,
+            is_manual_only: false,
+          })
+        }
+        await requestNotificationPermission()
+      }
+
       onSaved()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t('common.error'))
@@ -87,8 +164,7 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        ref={dialogRef}
-        className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
+        className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
       >
@@ -158,6 +234,94 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6a4f] resize-none"
               autoFocus
             />
+          </div>
+
+          {/* Photo attachment (up to 2) */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              📷 {t('treatment.attachPhotos')} <span className="text-gray-400">({t('common.optional')})</span>
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={e => {
+                const files = Array.from(e.target.files ?? []).slice(0, 2 - formPhotos.length)
+                setFormPhotos(prev => [...prev, ...files].slice(0, 2))
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={formPhotos.length >= 2}
+              className={`w-full border-2 border-dashed rounded-lg px-3 py-2 text-sm text-center transition-colors ${
+                formPhotos.length > 0 ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
+              } disabled:opacity-50`}
+            >
+              {formPhotos.length > 0
+                ? `📷 ${t('treatment.photosAttached', { count: formPhotos.length })}`
+                : t('photo.dropOrClick')}
+            </button>
+            {formPhotos.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                {formPhotos.map((file, idx) => (
+                  <div key={idx} className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt=""
+                      className="w-14 h-14 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormPhotos(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none shadow-sm"
+                      aria-label={t('common.delete')}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Reminder */}
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                id="quick-reminder-toggle"
+                type="checkbox"
+                checked={reminderEnabled}
+                onChange={e => setReminderEnabled(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#2d6a4f]"
+              />
+              <label htmlFor="quick-reminder-toggle" className="text-xs text-gray-700">
+                🔔 {t('treatment.enableReminder')}
+              </label>
+            </div>
+            {reminderEnabled && (
+              <div className="flex items-center gap-2 ml-6">
+                <span className="text-xs text-gray-600">{t('treatment.reminderEvery')}</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={reminderValue}
+                  onChange={e => setReminderValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="w-14 border border-gray-300 rounded px-2 py-1 text-xs"
+                />
+                <select
+                  value={reminderUnit}
+                  onChange={e => setReminderUnit(e.target.value as 'days' | 'months' | 'years')}
+                  className="border border-gray-300 rounded px-2 py-1 text-xs bg-white"
+                >
+                  <option value="days">{t('treatment.unit_days')}</option>
+                  <option value="months">{t('treatment.unit_months')}</option>
+                  <option value="years">{t('treatment.unit_years')}</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {error && <p className="text-xs text-red-600">{error}</p>}
