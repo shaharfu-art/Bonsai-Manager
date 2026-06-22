@@ -90,7 +90,10 @@
     "unit_months": "months",
     "unit_years": "years",
     "editTreatment": "Edit treatment",
-    "attachPhoto": "Attach photo"
+    "attachPhoto": "Attach photo",
+    "attachPhotos": "Attach photos (up to 2)",
+    "photosAttached": "{{count}} photo(s) attached",
+    "maxPhotosReached": "Maximum 2 photos per treatment"
   },
   "alert": {
     "due": "Due",

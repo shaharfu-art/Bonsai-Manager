@@ -90,7 +90,10 @@
     "unit_months": "חודשים",
     "unit_years": "שנים",
     "editTreatment": "ערוך טיפול",
-    "attachPhoto": "צרף תמונה"
+    "attachPhoto": "צרף תמונה",
+    "attachPhotos": "צרף תמונות (עד 2)",
+    "photosAttached": "{{count}} תמונה/ות צורפו",
+    "maxPhotosReached": "מקסימום 2 תמונות לטיפול"
   },
   "alert": {
     "due": "דחוף",

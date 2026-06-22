@@ -5,6 +5,8 @@ import { useAlertConfigs } from '../hooks/useAlertConfigs'
 import { usePhotos } from '../hooks/usePhotos'
 import { TREATMENT_TYPES } from '../lib/treatment-validator'
 import { requestNotificationPermission, sendLocalNotification } from '../lib/push-notifications'
+import { supabase } from '../lib/supabase-client'
+import Lightbox from './Lightbox'
 
 const TREATMENT_ICONS: Record<string, string> = {
   watering: '💧',
@@ -40,7 +42,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
   const [formDate, setFormDate] = useState(today())
   const [formType, setFormType] = useState<string>(TREATMENT_TYPES[0])
   const [formNotes, setFormNotes] = useState('')
-  const [formPhoto, setFormPhoto] = useState<File | null>(null)
+  const [formPhotos, setFormPhotos] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -50,9 +52,13 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
   const [editDate, setEditDate] = useState('')
   const [editType, setEditType] = useState('')
   const [editNotes, setEditNotes] = useState('')
-  const [editPhoto, setEditPhoto] = useState<File | null>(null)
+  const [editPhotos, setEditPhotos] = useState<File[]>([])
   const [editSubmitting, setEditSubmitting] = useState(false)
   const [editError, setEditError] = useState('')
+
+  // Lightbox state
+  const [lightboxImages, setLightboxImages] = useState<{ url: string; alt?: string }[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   // Reminder panel state: treatmentId -> open/closed
   const [reminderOpenId, setReminderOpenId] = useState<string | null>(null)
@@ -69,7 +75,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
     setFormDate(today())
     setFormType(TREATMENT_TYPES[0])
     setFormNotes('')
-    setFormPhoto(null)
+    setFormPhotos([])
     setSubmitError('')
   }
 
@@ -78,21 +84,29 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
     setSubmitting(true)
     setSubmitError('')
     try {
-      // Upload photo first if attached
-      let photoId: string | undefined
-      if (formPhoto) {
-        const photo = await uploadPhoto(formPhoto, {
-          photo_date: formDate,
-          caption: `${t(`treatment.${formType}`)} - ${formDate}`,
-        })
-        photoId = photo.id
-      }
-      await addTreatment({
+      // First create the treatment (without photos)
+      const result = await addTreatment({
         treatment_date: formDate,
         treatment_type: formType,
         notes: formNotes || undefined,
-        photo_id: photoId,
       })
+
+      // Upload photos (up to 2) and link to treatment
+      const photoIds: string[] = []
+      for (const file of formPhotos.slice(0, 2)) {
+        const photo = await uploadPhoto(file, {
+          photo_date: formDate,
+          caption: `${t(`treatment.${formType}`)} - ${formDate}`,
+          treatment_log_id: result.id,
+        })
+        photoIds.push(photo.id)
+      }
+
+      // Update treatment with first photo_id for legacy compatibility
+      if (photoIds.length > 0) {
+        await supabase.from('treatment_logs').update({ photo_id: photoIds[0] }).eq('id', result.id)
+      }
+
       // Save reminder if enabled
       if (reminderEnabled) {
         if (reminderMode === 'fixed') {
@@ -151,7 +165,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
 
   const handleEditCancel = () => {
     setEditingId(null)
-    setEditPhoto(null)
+    setEditPhotos([])
     setEditError('')
   }
 
@@ -159,22 +173,31 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
     setEditSubmitting(true)
     setEditError('')
     try {
-      // Upload new photo if provided
-      let photoId: string | undefined
-      if (editPhoto) {
-        const photo = await uploadPhoto(editPhoto, {
+      // Upload new photos if provided (up to 2 total)
+      const treatment = treatments.find(t => t.id === id)
+      const existingPhotoIds = treatment?.photo_ids ?? (treatment?.photo_id ? [treatment.photo_id] : [])
+      const maxNew = 2 - existingPhotoIds.length
+
+      const newPhotoIds: string[] = []
+      for (const file of editPhotos.slice(0, maxNew)) {
+        const photo = await uploadPhoto(file, {
           photo_date: editDate,
           caption: `${t(`treatment.${editType}`)} - ${editDate}`,
+          treatment_log_id: id,
         })
-        photoId = photo.id
+        newPhotoIds.push(photo.id)
       }
+
+      const allPhotoIds = [...existingPhotoIds, ...newPhotoIds].slice(0, 2)
 
       await updateTreatment(id, {
         treatment_date: editDate,
         treatment_type: editType,
         notes: editNotes || undefined,
-        ...(photoId ? { photo_id: photoId } : {}),
+        photo_id: allPhotoIds[0],
+        photo_ids: allPhotoIds,
       })
+
       // Also save reminder config
       if (reminderEnabled) {
         if (reminderMode === 'fixed') {
@@ -189,7 +212,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
         await removeConfig(editType)
       }
       setEditingId(null)
-      setEditPhoto(null)
+      setEditPhotos([])
     } catch (err: unknown) {
       setEditError(err instanceof Error ? err.message : t('common.error'))
     } finally {
@@ -327,27 +350,58 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6a4f] resize-none"
             />
           </div>
-          {/* Photo attachment */}
+          {/* Photo attachment (up to 2) */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              📷 {t('treatment.attachPhoto')} <span className="text-gray-400">({t('common.optional')})</span>
+              📷 {t('treatment.attachPhotos')} <span className="text-gray-400">({t('common.optional')})</span>
             </label>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
-              onChange={e => setFormPhoto(e.target.files?.[0] ?? null)}
+              onChange={e => {
+                const files = Array.from(e.target.files ?? []).slice(0, 2)
+                setFormPhotos(files)
+              }}
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
+              disabled={formPhotos.length >= 2}
               className={`w-full border-2 border-dashed rounded-lg px-3 py-2.5 text-sm text-center transition-colors ${
-                formPhoto ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
-              }`}
+                formPhotos.length > 0 ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
+              } disabled:opacity-50`}
             >
-              {formPhoto ? `📷 ${formPhoto.name}` : t('photo.dropOrClick')}
+              {formPhotos.length > 0
+                ? `📷 ${t('treatment.photosAttached', { count: formPhotos.length })}`
+                : t('photo.dropOrClick')}
             </button>
+            {formPhotos.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                {formPhotos.map((file, idx) => (
+                  <div key={idx} className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt=""
+                      className="w-14 h-14 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormPhotos(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none shadow-sm"
+                      aria-label={t('common.delete')}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {formPhotos.length >= 2 && (
+              <p className="text-xs text-amber-600 mt-1">{t('treatment.maxPhotosReached')}</p>
+            )}
           </div>
           {/* Reminder settings in add form */}
           <div className="border-t border-green-200 pt-3">
@@ -513,36 +567,69 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6a4f] resize-none"
                     />
                   </div>
-                  {/* Photo in edit form */}
+                  {/* Photo in edit form (up to 2) */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      📷 {t('treatment.attachPhoto')} <span className="text-gray-400">({t('common.optional')})</span>
+                      📷 {t('treatment.attachPhotos')} <span className="text-gray-400">({t('common.optional')})</span>
                     </label>
                     <input
                       ref={editFileInputRef}
                       type="file"
                       accept="image/*"
+                      multiple
                       className="hidden"
-                      onChange={e => setEditPhoto(e.target.files?.[0] ?? null)}
+                      onChange={e => {
+                        const existingCount = treatment.photo_ids?.length ?? (treatment.photo_id ? 1 : 0)
+                        const maxNew = 2 - existingCount
+                        const files = Array.from(e.target.files ?? []).slice(0, maxNew)
+                        setEditPhotos(files)
+                      }}
                     />
-                    {/* Show current photo if exists */}
-                    {treatment.photo_id && !editPhoto && (() => {
-                      const existing = allPhotos.find(p => p.id === treatment.photo_id)
-                      if (!existing?.public_url) return null
+                    {/* Show existing photos */}
+                    {(() => {
+                      const photoIds = treatment.photo_ids?.length ? treatment.photo_ids : (treatment.photo_id ? [treatment.photo_id] : [])
+                      const existingPhotos = photoIds.map(pid => allPhotos.find(p => p.id === pid)).filter(Boolean)
+                      if (existingPhotos.length === 0) return null
                       return (
-                        <div className="mb-2">
-                          <img src={existing.public_url} alt="" className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
+                        <div className="flex gap-2 mb-2">
+                          {existingPhotos.map(photo => photo?.public_url && (
+                            <img key={photo.id} src={photo.public_url} alt="" className="w-16 h-16 object-cover rounded-lg border border-gray-200" />
+                          ))}
                         </div>
                       )
                     })()}
+                    {/* New photos preview */}
+                    {editPhotos.length > 0 && (
+                      <div className="flex gap-2 mb-2">
+                        {editPhotos.map((file, idx) => (
+                          <div key={idx} className="relative">
+                            <img src={URL.createObjectURL(file)} alt="" className="w-14 h-14 object-cover rounded-lg border border-green-300" />
+                            <button
+                              type="button"
+                              onClick={() => setEditPhotos(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none shadow-sm"
+                              aria-label={t('common.delete')}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => editFileInputRef.current?.click()}
+                      disabled={(() => {
+                        const existingCount = treatment.photo_ids?.length ?? (treatment.photo_id ? 1 : 0)
+                        return existingCount + editPhotos.length >= 2
+                      })()}
                       className={`w-full border-2 border-dashed rounded-lg px-3 py-2 text-xs text-center transition-colors ${
-                        editPhoto ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
-                      }`}
+                        editPhotos.length > 0 ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
+                      } disabled:opacity-50`}
                     >
-                      {editPhoto ? `📷 ${editPhoto.name}` : treatment.photo_id ? `📷 ${t('photo.changePhoto')}` : `📷 ${t('treatment.attachPhoto')}`}
+                      {editPhotos.length > 0
+                        ? `📷 ${t('treatment.photosAttached', { count: editPhotos.length })}`
+                        : `📷 ${t('treatment.attachPhoto')}`}
                     </button>
                   </div>
                   {editError && (
@@ -653,17 +740,30 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
                       {treatment.notes && (
                         <p className="text-xs text-gray-500 mt-0.5 truncate">{treatment.notes}</p>
                       )}
-                      {/* Show treatment photo thumbnail */}
-                      {treatment.photo_id && (() => {
-                        const photo = allPhotos.find(p => p.id === treatment.photo_id)
-                        if (!photo?.public_url) return null
+                      {/* Show treatment photo thumbnails with lightbox */}
+                      {(() => {
+                        const photoIds = treatment.photo_ids?.length ? treatment.photo_ids : (treatment.photo_id ? [treatment.photo_id] : [])
+                        const treatmentPhotos = photoIds.map(pid => allPhotos.find(p => p.id === pid)).filter(p => p?.public_url)
+                        if (treatmentPhotos.length === 0) return null
                         return (
-                          <div className="mt-1.5">
-                            <img
-                              src={photo.public_url}
-                              alt={t('treatment.attachPhoto')}
-                              className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                            />
+                          <div className="flex gap-1.5 mt-1.5">
+                            {treatmentPhotos.map((photo, idx) => (
+                              <button
+                                key={photo!.id}
+                                type="button"
+                                onClick={() => {
+                                  setLightboxImages(treatmentPhotos.map(p => ({ url: p!.public_url!, alt: t('treatment.attachPhoto') })))
+                                  setLightboxIndex(idx)
+                                }}
+                                className="focus:outline-none focus:ring-2 focus:ring-[#2d6a4f] rounded-lg"
+                              >
+                                <img
+                                  src={photo!.public_url!}
+                                  alt={t('treatment.attachPhoto')}
+                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:border-[#2d6a4f] transition-colors cursor-pointer"
+                                />
+                              </button>
+                            ))}
                           </div>
                         )
                       })()}
@@ -867,6 +967,16 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId }) => {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#2d6a4f] text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
           {reminderToast}
         </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxImages.length > 0 && (
+        <Lightbox
+          images={lightboxImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxImages([])}
+          onNavigate={setLightboxIndex}
+        />
       )}
     </div>
   )
