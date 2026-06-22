@@ -302,6 +302,20 @@ const DashboardPage: React.FC = () => {
     navigate(`/trees/${alert.tree_id}`, { state: { openTreatment: alert.treatment_type } })
   }
 
+  // Dismiss an alert → delete the alert_config to stop the recurring cycle
+  const handleAlertDismiss = async (e: React.MouseEvent, alert: { tree_id: string; treatment_type: string }) => {
+    e.stopPropagation()
+    const { error: deleteErr } = await supabase
+      .from('alert_configs')
+      .delete()
+      .eq('tree_id', alert.tree_id)
+      .eq('treatment_type', alert.treatment_type)
+
+    if (!deleteErr) {
+      setAlerts(prev => prev.filter(a => !(a.tree_id === alert.tree_id && a.treatment_type === alert.treatment_type)))
+    }
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -497,11 +511,21 @@ const DashboardPage: React.FC = () => {
                       }`}>
                         {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-gray-800 truncate">{alert.tree_name}</p>
                         <p className="text-[10px] text-gray-500">{t(`treatment.${alert.treatment_type}`)}</p>
                         <p className="text-[10px] text-gray-400">{alert.due_date}</p>
                       </div>
+                      <button
+                        onClick={(e) => handleAlertDismiss(e, alert)}
+                        className="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors p-0.5 mt-0.5"
+                        title={t('common.delete')}
+                        aria-label={t('common.delete')}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </li>
                   ))}
                 </ul>
