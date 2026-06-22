@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase-client'
 import { TREATMENT_TYPES } from '../lib/treatment-validator'
 import { isImageSizeValid } from '../lib/photo-utils'
-import { requestNotificationPermission } from '../lib/push-notifications'
 
 const TREATMENT_ICONS: Record<string, string> = {
   watering: '💧',
@@ -46,11 +45,6 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
   const [formPhotos, setFormPhotos] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-
-  // Reminder state
-  const [reminderEnabled, setReminderEnabled] = useState(false)
-  const [reminderValue, setReminderValue] = useState(7)
-  const [reminderUnit, setReminderUnit] = useState<'days' | 'months' | 'years'>('days')
 
   // Close on Escape
   useEffect(() => {
@@ -117,37 +111,6 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
           is_cover: false,
           treatment_log_id: treatmentId,
         })
-      }
-
-      // 3. Save reminder if enabled
-      if (reminderEnabled) {
-        let totalDays = reminderValue
-        if (reminderUnit === 'months') totalDays = reminderValue * 30
-        if (reminderUnit === 'years') totalDays = reminderValue * 365
-
-        // Upsert alert config
-        const { data: existingConfig } = await supabase
-          .from('alert_configs')
-          .select('id')
-          .eq('tree_id', treeId)
-          .eq('treatment_type', formType)
-          .single()
-
-        if (existingConfig) {
-          await supabase.from('alert_configs')
-            .update({ interval_days: totalDays, snoozed_until: null, is_manual_only: false })
-            .eq('id', existingConfig.id)
-        } else {
-          await supabase.from('alert_configs').insert({
-            tree_id: treeId,
-            user_id: userId,
-            treatment_type: formType,
-            interval_days: totalDays,
-            snoozed_until: null,
-            is_manual_only: false,
-          })
-        }
-        await requestNotificationPermission()
       }
 
       onSaved()
@@ -283,43 +246,6 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
                     </button>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-
-          {/* Reminder */}
-          <div className="border-t border-gray-200 pt-3">
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                id="quick-reminder-toggle"
-                type="checkbox"
-                checked={reminderEnabled}
-                onChange={e => setReminderEnabled(e.target.checked)}
-                className="w-4 h-4 rounded accent-[#2d6a4f]"
-              />
-              <label htmlFor="quick-reminder-toggle" className="text-xs text-gray-700">
-                🔔 {t('treatment.enableReminder')}
-              </label>
-            </div>
-            {reminderEnabled && (
-              <div className="flex items-center gap-2 ml-6">
-                <span className="text-xs text-gray-600">{t('treatment.reminderEvery')}</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={reminderValue}
-                  onChange={e => setReminderValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  className="w-14 border border-gray-300 rounded px-2 py-1 text-xs"
-                />
-                <select
-                  value={reminderUnit}
-                  onChange={e => setReminderUnit(e.target.value as 'days' | 'months' | 'years')}
-                  className="border border-gray-300 rounded px-2 py-1 text-xs bg-white"
-                >
-                  <option value="days">{t('treatment.unit_days')}</option>
-                  <option value="months">{t('treatment.unit_months')}</option>
-                  <option value="years">{t('treatment.unit_years')}</option>
-                </select>
               </div>
             )}
           </div>
