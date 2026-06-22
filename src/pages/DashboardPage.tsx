@@ -6,6 +6,7 @@ import { useTrees } from '../hooks/useTrees'
 import { useSpecies } from '../hooks/useSpecies'
 import { supabase } from '../lib/supabase-client'
 import type { Tree } from '../hooks/useTrees'
+import QuickTreatmentDialog from '../components/QuickTreatmentDialog'
 
 const TREATMENT_ICONS: Record<string, string> = {
   watering: '💧',
@@ -147,6 +148,11 @@ const DashboardPage: React.FC = () => {
     due_date: string
   }>>([])
   const [alertsLoading, setAlertsLoading] = useState(true)
+  const [quickTreatment, setQuickTreatment] = useState<{
+    treeId: string
+    treeName: string
+    treatmentType: string
+  } | null>(null)
 
   const isRtl = i18n.language === 'he'
 
@@ -297,9 +303,23 @@ const DashboardPage: React.FC = () => {
     return map
   }, [alerts])
 
-  // Click on an alert → navigate to tree with pre-filled treatment type
-  const handleAlertClick = (alert: { tree_id: string; treatment_type: string }) => {
-    navigate(`/trees/${alert.tree_id}`, { state: { openTreatment: alert.treatment_type } })
+  // Click on an alert → open quick treatment popup
+  const handleAlertClick = (alert: { tree_id: string; tree_name: string; treatment_type: string }) => {
+    setQuickTreatment({
+      treeId: alert.tree_id,
+      treeName: alert.tree_name,
+      treatmentType: alert.treatment_type,
+    })
+  }
+
+  // After saving a quick treatment, remove the alert from the list
+  const handleQuickTreatmentSaved = () => {
+    if (quickTreatment) {
+      setAlerts(prev => prev.filter(a =>
+        !(a.tree_id === quickTreatment.treeId && a.treatment_type === quickTreatment.treatmentType)
+      ))
+    }
+    setQuickTreatment(null)
   }
 
   // Dismiss an alert → delete the alert_config to stop the recurring cycle
@@ -534,6 +554,17 @@ const DashboardPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Quick treatment popup */}
+      {quickTreatment && (
+        <QuickTreatmentDialog
+          treeId={quickTreatment.treeId}
+          treeName={quickTreatment.treeName}
+          treatmentType={quickTreatment.treatmentType}
+          onClose={() => setQuickTreatment(null)}
+          onSaved={handleQuickTreatmentSaved}
+        />
+      )}
     </Layout>
   )
 }
