@@ -351,19 +351,25 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Pending treatments (scheduled) */}
-        {!pendingLoading && pendingTreatments.length > 0 && (
+        {/* Pending treatments + alerts combined at the top */}
+        {!pendingLoading && !alertsLoading && (pendingTreatments.length > 0 || alerts.length > 0) && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <h2 className="text-sm font-semibold text-amber-800 mb-3">⏳ {t('treatment.pending')} ({pendingTreatments.length})</h2>
-            <ul className="space-y-2">
+            <h2 className="text-sm font-semibold text-amber-800 mb-3">
+              🔔 {t('dashboard.openAlerts')} ({pendingTreatments.length + alerts.length})
+            </h2>
+            <ul className="space-y-2 max-h-[40vh] overflow-y-auto">
+              {/* Pending treatments */}
               {pendingTreatments.map(pt => (
                 <li
                   key={pt.id}
-                  className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-amber-50 transition-colors"
-                  onClick={() => navigate(`/trees/${pt.tree_id}`)}
+                  className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors"
+                  onClick={() => setQuickTreatment({ treeId: pt.tree_id, treeName: pt.tree_name, treatmentType: pt.treatment_type })}
                 >
                   <span className="text-lg" aria-hidden="true">
                     {TREATMENT_ICONS[pt.treatment_type] ?? '📝'}
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 flex-shrink-0">
+                    {t('treatment.pending')}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{pt.tree_name}</p>
@@ -374,14 +380,44 @@ const DashboardPage: React.FC = () => {
                   </span>
                 </li>
               ))}
+              {/* Alerts */}
+              {alerts.map((alert, idx) => (
+                <li
+                  key={`alert-${alert.tree_id}-${alert.treatment_type}-${idx}`}
+                  className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors"
+                  onClick={() => handleAlertClick(alert)}
+                >
+                  <span className="text-lg" aria-hidden="true">
+                    {TREATMENT_ICONS[alert.treatment_type] ?? '📝'}
+                  </span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
+                    alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{alert.tree_name}</p>
+                    <p className="text-xs text-gray-500">{t(`treatment.${alert.treatment_type}`)}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 flex-shrink-0">{alert.due_date}</span>
+                  <button
+                    onClick={(e) => handleAlertDismiss(e, alert)}
+                    className="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors p-0.5"
+                    title={t('common.delete')}
+                    aria-label={t('common.delete')}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
         )}
 
-        {/* Two-column layout: trees + sidebar alerts */}
-        <div className="flex gap-6 flex-col lg:flex-row-reverse">
-          {/* Main content (trees) */}
-          <div className="flex-1 space-y-4">
+        {/* Trees section */}
+        <div className="space-y-4">
             {/* Search + view toggle */}
         <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <div className="relative flex-1">
@@ -511,47 +547,6 @@ const DashboardPage: React.FC = () => {
         >
           +
         </button>
-          </div>
-          {/* End main content */}
-
-          {/* Sidebar: alerts (left on desktop, below on mobile) */}
-          {!alertsLoading && alerts.length > 0 && (
-            <div className="lg:w-72 flex-shrink-0">
-              <div className="bg-white rounded-xl shadow p-4 lg:sticky lg:top-20">
-                <h2 className="text-sm font-semibold text-[#2d6a4f] mb-3">🔔 {t('dashboard.openAlerts')}</h2>
-                <ul className="space-y-2 max-h-[60vh] overflow-y-auto">
-                  {alerts.map((alert, idx) => (
-                    <li
-                      key={`${alert.tree_id}-${alert.treatment_type}-${idx}`}
-                      className="flex items-start gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => handleAlertClick(alert)}
-                    >
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0 ${
-                        alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-gray-800 truncate">{alert.tree_name}</p>
-                        <p className="text-[10px] text-gray-500">{t(`treatment.${alert.treatment_type}`)}</p>
-                        <p className="text-[10px] text-gray-400">{alert.due_date}</p>
-                      </div>
-                      <button
-                        onClick={(e) => handleAlertDismiss(e, alert)}
-                        className="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors p-0.5 mt-0.5"
-                        title={t('common.delete')}
-                        aria-label={t('common.delete')}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
