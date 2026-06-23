@@ -6,7 +6,6 @@ import { useTrees } from '../hooks/useTrees'
 import { useSpecies } from '../hooks/useSpecies'
 import { supabase } from '../lib/supabase-client'
 import type { Tree } from '../hooks/useTrees'
-import QuickTreatmentDialog from '../components/QuickTreatmentDialog'
 import { subscribeToPush } from '../lib/push-notifications'
 
 const TREATMENT_ICONS: Record<string, string> = {
@@ -149,11 +148,6 @@ const DashboardPage: React.FC = () => {
     due_date: string
   }>>([])
   const [alertsLoading, setAlertsLoading] = useState(true)
-  const [quickTreatment, setQuickTreatment] = useState<{
-    treeId: string
-    treeName: string
-    treatmentType: string
-  } | null>(null)
 
   const isRtl = i18n.language === 'he'
 
@@ -316,28 +310,9 @@ const DashboardPage: React.FC = () => {
     return map
   }, [alerts])
 
-  // Click on an alert → open quick treatment popup
-  const handleAlertClick = (alert: { tree_id: string; tree_name: string; treatment_type: string }) => {
-    setQuickTreatment({
-      treeId: alert.tree_id,
-      treeName: alert.tree_name,
-      treatmentType: alert.treatment_type,
-    })
-  }
-
-  // After saving a quick treatment, remove the alert from the list
-  const handleQuickTreatmentSaved = () => {
-    if (quickTreatment) {
-      // Remove from alerts
-      setAlerts(prev => prev.filter(a =>
-        !(a.tree_id === quickTreatment.treeId && a.treatment_type === quickTreatment.treatmentType)
-      ))
-      // Remove from pending treatments
-      setPendingTreatments(prev => prev.filter(pt =>
-        !(pt.tree_id === quickTreatment.treeId && pt.treatment_type === quickTreatment.treatmentType)
-      ))
-    }
-    setQuickTreatment(null)
+  // Click on an alert → navigate to tree with pre-filled treatment form
+  const handleAlertClick = (alert: { tree_id: string; treatment_type: string }) => {
+    navigate(`/trees/${alert.tree_id}`, { state: { openTreatment: alert.treatment_type } })
   }
 
   // Dismiss an alert → delete the alert_config to stop the recurring cycle
@@ -381,7 +356,7 @@ const DashboardPage: React.FC = () => {
                 <li
                   key={pt.id}
                   className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors"
-                  onClick={() => setQuickTreatment({ treeId: pt.tree_id, treeName: pt.tree_name, treatmentType: pt.treatment_type })}
+                  onClick={() => navigate(`/trees/${pt.tree_id}`, { state: { openTreatment: pt.treatment_type } })}
                 >
                   <span className="text-lg" aria-hidden="true">
                     {TREATMENT_ICONS[pt.treatment_type] ?? '📝'}
@@ -568,16 +543,6 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick treatment popup */}
-      {quickTreatment && (
-        <QuickTreatmentDialog
-          treeId={quickTreatment.treeId}
-          treeName={quickTreatment.treeName}
-          treatmentType={quickTreatment.treatmentType}
-          onClose={() => setQuickTreatment(null)}
-          onSaved={handleQuickTreatmentSaved}
-        />
-      )}
     </Layout>
   )
 }
