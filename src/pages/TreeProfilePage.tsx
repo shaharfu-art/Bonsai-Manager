@@ -230,7 +230,6 @@ const TreeProfilePage: React.FC = () => {
                 ref={coverUploadRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="hidden"
                 onChange={handleCoverUpload}
               />
