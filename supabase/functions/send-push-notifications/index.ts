@@ -40,9 +40,31 @@ serve(async (req) => {
       .select('tree_id, treatment_type, treatment_date, user_id')
       .order('treatment_date', { ascending: false })
 
-    // 3. Get all trees for names
-    const { data: trees } = await supabase.from('trees').select('id, custom_name, user_id')
+  // 3. Get all trees for names + cover photos
+    const { data: trees } = await supabase.from('trees').select('id, custom_name, user_id, cover_photo_id')
     const treeMap = new Map((trees ?? []).map(t => [t.id, t]))
+
+    // Get cover photo storage paths
+    const coverPhotoIds = (trees ?? []).map(t => t.cover_photo_id).filter(Boolean)
+    const coverPhotoMap = new Map<string, string>()
+    if (coverPhotoIds.length > 0) {
+      const { data: coverPhotos } = await supabase
+        .from('photos')
+        .select('id, tree_id, storage_path')
+        .in('id', coverPhotoIds)
+      
+      if (coverPhotos) {
+        for (const photo of coverPhotos) {
+          // Create a signed URL for the push notification image
+          const { data: signedData } = await supabase.storage
+            .from('bonsai-photos')
+            .createSignedUrl(photo.storage_path, 3600)
+          if (signedData?.signedUrl) {
+            coverPhotoMap.set(photo.tree_id, signedData.signedUrl)
+          }
+        }
+      }
+    }
 
     // 4. Compute who needs notifications
     const today = new Date()
@@ -69,11 +91,13 @@ serve(async (req) => {
       }
 
       if (isDue) {
+        const treeImage = coverPhotoMap.get(config.tree_id) ?? null
         notifications.push({
           user_id: config.user_id,
           title: `🌿 ${tree.custom_name}`,
           body: `${config.treatment_type} is due!`,
           url: `/trees/${config.tree_id}`,
+          image: treeImage,
         })
       }
     }
@@ -107,7 +131,8 @@ serve(async (req) => {
             title: notif.title,
             body: notif.body,
             url: notif.url,
-            icon: '/favicon.svg',
+            icon: notif.image || '/favicon.svg',
+            image: notif.image,
           })
 
           // Use web-push compatible approach with crypto

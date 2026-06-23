@@ -7,6 +7,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || '',
     icon: data.icon || '/favicon.svg',
+    image: data.image || undefined,
     badge: '/favicon.svg',
     data: { url: data.url || '/' },
     vibrate: [200, 100, 200],
