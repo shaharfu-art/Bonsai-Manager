@@ -237,6 +237,11 @@ const DashboardPage: React.FC = () => {
 
         // Fixed date alert
         if (config.snoozed_until) {
+          // If treatment of this type was done today, skip
+          const todayStr = today.toISOString().split('T')[0]
+          const lastLogFixed = logs.find(l => l.tree_id === config.tree_id && l.treatment_type === config.treatment_type)
+          if (lastLogFixed && lastLogFixed.treatment_date === todayStr) continue
+
           const dueDate = new Date(config.snoozed_until)
           const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
           const treeName = trees.find(t => t.id === config.tree_id)?.custom_name ?? ''
@@ -253,6 +258,11 @@ const DashboardPage: React.FC = () => {
         // Interval-based alert
         const lastLog = logs.find(l => l.tree_id === config.tree_id && l.treatment_type === config.treatment_type)
         const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
+
+        // If treatment was done today, skip — no need to alert
+        const todayStr = today.toISOString().split('T')[0]
+        if (lastLog && lastLog.treatment_date === todayStr) continue
+
         const nextDue = new Date(lastDate.getTime() + config.interval_days * 24 * 60 * 60 * 1000)
         const diffDays = Math.ceil((nextDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
         const treeName = trees.find(t => t.id === config.tree_id)?.custom_name ?? ''
