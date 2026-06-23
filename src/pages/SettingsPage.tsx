@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
+import { subscribeToPush, unsubscribeFromPush } from '../lib/push-notifications'
 
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -77,21 +78,59 @@ const SettingsPage: React.FC = () => {
           </button>
         </section>
 
-        {/* Notifications (placeholder) */}
-        <section className="bg-white rounded-2xl shadow p-5 opacity-60">
+        {/* Notifications */}
+        <section className="bg-white rounded-2xl shadow p-5">
           <h2 className="text-base font-semibold text-gray-800 mb-3">{t('settings.notifications')}</h2>
-          <label className={`flex items-center gap-3 cursor-not-allowed ${isRtl ? 'flex-row-reverse' : ''}`}>
-            <div className="relative inline-flex items-center">
-              <input type="checkbox" disabled className="sr-only peer" />
-              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#52b788] transition-colors" />
-              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
-            </div>
-            <span className="text-sm text-gray-600">{t('settings.enableNotifications')}</span>
-          </label>
-          <p className="text-xs text-gray-400 mt-2">{t('common.pending')}</p>
+          <NotificationToggle isRtl={isRtl} />
         </section>
       </div>
     </Layout>
+  )
+}
+
+// Notification toggle sub-component
+const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
+  const { t } = useTranslation()
+  const [enabled, setEnabled] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setEnabled('Notification' in window && Notification.permission === 'granted')
+  }, [])
+
+  const handleToggle = async () => {
+    setLoading(true)
+    try {
+      if (!enabled) {
+        const success = await subscribeToPush()
+        setEnabled(success)
+      } else {
+        await unsubscribeFromPush()
+        setEnabled(false)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <label className={`flex items-center gap-3 cursor-pointer ${isRtl ? 'flex-row-reverse' : ''}`}>
+        <div className="relative inline-flex items-center">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={handleToggle}
+            disabled={loading}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#52b788] transition-colors" />
+          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+        </div>
+        <span className="text-sm text-gray-600">{t('settings.enableNotifications')}</span>
+      </label>
+      {loading && <p className="text-xs text-gray-400 mt-2">{t('common.loading')}</p>}
+    </>
   )
 }
 

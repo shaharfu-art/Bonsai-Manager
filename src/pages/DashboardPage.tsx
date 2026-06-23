@@ -7,6 +7,7 @@ import { useSpecies } from '../hooks/useSpecies'
 import { supabase } from '../lib/supabase-client'
 import type { Tree } from '../hooks/useTrees'
 import QuickTreatmentDialog from '../components/QuickTreatmentDialog'
+import { subscribeToPush } from '../lib/push-notifications'
 
 const TREATMENT_ICONS: Record<string, string> = {
   watering: '💧',
@@ -208,6 +209,13 @@ const DashboardPage: React.FC = () => {
       })
       .catch(() => setPendingLoading(false))
   }, [trees])
+
+  // Subscribe to push notifications (once, if permission granted)
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      subscribeToPush()
+    }
+  }, [])
 
   // Calculate stats
   const totalTrees = trees.length
