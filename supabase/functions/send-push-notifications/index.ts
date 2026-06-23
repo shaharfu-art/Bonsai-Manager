@@ -69,7 +69,7 @@ serve(async (req) => {
     // 4. Compute who needs notifications
     const today = new Date()
     const todayStr = today.toISOString().split('T')[0]
-    const notifications: Array<{ user_id: string; tree_id: string; treatment_type: string; url: string; image: string | null }> = []
+    const notifications: Array<{ user_id: string; tree_id: string; treatment_type: string; url: string; image: string | null; config_id: string }> = []
 
     // Treatment type translations
     const treatmentNames: Record<string, Record<string, string>> = {
@@ -116,12 +116,20 @@ serve(async (req) => {
         )
         if (lastLogToday) continue
 
+        // Throttle: only send push again after 2 days since last push
+        if (config.last_push_sent_at) {
+          const lastPush = new Date(config.last_push_sent_at)
+          const daysSinceLastPush = (today.getTime() - lastPush.getTime()) / (1000 * 60 * 60 * 24)
+          if (daysSinceLastPush < 2) continue
+        }
+
         notifications.push({
           user_id: config.user_id,
           tree_id: config.tree_id,
           treatment_type: config.treatment_type,
           url: `/trees/${config.tree_id}`,
           image: treeImage,
+          config_id: config.id,
         })
       }
     }
@@ -151,6 +159,7 @@ serve(async (req) => {
       const userSubs = subscriptions.filter(s => s.user_id === notif.user_id)
       const tree = treeMap.get(notif.tree_id)
       const treeName = tree?.custom_name ?? ''
+      let pushSentForThisNotif = false
 
       for (const sub of userSubs) {
         try {
@@ -168,7 +177,6 @@ serve(async (req) => {
             image: notif.image,
           })
 
-          // Use web-push compatible approach with crypto
           const response = await sendWebPush(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             pushPayload,
@@ -178,13 +186,21 @@ serve(async (req) => {
 
           if (response.ok) {
             sentCount++
+            pushSentForThisNotif = true
           } else if (response.status === 410) {
-            // Subscription expired, remove it
             await supabase.from('push_subscriptions').delete().eq('id', sub.id)
           }
         } catch (err) {
           console.error('Push send error:', err)
         }
+      }
+
+      // Update last_push_sent_at so we don't spam again for 2 days
+      if (pushSentForThisNotif) {
+        await supabase
+          .from('alert_configs')
+          .update({ last_push_sent_at: new Date().toISOString() })
+          .eq('id', notif.config_id)
       }
     }
 

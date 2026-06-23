@@ -204,6 +204,16 @@ const TreeProfilePage: React.FC = () => {
               📷
             </button>
           )}
+          {/* Upload first photo button (when no photos) */}
+          {photos.length === 0 && (
+            <button
+              onClick={() => setActiveTab('photos')}
+              className="absolute top-3 right-3 bg-white/80 hover:bg-white px-3 py-1.5 rounded-full shadow flex items-center gap-1 text-xs font-medium text-[#2d6a4f] transition-colors"
+              title={t('photo.addPhoto')}
+            >
+              📷 {t('photo.addPhoto')}
+            </button>
+          )}
         </div>
 
         {/* Cover photo picker dialog */}
