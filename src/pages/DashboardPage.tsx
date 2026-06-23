@@ -328,8 +328,13 @@ const DashboardPage: React.FC = () => {
   // After saving a quick treatment, remove the alert from the list
   const handleQuickTreatmentSaved = () => {
     if (quickTreatment) {
+      // Remove from alerts
       setAlerts(prev => prev.filter(a =>
         !(a.tree_id === quickTreatment.treeId && a.treatment_type === quickTreatment.treatmentType)
+      ))
+      // Remove from pending treatments
+      setPendingTreatments(prev => prev.filter(pt =>
+        !(pt.tree_id === quickTreatment.treeId && pt.treatment_type === quickTreatment.treatmentType)
       ))
     }
     setQuickTreatment(null)
