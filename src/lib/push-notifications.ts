@@ -44,11 +44,13 @@ export async function subscribeToPush(): Promise<boolean> {
     if (!userData.user) return false
 
     const subscriptionJSON = subscription.toJSON()
+    const language = localStorage.getItem('language') || document.documentElement.lang || 'he'
     const { error } = await supabase.from('push_subscriptions').upsert({
       user_id: userData.user.id,
       endpoint: subscriptionJSON.endpoint!,
       p256dh: subscriptionJSON.keys!.p256dh!,
       auth: subscriptionJSON.keys!.auth!,
+      language,
     }, { onConflict: 'user_id,endpoint' })
 
     return !error

@@ -68,7 +68,25 @@ serve(async (req) => {
 
     // 4. Compute who needs notifications
     const today = new Date()
-    const notifications: Array<{ user_id: string; title: string; body: string; url: string }> = []
+    const todayStr = today.toISOString().split('T')[0]
+    const notifications: Array<{ user_id: string; tree_id: string; treatment_type: string; url: string; image: string | null }> = []
+
+    // Treatment type translations
+    const treatmentNames: Record<string, Record<string, string>> = {
+      he: {
+        watering: 'השקיה', fertilizing: 'דישון', branch_pruning: 'גיזום ענפים',
+        root_pruning: 'גיזום שורשים', wiring: 'עיצוב / חיווט', wire_removal: 'הסרת חיווט',
+        repotting: 'שתילה מחדש', pest_treatment: 'טיפול במזיקים', shading: 'הצללה',
+        sun_exposure: 'חשיפה לשמש', winter_dormancy: 'מנוחת חורף', other: 'אחר',
+      },
+      en: {
+        watering: 'Watering', fertilizing: 'Fertilizing', branch_pruning: 'Branch Pruning',
+        root_pruning: 'Root Pruning', wiring: 'Wiring', wire_removal: 'Wire Removal',
+        repotting: 'Repotting', pest_treatment: 'Pest Treatment', shading: 'Shading',
+        sun_exposure: 'Sun Exposure', winter_dormancy: 'Winter Dormancy', other: 'Other',
+      },
+    }
+    const dueText: Record<string, string> = { he: 'הגיע הזמן!', en: 'is due!' }
 
     for (const config of configs) {
       const tree = treeMap.get(config.tree_id)
@@ -92,10 +110,16 @@ serve(async (req) => {
 
       if (isDue) {
         const treeImage = coverPhotoMap.get(config.tree_id) ?? null
+        // Skip if treatment was done today
+        const lastLogToday = (logs ?? []).find(
+          l => l.tree_id === config.tree_id && l.treatment_type === config.treatment_type && l.treatment_date === todayStr
+        )
+        if (lastLogToday) continue
+
         notifications.push({
           user_id: config.user_id,
-          title: `🌿 ${tree.custom_name}`,
-          body: `${config.treatment_type} is due!`,
+          tree_id: config.tree_id,
+          treatment_type: config.treatment_type,
           url: `/trees/${config.tree_id}`,
           image: treeImage,
         })
@@ -125,11 +149,20 @@ serve(async (req) => {
     let sentCount = 0
     for (const notif of notifications) {
       const userSubs = subscriptions.filter(s => s.user_id === notif.user_id)
+      const tree = treeMap.get(notif.tree_id)
+      const treeName = tree?.custom_name ?? ''
+
       for (const sub of userSubs) {
         try {
+          const lang = sub.language === 'en' ? 'en' : 'he'
+          const treatmentLabel = treatmentNames[lang]?.[notif.treatment_type] ?? notif.treatment_type
+          const body = lang === 'he'
+            ? `${treatmentLabel} — ${dueText.he}`
+            : `${treatmentLabel} ${dueText.en}`
+
           const pushPayload = JSON.stringify({
-            title: notif.title,
-            body: notif.body,
+            title: `🌿 ${treeName}`,
+            body,
             url: notif.url,
             icon: notif.image || '/favicon.svg',
             image: notif.image,
