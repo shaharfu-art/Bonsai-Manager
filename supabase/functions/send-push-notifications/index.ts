@@ -41,21 +41,27 @@ serve(async (req) => {
       .order('treatment_date', { ascending: false })
 
   // 3. Get all trees for names + cover photos
-    const { data: trees } = await supabase.from('trees').select('id, custom_name, user_id, cover_photo_id')
+    const { data: trees } = await supabase.from('trees').select('id, custom_name, user_id')
     const treeMap = new Map((trees ?? []).map(t => [t.id, t]))
 
-    // Get cover photo storage paths
-    const coverPhotoIds = (trees ?? []).map(t => t.cover_photo_id).filter(Boolean)
+    // Get cover photos directly (is_cover = true or first photo per tree)
+    const treeIds = (trees ?? []).map(t => t.id)
     const coverPhotoMap = new Map<string, string>()
-    if (coverPhotoIds.length > 0) {
+    if (treeIds.length > 0) {
       const { data: coverPhotos } = await supabase
         .from('photos')
-        .select('id, tree_id, storage_path')
-        .in('id', coverPhotoIds)
-      
+        .select('tree_id, storage_path, is_cover')
+        .in('tree_id', treeIds)
+        .order('is_cover', { ascending: false })
+        .order('created_at', { ascending: false })
+
       if (coverPhotos) {
+        // Pick the first photo per tree (is_cover=true first, then newest)
+        const seen = new Set<string>()
         for (const photo of coverPhotos) {
-          // Create a signed URL for the push notification image
+          if (seen.has(photo.tree_id)) continue
+          seen.add(photo.tree_id)
+          // Create signed URL
           const { data: signedData } = await supabase.storage
             .from('bonsai-photos')
             .createSignedUrl(photo.storage_path, 3600)
