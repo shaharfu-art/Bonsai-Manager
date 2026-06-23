@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
@@ -68,7 +68,7 @@ const TreeProfilePage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { getSpeciesById } = useSpecies()
-  const { photos, setCoverPhoto } = usePhotos(id ?? '')
+  const { photos, setCoverPhoto, uploadPhoto } = usePhotos(id ?? '')
 
   const [tree, setTree] = useState<Tree | null>(null)
   const [loading, setLoading] = useState(true)
@@ -77,6 +77,8 @@ const TreeProfilePage: React.FC = () => {
   const [deleting, setDeleting] = useState(false)
   const [activeTab, setActiveTab] = useState<'treatments' | 'photos' | 'alerts'>('treatments')
   const [showCoverPicker, setShowCoverPicker] = useState(false)
+  const coverUploadRef = useRef<HTMLInputElement>(null)
+  const [coverUploading, setCoverUploading] = useState(false)
 
   // If navigated from alert click, get the treatment type to pre-fill
   const openTreatmentType = (location.state as { openTreatment?: string } | null)?.openTreatment ?? null
@@ -89,6 +91,23 @@ const TreeProfilePage: React.FC = () => {
   const handleSetCoverFromPicker = async (photoId: string) => {
     await setCoverPhoto(photoId)
     setShowCoverPicker(false)
+  }
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !id) return
+    setCoverUploading(true)
+    try {
+      await uploadPhoto(file, {
+        photo_date: new Date().toISOString().split('T')[0],
+        caption: tree?.custom_name ?? '',
+      })
+    } catch (err) {
+      console.error('Cover upload failed:', err)
+    } finally {
+      setCoverUploading(false)
+      if (coverUploadRef.current) coverUploadRef.current.value = ''
+    }
   }
 
   useEffect(() => {
@@ -206,13 +225,24 @@ const TreeProfilePage: React.FC = () => {
           )}
           {/* Upload first photo button (when no photos) */}
           {photos.length === 0 && (
-            <button
-              onClick={() => setActiveTab('photos')}
-              className="absolute top-3 right-3 bg-white/80 hover:bg-white px-3 py-1.5 rounded-full shadow flex items-center gap-1 text-xs font-medium text-[#2d6a4f] transition-colors"
-              title={t('photo.addPhoto')}
-            >
-              📷 {t('photo.addPhoto')}
-            </button>
+            <>
+              <input
+                ref={coverUploadRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleCoverUpload}
+              />
+              <button
+                onClick={() => coverUploadRef.current?.click()}
+                disabled={coverUploading}
+                className="absolute top-3 right-3 bg-white/80 hover:bg-white px-3 py-1.5 rounded-full shadow flex items-center gap-1 text-xs font-medium text-[#2d6a4f] transition-colors disabled:opacity-50"
+                title={t('photo.addPhoto')}
+              >
+                📷 {coverUploading ? t('common.loading') : t('photo.addPhoto')}
+              </button>
+            </>
           )}
         </div>
 
