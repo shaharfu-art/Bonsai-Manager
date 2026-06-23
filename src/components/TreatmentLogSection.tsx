@@ -139,6 +139,15 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
           status: 'pending',
         })
       }
+
+      // Delete any pending treatment of the same type (alert was fulfilled)
+      const existingPending = treatments.find(
+        tr => tr.treatment_type === formType && tr.status === 'pending'
+      )
+      if (existingPending) {
+        await deleteTreatment(existingPending.id)
+      }
+
       resetForm()
       setReminderEnabled(false)
       setShowForm(false)
