@@ -114,9 +114,9 @@ export function useAdminData() {
         treeCountByUser[tree.user_id] = (treeCountByUser[tree.user_id] ?? 0) + 1
       }
 
-      // Build user list from admin_users_view
+      // Build user list from user_profiles (secure, with RLS)
       const { data: viewUsers } = await supabase
-        .from('admin_users_view')
+        .from('user_profiles')
         .select('*')
 
       const adminUsers: AdminUser[] = (viewUsers ?? []).map((u: Record<string, unknown>) => ({
@@ -125,7 +125,7 @@ export function useAdminData() {
         full_name: (u.full_name as string) ?? null,
         display_name: (u.display_name as string) ?? null,
         created_at: (u.created_at as string) ?? '',
-        last_sign_in_at: (u.last_sign_in_at as string) ?? null,
+        last_sign_in_at: null,
         role: (u.role as string) ?? 'user',
         tree_count: treeCountByUser[(u.id as string)] ?? 0,
         max_trees: (u.max_trees as number) ?? 100,
