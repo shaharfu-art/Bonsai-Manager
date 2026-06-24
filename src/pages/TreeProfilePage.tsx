@@ -12,7 +12,7 @@ import TreatmentLogSection from '../components/TreatmentLogSection'
 import PhotoTimelineSection from '../components/PhotoTimelineSection'
 
 // ─── Three-dots menu ────────────────────────────────────────
-const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEdit, onDelete }) => {
+const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring?: () => void }> = ({ onEdit, onDelete, onRecurring }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
@@ -34,6 +34,14 @@ const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEd
             >
               ✏️ {t('common.edit')}
             </button>
+            {onRecurring && (
+              <button
+                onClick={() => { setOpen(false); onRecurring() }}
+                className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                ⚙️ {t('treatment.reminder')}
+              </button>
+            )}
             <button
               onClick={() => { setOpen(false); onDelete() }}
               className="w-full text-right px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors"
@@ -85,9 +93,10 @@ interface IDCardProps {
   onSave: (updates: Partial<Tree>) => Promise<void>
   onEdit: () => void
   onDelete: () => void
+  onRecurring: () => void
 }
 
-const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete }) => {
+const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete, onRecurring }) => {
   const { t, i18n } = useTranslation()
   const isRtl = i18n.language === 'he'
   const [editing, setEditing] = useState(false)
@@ -133,7 +142,7 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
       {/* More menu - top left */}
       {!editing && (
         <div className="absolute top-3 left-3">
-          <MoreMenu onEdit={onEdit} onDelete={onDelete} />
+          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} />
         </div>
       )}
 
@@ -210,8 +219,9 @@ const TreeProfilePage: React.FC = () => {
   const [error, setError] = useState('')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [activeTab, setActiveTab] = useState<'treatments' | 'photos' | 'alerts'>('treatments')
+  const [activeTab, setActiveTab] = useState<'treatments' | 'photos'>('treatments')
   const [showCoverPicker, setShowCoverPicker] = useState(false)
+  const [showRecurringSettings, setShowRecurringSettings] = useState(false)
   const coverUploadRef = useRef<HTMLInputElement>(null)
   const [coverUploading, setCoverUploading] = useState(false)
 
@@ -322,7 +332,7 @@ const TreeProfilePage: React.FC = () => {
         </div>
 
         {/* Smart ID Card */}
-        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} />
+        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} onRecurring={() => setShowRecurringSettings(true)} />
 
         {/* Cover photo picker */}
         {showCoverPicker && (
@@ -347,8 +357,8 @@ const TreeProfilePage: React.FC = () => {
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow overflow-hidden">
           <div className="flex border-b border-gray-100">
-            {(['treatments', 'photos', 'alerts'] as const).map((tab) => {
-              const labels = { treatments: t('tabs.treatments'), photos: t('tabs.photos'), alerts: t('tabs.alerts') }
+            {(['treatments', 'photos'] as const).map((tab) => {
+              const labels = { treatments: t('tabs.treatments'), photos: t('tabs.photos') }
               return (
                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? 'text-[#2d6a4f] border-b-2 border-[#2d6a4f]' : 'text-gray-500 hover:text-gray-700'}`}>
                   {labels[tab]}
@@ -359,10 +369,22 @@ const TreeProfilePage: React.FC = () => {
           <div className="p-5">
             {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} />}
             {activeTab === 'photos' && <PhotoTimelineSection treeId={id!} onCoverPhotoChange={() => {}} />}
-            {activeTab === 'alerts' && <AlertsTabContent treeId={id!} />}
           </div>
         </div>
       </div>
+
+      {/* Recurring settings modal */}
+      {showRecurringSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowRecurringSettings(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-5 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-[#2d6a4f]">⚙️ {t('treatment.reminder')}</h3>
+              <button onClick={() => setShowRecurringSettings(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+            </div>
+            <AlertsTabContent treeId={id!} />
+          </div>
+        </div>
+      )}
 
       {showDeleteDialog && <DeleteDialog treeName={tree.custom_name} onConfirm={handleDelete} onCancel={() => setShowDeleteDialog(false)} loading={deleting} />}
     </Layout>
@@ -408,8 +430,11 @@ const AlertsTabContent: React.FC<{ treeId: string }> = ({ treeId }) => {
   const handleRemove = async (type: string) => { await removeConfig(type); setEditingType(null) }
 
   const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
   const getAlertStatus = (type: string): { status: 'due' | 'upcoming' | 'ok' | 'none'; dueDate: string } => {
     const cfg = getConfig(type); if (!cfg) return { status: 'none', dueDate: '' }
+    // If treatment was done today, it's OK (fulfilled)
+    if (lastTreatments[type] === todayStr) return { status: 'ok', dueDate: '' }
     if (cfg.snoozed_until) { const d = new Date(cfg.snoozed_until); const diff = Math.ceil((d.getTime()-today.getTime())/(1000*60*60*24)); if (diff<=0) return{status:'due',dueDate:cfg.snoozed_until}; if (diff<=30) return{status:'upcoming',dueDate:cfg.snoozed_until}; return{status:'ok',dueDate:cfg.snoozed_until} }
     if (!cfg.interval_days||cfg.interval_days<=0) return{status:'none',dueDate:''}
     const last=lastTreatments[type]; const lastDate=last?new Date(last):new Date(0); const next=new Date(lastDate.getTime()+cfg.interval_days*24*60*60*1000); const diff=Math.ceil((next.getTime()-today.getTime())/(1000*60*60*24)); const dueStr=next.toISOString().split('T')[0]
