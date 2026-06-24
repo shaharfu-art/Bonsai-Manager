@@ -68,35 +68,35 @@ const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, a
       </div>
 
       <div className="p-3 space-y-1">
-        <h3 className="font-semibold text-gray-900 truncate text-sm">{tree.custom_name}</h3>
-        <p className="text-[11px] text-gray-500 truncate">
-          {speciesName || tree.species_free_text || '—'}
+        <h3 className="font-bold text-gray-900 truncate text-sm">🪪 {tree.custom_name}</h3>
+        <p className="text-[11px] text-green-700 font-medium truncate">
+          🌳 {speciesName || tree.species_free_text || '—'}
         </p>
         {/* ID Card details */}
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 pt-1 border-t border-gray-100">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 pt-1.5 border-t border-gray-100">
           {tree.age_years && (
-            <p className="text-[10px] text-gray-400">
-              <span className="font-medium text-gray-600">{t('tree.age')}:</span> {tree.age_years}
+            <p className="text-[10px] text-gray-500">
+              🗓️ {tree.age_years} {t('tree.age').replace('(שנים)', '').replace('(years)', '').trim()}
             </p>
           )}
           {tree.style && (
-            <p className="text-[10px] text-gray-400">
-              <span className="font-medium text-gray-600">{t('tree.style')}:</span> {isRtl ? t(`style.${tree.style}`) : tree.style}
+            <p className="text-[10px] text-gray-500">
+              ✨ {isRtl ? t(`style.${tree.style}`) : tree.style}
             </p>
           )}
           {tree.location && (
-            <p className="text-[10px] text-gray-400">
-              <span className="font-medium text-gray-600">{t('tree.location')}:</span> {t(`location.${tree.location}`)}
+            <p className="text-[10px] text-gray-500">
+              📍 {t(`location.${tree.location}`)}
             </p>
           )}
           {tree.pot_type && (
-            <p className="text-[10px] text-gray-400">
-              <span className="font-medium text-gray-600">{t('tree.potType')}:</span> {tree.pot_type}
+            <p className="text-[10px] text-gray-500">
+              🪴 {tree.pot_type}
             </p>
           )}
           {tree.substrate && (
-            <p className="text-[10px] text-gray-400">
-              <span className="font-medium text-gray-600">{t('tree.substrate')}:</span> {tree.substrate}
+            <p className="text-[10px] text-gray-500">
+              🧱 {tree.substrate}
             </p>
           )}
         </div>
