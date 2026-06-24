@@ -60,6 +60,30 @@ const AdminPage: React.FC = () => {
     setSpeciesList(prev => prev.filter(s => s.id !== id))
   }
 
+  const [addingSpecies, setAddingSpecies] = useState(false)
+  const [newSpecHe, setNewSpecHe] = useState('')
+  const [newSpecEn, setNewSpecEn] = useState('')
+  const [newSpecLatin, setNewSpecLatin] = useState('')
+  const [newSpecType, setNewSpecType] = useState('temperate')
+
+  const handleSpeciesAdd = async () => {
+    if (!newSpecHe.trim() || !newSpecEn.trim()) return
+    const { data, error: insertErr } = await supabase.from('species').insert({
+      name_he: newSpecHe.trim(),
+      name_en: newSpecEn.trim(),
+      name_latin: newSpecLatin.trim() || null,
+      type: newSpecType,
+      is_system: true,
+    }).select().single()
+    if (!insertErr && data) {
+      setSpeciesList(prev => [...prev, data as typeof prev[0]])
+      setNewSpecHe('')
+      setNewSpecEn('')
+      setNewSpecLatin('')
+      setAddingSpecies(false)
+    }
+  }
+
   // Redirect non-admins
   if (!profileLoading && !isAdmin) {
     return (
@@ -283,15 +307,23 @@ const AdminPage: React.FC = () => {
 
         {/* Species Management */}
         <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-gray-700">🌿 {t('tree.species')} ({speciesList.length})</h2>
-            <input
-              type="text"
-              value={speciesFilter}
-              onChange={e => setSpeciesFilter(e.target.value)}
-              placeholder={t('dashboard.searchPlaceholder')}
-              className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-40 focus:outline-none focus:ring-1 focus:ring-[#52b788]"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={speciesFilter}
+                onChange={e => setSpeciesFilter(e.target.value)}
+                placeholder={t('dashboard.searchPlaceholder')}
+                className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-32 focus:outline-none focus:ring-1 focus:ring-[#52b788]"
+              />
+              <button
+                onClick={() => setAddingSpecies(true)}
+                className="text-xs bg-[#2d6a4f] text-white px-2.5 py-1 rounded-lg hover:bg-[#245a42]"
+              >
+                + {t('common.add')}
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto max-h-[50vh] overflow-y-auto">
             <table className="w-full text-sm">
@@ -304,6 +336,25 @@ const AdminPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
+                {addingSpecies && (
+                  <tr className="border-t border-green-100 bg-green-50">
+                    <td className="px-4 py-2">
+                      <input value={newSpecHe} onChange={e => setNewSpecHe(e.target.value)} placeholder={t('species.nameHe')} className="border rounded px-1 py-0.5 text-xs w-full" />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input value={newSpecEn} onChange={e => setNewSpecEn(e.target.value)} placeholder={t('species.nameEn')} className="border rounded px-1 py-0.5 text-xs w-full" />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input value={newSpecLatin} onChange={e => setNewSpecLatin(e.target.value)} placeholder={t('species.nameLatin')} className="border rounded px-1 py-0.5 text-xs w-full" />
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-1">
+                        <button onClick={handleSpeciesAdd} className="text-[10px] bg-[#2d6a4f] text-white px-2 py-0.5 rounded">✓</button>
+                        <button onClick={() => setAddingSpecies(false)} className="text-[10px] text-gray-500 border px-2 py-0.5 rounded">✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {filteredAdminSpecies.map(s => (
                   <tr key={s.id} className="border-t border-gray-50 hover:bg-gray-50">
                     {editingSpecies === s.id ? (
