@@ -309,21 +309,13 @@ const AdminPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-gray-700">🌿 {t('tree.species')} ({speciesList.length})</h2>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={speciesFilter}
-                onChange={e => setSpeciesFilter(e.target.value)}
-                placeholder={t('dashboard.searchPlaceholder')}
-                className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-32 focus:outline-none focus:ring-1 focus:ring-[#52b788]"
-              />
-              <button
-                onClick={() => setAddingSpecies(true)}
-                className="text-xs bg-[#2d6a4f] text-white px-2.5 py-1 rounded-lg hover:bg-[#245a42]"
-              >
-                + {t('common.add')}
-              </button>
-            </div>
+            <input
+              type="text"
+              value={speciesFilter}
+              onChange={e => setSpeciesFilter(e.target.value)}
+              placeholder={t('dashboard.searchPlaceholder')}
+              className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-40 focus:outline-none focus:ring-1 focus:ring-[#52b788]"
+            />
           </div>
           <div className="overflow-x-auto max-h-[50vh] overflow-y-auto">
             <table className="w-full text-sm">
@@ -393,6 +385,15 @@ const AdminPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          {/* FAB - Add species */}
+          <button
+            onClick={() => setAddingSpecies(true)}
+            className="fixed bottom-6 right-6 w-14 h-14 bg-[#2d6a4f] hover:bg-[#245a42] text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors z-50"
+            aria-label={t('common.add')}
+            title={t('species.addNew')}
+          >
+            +
+          </button>
         </div>
       </div>
     </Layout>
