@@ -20,7 +20,7 @@ const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEd
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-black/30 hover:bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors"
+        className="bg-gray-100 hover:bg-gray-200 text-gray-600 w-7 h-7 rounded-full flex items-center justify-center transition-colors text-sm"
       >
         ⋯
       </button>
@@ -83,9 +83,11 @@ interface IDCardProps {
   tree: Tree
   displaySpecies: string | null
   onSave: (updates: Partial<Tree>) => Promise<void>
+  onEdit: () => void
+  onDelete: () => void
 }
 
-const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave }) => {
+const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete }) => {
   const { t, i18n } = useTranslation()
   const isRtl = i18n.language === 'he'
   const [editing, setEditing] = useState(false)
@@ -130,13 +132,21 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave }) =>
     >
       {/* Pencil hint */}
       {!editing && (
-        <button
-          onClick={() => setEditing(true)}
-          className="absolute top-3 left-3 text-gray-300 hover:text-[#2d6a4f] transition-colors"
-          title={t('common.edit')}
-        >
-          ✏️
-        </button>
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          <button
+            onClick={() => setEditing(true)}
+            className="text-gray-300 hover:text-[#2d6a4f] transition-colors"
+            title={t('common.edit')}
+          >
+            ✏️
+          </button>
+        </div>
+      )}
+      {/* More menu - top left */}
+      {!editing && (
+        <div className="absolute top-3 left-3">
+          <MoreMenu onEdit={onEdit} onDelete={onDelete} />
+        </div>
       )}
 
       <h2 className="text-base font-bold text-[#2d6a4f] mb-3">🪪 {tree.custom_name}</h2>
@@ -320,12 +330,11 @@ const TreeProfilePage: React.FC = () => {
                 </button>
               </>
             )}
-            <MoreMenu onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} />
           </div>
         </div>
 
         {/* Smart ID Card */}
-        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} />
+        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} />
 
         {/* Cover photo picker */}
         {showCoverPicker && (
