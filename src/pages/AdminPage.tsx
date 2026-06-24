@@ -6,6 +6,8 @@ import Layout from '../components/Layout'
 import { useUserProfile } from '../hooks/useUserProfile'
 import { useAdminData } from '../hooks/useAdminData'
 import { useOnlineUsers } from '../hooks/useOnlineUsers'
+import { useSpecies } from '../hooks/useSpecies'
+import { supabase } from '../lib/supabase-client'
 
 const AdminPage: React.FC = () => {
   const { t } = useTranslation()
@@ -13,8 +15,50 @@ const AdminPage: React.FC = () => {
   const { isAdmin, loading: profileLoading } = useUserProfile()
   const { stats, users, loading, error, updateUserRole, updateUserLimits } = useAdminData()
   const { onlineCount, onlineUsers } = useOnlineUsers()
+  const { species } = useSpecies()
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [editMaxTrees, setEditMaxTrees] = useState(100)
+  const [editingSpecies, setEditingSpecies] = useState<string | null>(null)
+  const [editSpeciesHe, setEditSpeciesHe] = useState('')
+  const [editSpeciesEn, setEditSpeciesEn] = useState('')
+  const [editSpeciesLatin, setEditSpeciesLatin] = useState('')
+  const [speciesFilter, setSpeciesFilter] = useState('')
+  const [speciesList, setSpeciesList] = useState<typeof species>([])
+
+  // Sync species from hook
+  React.useEffect(() => {
+    if (species.length > 0 && speciesList.length === 0) setSpeciesList(species)
+  }, [species])
+
+  const filteredAdminSpecies = speciesList.filter(s => {
+    if (!speciesFilter) return true
+    const q = speciesFilter.toLowerCase()
+    return s.name_he.includes(speciesFilter) || s.name_en.toLowerCase().includes(q) || (s.name_latin ?? '').toLowerCase().includes(q)
+  })
+
+  const handleSpeciesEdit = (id: string) => {
+    const s = speciesList.find(sp => sp.id === id)
+    if (!s) return
+    setEditingSpecies(id)
+    setEditSpeciesHe(s.name_he)
+    setEditSpeciesEn(s.name_en)
+    setEditSpeciesLatin(s.name_latin ?? '')
+  }
+
+  const handleSpeciesSave = async (id: string) => {
+    await supabase.from('species').update({
+      name_he: editSpeciesHe,
+      name_en: editSpeciesEn,
+      name_latin: editSpeciesLatin || null,
+    }).eq('id', id)
+    setSpeciesList(prev => prev.map(s => s.id === id ? { ...s, name_he: editSpeciesHe, name_en: editSpeciesEn, name_latin: editSpeciesLatin || null } : s))
+    setEditingSpecies(null)
+  }
+
+  const handleSpeciesDelete = async (id: string) => {
+    await supabase.from('species').delete().eq('id', id)
+    setSpeciesList(prev => prev.filter(s => s.id !== id))
+  }
 
   // Redirect non-admins
   if (!profileLoading && !isAdmin) {
@@ -232,6 +276,69 @@ const AdminPage: React.FC = () => {
                     </td>
                   </tr>
                 )})}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Species Management */}
+        <div className="bg-white rounded-xl shadow overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-700">🌿 {t('tree.species')} ({speciesList.length})</h2>
+            <input
+              type="text"
+              value={speciesFilter}
+              onChange={e => setSpeciesFilter(e.target.value)}
+              placeholder={t('dashboard.searchPlaceholder')}
+              className="border border-gray-300 rounded-lg px-2 py-1 text-xs w-40 focus:outline-none focus:ring-1 focus:ring-[#52b788]"
+            />
+          </div>
+          <div className="overflow-x-auto max-h-[50vh] overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('species.nameHe')}</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('species.nameEn')}</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('species.nameLatin')}</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAdminSpecies.map(s => (
+                  <tr key={s.id} className="border-t border-gray-50 hover:bg-gray-50">
+                    {editingSpecies === s.id ? (
+                      <>
+                        <td className="px-4 py-2">
+                          <input value={editSpeciesHe} onChange={e => setEditSpeciesHe(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-full" />
+                        </td>
+                        <td className="px-4 py-2">
+                          <input value={editSpeciesEn} onChange={e => setEditSpeciesEn(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-full" />
+                        </td>
+                        <td className="px-4 py-2">
+                          <input value={editSpeciesLatin} onChange={e => setEditSpeciesLatin(e.target.value)} className="border rounded px-1 py-0.5 text-xs w-full" />
+                        </td>
+                        <td className="px-4 py-2">
+                          <div className="flex gap-1">
+                            <button onClick={() => handleSpeciesSave(s.id)} className="text-[10px] bg-[#2d6a4f] text-white px-2 py-0.5 rounded">✓</button>
+                            <button onClick={() => setEditingSpecies(null)} className="text-[10px] text-gray-500 border px-2 py-0.5 rounded">✕</button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-2 text-xs text-gray-700">{s.name_he}</td>
+                        <td className="px-4 py-2 text-xs text-gray-700">{s.name_en}</td>
+                        <td className="px-4 py-2 text-xs text-gray-400 italic">{s.name_latin ?? '—'}</td>
+                        <td className="px-4 py-2">
+                          <div className="flex gap-1">
+                            <button onClick={() => handleSpeciesEdit(s.id)} className="text-[10px] text-gray-500 border border-gray-200 px-2 py-0.5 rounded hover:bg-gray-100">✏️</button>
+                            <button onClick={() => handleSpeciesDelete(s.id)} className="text-[10px] text-red-500 border border-red-200 px-2 py-0.5 rounded hover:bg-red-50">🗑️</button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
