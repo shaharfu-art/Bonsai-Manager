@@ -50,29 +50,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Right group (or left in RTL): actions + user */}
           <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-            {/* Add tree button */}
-            <button
-              onClick={() => navigate('/trees/new')}
-              className="flex items-center gap-1 bg-[#52b788] hover:bg-[#40a070] text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-              title={t('nav.addTree')}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              <span className="hidden sm:inline">{t('nav.addTree')}</span>
-            </button>
-
             {/* Settings link */}
             <Link
               to="/settings"
