@@ -12,7 +12,7 @@ import TreatmentLogSection from '../components/TreatmentLogSection'
 import PhotoTimelineSection from '../components/PhotoTimelineSection'
 
 // ─── Three-dots menu ────────────────────────────────────────
-const MoreMenu: React.FC<{ onDelete: () => void }> = ({ onDelete }) => {
+const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEdit, onDelete }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
@@ -28,6 +28,12 @@ const MoreMenu: React.FC<{ onDelete: () => void }> = ({ onDelete }) => {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute top-10 right-0 z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[160px]">
+            <button
+              onClick={() => { setOpen(false); onEdit() }}
+              className="w-full text-right px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              ✏️ {t('common.edit')}
+            </button>
             <button
               onClick={() => { setOpen(false); onDelete() }}
               className="w-full text-right px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -314,7 +320,7 @@ const TreeProfilePage: React.FC = () => {
                 </button>
               </>
             )}
-            <MoreMenu onDelete={() => setShowDeleteDialog(true)} />
+            <MoreMenu onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} />
           </div>
         </div>
 
