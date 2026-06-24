@@ -44,7 +44,8 @@ interface TreeCardProps {
 }
 
 const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, alertCount, onClick }) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isRtl = i18n.language === 'he'
 
   return (
     <button
@@ -58,7 +59,7 @@ const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, a
         </span>
       )}
       {/* Cover image / placeholder */}
-      <div className="h-36 bg-gradient-to-br from-[#2d6a4f] to-[#52b788] flex items-center justify-center overflow-hidden">
+      <div className="h-32 bg-gradient-to-br from-[#2d6a4f] to-[#52b788] flex items-center justify-center overflow-hidden">
         {coverPhotoUrl ? (
           <img src={coverPhotoUrl} alt={tree.custom_name} className="w-full h-full object-cover" />
         ) : (
@@ -66,16 +67,39 @@ const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, a
         )}
       </div>
 
-      <div className="p-3">
-        <h3 className="font-semibold text-gray-900 truncate">{tree.custom_name}</h3>
-        <p className="text-xs text-gray-500 mt-0.5 truncate">
+      <div className="p-3 space-y-1">
+        <h3 className="font-semibold text-gray-900 truncate text-sm">{tree.custom_name}</h3>
+        <p className="text-[11px] text-gray-500 truncate">
           {speciesName || tree.species_free_text || '—'}
         </p>
-        {tree.date_added && (
-          <p className="text-xs text-gray-400 mt-1">
-            {t('tree.dateAdded')}: {tree.date_added}
-          </p>
-        )}
+        {/* ID Card details */}
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 pt-1 border-t border-gray-100">
+          {tree.age_years && (
+            <p className="text-[10px] text-gray-400">
+              <span className="font-medium text-gray-600">{t('tree.age')}:</span> {tree.age_years}
+            </p>
+          )}
+          {tree.style && (
+            <p className="text-[10px] text-gray-400">
+              <span className="font-medium text-gray-600">{t('tree.style')}:</span> {isRtl ? t(`style.${tree.style}`) : tree.style}
+            </p>
+          )}
+          {tree.location && (
+            <p className="text-[10px] text-gray-400">
+              <span className="font-medium text-gray-600">{t('tree.location')}:</span> {t(`location.${tree.location}`)}
+            </p>
+          )}
+          {tree.pot_type && (
+            <p className="text-[10px] text-gray-400">
+              <span className="font-medium text-gray-600">{t('tree.potType')}:</span> {tree.pot_type}
+            </p>
+          )}
+          {tree.substrate && (
+            <p className="text-[10px] text-gray-400">
+              <span className="font-medium text-gray-600">{t('tree.substrate')}:</span> {tree.substrate}
+            </p>
+          )}
+        </div>
       </div>
     </button>
   )

@@ -35,6 +35,7 @@
     "location": "Location",
     "dateAdded": "Date Added",
     "notes": "Notes",
+    "substrate": "Substrate",
     "coverPhoto": "Cover Photo",
     "noTrees": "No trees in collection yet",
     "addFirst": "Add your first tree"

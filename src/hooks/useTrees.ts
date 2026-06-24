@@ -16,6 +16,7 @@ export interface Tree {
   location: string | null
   date_added: string | null
   notes: string | null
+  substrate: string | null
   cover_photo_id: string | null
   created_at: string
   updated_at: string
@@ -33,6 +34,7 @@ export interface CreateTreeInput {
   location?: string | null
   date_added?: string | null
   notes?: string | null
+  substrate?: string | null
 }
 
 export interface UpdateTreeInput extends Partial<CreateTreeInput> {
@@ -107,6 +109,7 @@ export function useTrees(): UseTreesResult {
       location: input.location ?? null,
       date_added: input.date_added ?? null,
       notes: input.notes ?? null,
+      substrate: input.substrate ?? null,
       cover_photo_id: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

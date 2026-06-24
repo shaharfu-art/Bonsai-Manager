@@ -50,6 +50,7 @@ const AddTreePage: React.FC = () => {
   const [location2, setLocation2] = useState(editTree?.location ?? '')
   const [dateAdded, setDateAdded] = useState(editTree?.date_added ?? today)
   const [notes, setNotes] = useState(editTree?.notes ?? '')
+  const [substrate, setSubstrate] = useState(editTree?.substrate ?? '')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -93,6 +94,7 @@ const AddTreePage: React.FC = () => {
         location: location2 || null,
         date_added: dateAdded || null,
         notes: notes.trim() || null,
+        substrate: substrate.trim() || null,
       }
 
       if (isEditMode && editTree) {
@@ -322,6 +324,20 @@ const AddTreePage: React.FC = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
               />
             </div>
+          </div>
+
+          {/* Substrate */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('tree.substrate')} <span className="text-gray-400 text-xs">({t('common.optional')})</span>
+            </label>
+            <input
+              type="text"
+              value={substrate}
+              onChange={(e) => setSubstrate(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
+              placeholder={t('tree.substrate')}
+            />
           </div>
 
           {/* Notes */}
