@@ -20,23 +20,23 @@ const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEd
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-gray-100 hover:bg-gray-200 text-gray-600 w-7 h-7 rounded-full flex items-center justify-center transition-colors text-sm"
+        className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg font-bold shadow-sm"
       >
-        ⋯
+        ⋮
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-10 right-0 z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[160px]">
+          <div className="absolute top-9 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-36">
             <button
               onClick={() => { setOpen(false); onEdit() }}
-              className="w-full text-right px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
             >
               ✏️ {t('common.edit')}
             </button>
             <button
               onClick={() => { setOpen(false); onDelete() }}
-              className="w-full text-right px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full text-right px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors"
             >
               🗑️ {t('common.delete')}
             </button>
@@ -130,18 +130,6 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
       className="bg-white rounded-2xl shadow-md p-5 -mt-8 relative z-10 mx-3"
       onDoubleClick={() => !editing && setEditing(true)}
     >
-      {/* Pencil hint */}
-      {!editing && (
-        <div className="absolute top-3 right-3 flex items-center gap-2">
-          <button
-            onClick={() => setEditing(true)}
-            className="text-gray-300 hover:text-[#2d6a4f] transition-colors"
-            title={t('common.edit')}
-          >
-            ✏️
-          </button>
-        </div>
-      )}
       {/* More menu - top left */}
       {!editing && (
         <div className="absolute top-3 left-3">
