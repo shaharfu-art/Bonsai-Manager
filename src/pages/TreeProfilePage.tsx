@@ -204,15 +204,6 @@ const TreeProfilePage: React.FC = () => {
           ) : (
             <span className="text-8xl" role="img" aria-label="bonsai">🌿</span>
           )}
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent px-5 py-3">
-            <h1 className="text-white text-2xl font-bold drop-shadow">{tree.custom_name}</h1>
-            {displaySpecies && (
-              <p className="text-green-200 text-sm">{displaySpecies}</p>
-            )}
-            {tree.style && (
-              <p className="text-green-300 text-xs">{t(`style.${tree.style}`)}</p>
-            )}
-          </div>
           {/* Change cover photo button */}
           {photos.length > 0 && (
             <button
