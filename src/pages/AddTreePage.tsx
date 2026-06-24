@@ -41,6 +41,7 @@ const AddTreePage: React.FC = () => {
   const [speciesId, setSpeciesId] = useState(editTree?.species_id ?? '')
   const [speciesFreeText, setSpeciesFreeText] = useState(editTree?.species_free_text ?? '')
   const [speciesSearch, setSpeciesSearch] = useState('')
+  const [speciesDropdownOpen, setSpeciesDropdownOpen] = useState(false)
   const [style, setStyle] = useState(editTree?.style ?? '')
   const [ageYears, setAgeYears] = useState(editTree?.age_years != null ? String(editTree.age_years) : '')
   const [origin, setOrigin] = useState(editTree?.origin ?? '')
@@ -143,37 +144,55 @@ const AddTreePage: React.FC = () => {
             />
           </div>
 
-          {/* Species */}
-          <div>
+          {/* Species - searchable dropdown */}
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {t('tree.species')}
             </label>
-            {/* Species search */}
             <input
               type="text"
               value={speciesSearch}
-              onChange={(e) => setSpeciesSearch(e.target.value)}
-              placeholder={`${t('common.add')} / ${t('tree.species')}...`}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-[#52b788]"
-            />
-            <select
-              value={speciesId}
-              onChange={(e) => setSpeciesId(e.target.value)}
+              onChange={(e) => { setSpeciesSearch(e.target.value); setSpeciesId('') }}
+              onFocus={() => setSpeciesDropdownOpen(true)}
+              placeholder={
+                speciesId && speciesId !== 'other'
+                  ? (species.find(s => s.id === speciesId)?.[isRtl ? 'name_he' : 'name_en'] ?? '')
+                  : `${t('tree.species')}...`
+              }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
-            >
-              <option value="">— {t('tree.species')} —</option>
-              {speciesLoading ? (
-                <option disabled>{t('common.loading')}</option>
-              ) : (
-                filteredSpecies.map((s) => (
-                  <option key={s.id} value={s.id}>
+            />
+            {speciesId && speciesId !== 'other' && !speciesSearch && (
+              <div className="absolute top-[calc(100%-2px)] right-2 -translate-y-full text-xs text-green-600 pointer-events-none">
+                ✓
+              </div>
+            )}
+            {speciesDropdownOpen && (
+              <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {filteredSpecies.length === 0 && !speciesLoading && (
+                  <li className="px-3 py-2 text-xs text-gray-400">{t('tree.noTrees')}</li>
+                )}
+                {filteredSpecies.map((s) => (
+                  <li
+                    key={s.id}
+                    onClick={() => { setSpeciesId(s.id); setSpeciesSearch(''); setSpeciesDropdownOpen(false) }}
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-green-50 ${speciesId === s.id ? 'bg-green-50 font-medium' : ''}`}
+                  >
                     {isRtl ? s.name_he : s.name_en}
-                    {s.name_latin ? ` (${s.name_latin})` : ''}
-                  </option>
-                ))
-              )}
-              <option value="other">{t('style.other')}</option>
-            </select>
+                    {s.name_latin && <span className="text-xs text-gray-400 ml-1">({s.name_latin})</span>}
+                  </li>
+                ))}
+                <li
+                  onClick={() => { setSpeciesId('other'); setSpeciesSearch(''); setSpeciesDropdownOpen(false) }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 border-t border-gray-100 text-gray-500"
+                >
+                  ✏️ {t('style.other')}
+                </li>
+              </ul>
+            )}
+            {/* Close dropdown when clicking outside */}
+            {speciesDropdownOpen && (
+              <div className="fixed inset-0 z-10" onClick={() => setSpeciesDropdownOpen(false)} />
+            )}
           </div>
 
           {/* Species free text (when "other") */}
