@@ -282,6 +282,34 @@ const TreeProfilePage: React.FC = () => {
           </div>
         )}
 
+        {/* ID Card - תעודת זהות */}
+        <div className="bg-white rounded-xl shadow p-4 -mt-6 relative z-10 mx-4">
+          <h2 className="text-sm font-bold text-[#2d6a4f] mb-2">🪪 {tree.custom_name}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {displaySpecies && (
+              <p className="text-xs text-gray-600">🌳 {displaySpecies}</p>
+            )}
+            {tree.age_years && (
+              <p className="text-xs text-gray-600">🗓️ {tree.age_years} {t('tree.age').replace('(שנים)', '').replace('(years)', '').trim()}</p>
+            )}
+            {tree.style && (
+              <p className="text-xs text-gray-600">✨ {t(`style.${tree.style}`)}</p>
+            )}
+            {tree.location && (
+              <p className="text-xs text-gray-600">📍 {t(`location.${tree.location}`)}</p>
+            )}
+            {tree.pot_type && (
+              <p className="text-xs text-gray-600">🪴 {tree.pot_type}</p>
+            )}
+            {tree.substrate && (
+              <p className="text-xs text-gray-600">🧱 {tree.substrate}</p>
+            )}
+            {tree.date_added && (
+              <p className="text-xs text-gray-600">📅 {tree.date_added}</p>
+            )}
+          </div>
+        </div>
+
         {/* Action buttons */}
         <div className={`flex gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <button
