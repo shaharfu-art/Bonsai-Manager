@@ -542,11 +542,12 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* FAB for mobile */}
+        {/* FAB - Add new tree */}
         <button
           onClick={() => navigate('/trees/new')}
-          className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#2d6a4f] hover:bg-[#245a42] text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors z-50"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-[#2d6a4f] hover:bg-[#245a42] text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors z-50"
           aria-label={t('nav.addTree')}
+          title={t('nav.addTree')}
         >
           +
         </button>
