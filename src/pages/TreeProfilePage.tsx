@@ -10,6 +10,7 @@ import { TREATMENT_TYPES } from '../lib/treatment-validator'
 import type { Tree } from '../hooks/useTrees'
 import TreatmentLogSection from '../components/TreatmentLogSection'
 import PhotoTimelineSection from '../components/PhotoTimelineSection'
+import AiInsightsPanel from '../components/AiInsightsPanel'
 
 // ─── Three-dots menu ────────────────────────────────────────
 const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring?: () => void }> = ({ onEdit, onDelete, onRecurring }) => {
@@ -387,6 +388,9 @@ const TreeProfilePage: React.FC = () => {
       )}
 
       {showDeleteDialog && <DeleteDialog treeName={tree.custom_name} onConfirm={handleDelete} onCancel={() => setShowDeleteDialog(false)} loading={deleting} />}
+
+      {/* AI Insights floating button */}
+      <AiInsightsPanel treeId={id!} />
     </Layout>
   )
 }
