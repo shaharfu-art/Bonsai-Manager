@@ -6,7 +6,7 @@ interface AiInsightsPanelProps {
   treeId: string
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string).trim()
 
 const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const { t, i18n } = useTranslation()
