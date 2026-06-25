@@ -23,18 +23,18 @@ serve(async (req) => {
   try {
     // Get authorization header to identify user
     const authHeader = req.headers.get('authorization')
-    if (!authHeader) return new Response('Unauthorized', { status: 401 })
+    if (!authHeader) return new Response('Unauthorized', { status: 401, headers: { 'Access-Control-Allow-Origin': '*' } })
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     // Verify user token
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) return new Response('Unauthorized', { status: 401 })
+    if (authError || !user) return new Response('Unauthorized', { status: 401, headers: { 'Access-Control-Allow-Origin': '*' } })
 
     // Get tree_id from request body
     const { tree_id, language } = await req.json()
-    if (!tree_id) return new Response('Missing tree_id', { status: 400 })
+    if (!tree_id) return new Response('Missing tree_id', { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } })
 
     // Fetch tree data
     const { data: tree } = await supabase
@@ -44,7 +44,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single()
 
-    if (!tree) return new Response('Tree not found', { status: 404 })
+    if (!tree) return new Response('Tree not found', { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } })
 
     // Fetch species info
     let speciesInfo = ''
