@@ -28,6 +28,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
         },
         body: JSON.stringify({ tree_id: treeId, language: i18n.language }),
       })
