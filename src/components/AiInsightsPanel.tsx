@@ -64,7 +64,7 @@ Keep it concise (max 250 words), practical, with emoji.`
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': GEMINI_API_KEY,
+            'Authorization': `Bearer ${GEMINI_API_KEY}`,
           },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
