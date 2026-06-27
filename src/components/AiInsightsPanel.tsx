@@ -13,8 +13,10 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const [insights, setInsights] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [question, setQuestion] = useState('')
-  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'ai'; text: string }>>([])
+  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'ai'; text: string; imageUrl?: string }>>([])
+  const [attachedImage, setAttachedImage] = useState<{ base64: string; mimeType: string; preview: string } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -53,7 +55,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     localStorage.removeItem(CACHE_KEY)
   }
 
-  const fetchInsights = async (userQuestion?: string, skipCache = false) => {
+  const fetchInsights = async (userQuestion?: string, skipCache = false, imageData?: { base64: string; mimeType: string } | null) => {
     // For initial insights (no question), check cache first
     if (!userQuestion && !skipCache) {
       const cached = getCachedInsights()
@@ -74,6 +76,11 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
       const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
       const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
 
+      const body: Record<string, unknown> = { tree_id: treeId, language: i18n.language, question: userQuestion }
+      if (imageData) {
+        body.image = { base64: imageData.base64, mimeType: imageData.mimeType }
+      }
+
       const response = await fetch(`${url}/functions/v1/ai-insights`, {
         method: 'POST',
         headers: {
@@ -81,7 +88,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': anonKey,
         },
-        body: JSON.stringify({ tree_id: treeId, language: i18n.language, question: userQuestion }),
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
@@ -112,12 +119,30 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   }
 
   const handleAsk = () => {
-    if (!question.trim()) return
+    if (!question.trim() && !attachedImage) return
     const q = question.trim()
+    const img = attachedImage
     setQuestion('')
-    setChatHistory(prev => [...prev, { role: 'user', text: q }])
+    setAttachedImage(null)
+    setChatHistory(prev => [...prev, { role: 'user', text: q || (i18n.language === 'he' ? '📷 תמונה' : '📷 Image'), imageUrl: img?.preview }])
     scrollToBottom()
-    fetchInsights(q)
+    fetchInsights(q || (i18n.language === 'he' ? 'מה אתה רואה בתמונה? תן המלצות.' : 'What do you see in this image? Give recommendations.'), false, img)
+  }
+
+  const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // result format: "data:<mimeType>;base64,<data>"
+      const [header, base64] = result.split(',')
+      const mimeType = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg'
+      setAttachedImage({ base64, mimeType, preview: result })
+    }
+    reader.readAsDataURL(file)
+    // Reset input so same file can be selected again
+    if (imageInputRef.current) imageInputRef.current.value = ''
   }
 
   const handleOpen = () => {
@@ -209,6 +234,9 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
                       ? 'bg-purple-100 text-purple-800'
                       : 'bg-gray-100 text-gray-700'
                   }`} dir={i18n.language === 'he' ? 'rtl' : 'ltr'}>
+                    {msg.imageUrl && (
+                      <img src={msg.imageUrl} alt="" className="w-32 h-32 object-cover rounded-lg mb-1" />
+                    )}
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                   </div>
                 </div>
@@ -227,7 +255,34 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
 
         {/* Question input */}
         <div className="px-4 py-3 border-t border-gray-100">
+          {/* Attached image preview */}
+          {attachedImage && (
+            <div className="mb-2 relative inline-block">
+              <img src={attachedImage.preview} alt="" className="w-16 h-16 object-cover rounded-lg border border-purple-200" />
+              <button
+                onClick={() => setAttachedImage(null)}
+                className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none shadow-sm"
+              >
+                ×
+              </button>
+            </div>
+          )}
           <div className="flex gap-2">
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageAttach}
+            />
+            <button
+              onClick={() => imageInputRef.current?.click()}
+              disabled={loading || !!attachedImage}
+              className="border border-gray-300 hover:border-purple-400 text-gray-500 hover:text-purple-600 px-2 py-2 rounded-lg text-sm disabled:opacity-50 transition-colors"
+              title={i18n.language === 'he' ? 'צרף תמונה' : 'Attach image'}
+            >
+              📷
+            </button>
             <input
               type="text"
               value={question}
@@ -240,7 +295,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
             />
             <button
               onClick={handleAsk}
-              disabled={loading || !question.trim()}
+              disabled={loading || (!question.trim() && !attachedImage)}
               className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-50 transition-colors"
             >
               {loading ? '...' : '→'}

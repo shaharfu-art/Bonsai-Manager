@@ -30,7 +30,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-    const { tree_id, language, question } = await req.json()
+    const { tree_id, language, question, image } = await req.json()
     if (!tree_id) return new Response(JSON.stringify({ error: 'Missing tree_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     // Fetch tree
@@ -85,11 +85,23 @@ Respond in ${lang}. Structure:
 
 Keep it concise (max 250 words), practical, with emoji.`
 
-    // Call Gemini via SDK
+    // Call Gemini via SDK (multimodal if image provided)
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+
+    let contents: any
+    if (image && question) {
+      // Multimodal: image + text
+      contents = [
+        { text: prompt },
+        { inlineData: { mimeType: image.mimeType || 'image/jpeg', data: image.base64 } },
+      ]
+    } else {
+      contents = prompt
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
+      contents,
     })
 
     const aiText = response.text ?? 'No response'
