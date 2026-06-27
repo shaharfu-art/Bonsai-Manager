@@ -30,7 +30,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-    const { tree_id, language } = await req.json()
+    const { tree_id, language, question } = await req.json()
     if (!tree_id) return new Response(JSON.stringify({ error: 'Missing tree_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     // Fetch tree
@@ -52,7 +52,22 @@ serve(async (req) => {
     const season = month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter'
     const lang = language === 'he' ? 'Hebrew' : 'English'
 
-    const prompt = `You are an expert bonsai mentor. Based on this tree profile, provide personalized care recommendations.
+    const prompt = question
+      ? `You are an expert bonsai mentor. The user has a question about their tree.
+
+Tree context:
+- Name: ${tree.custom_name}
+- ${speciesInfo || `Species: ${tree.species_free_text ?? 'Unknown'}`}
+- Age: ${tree.age_years ?? 'Unknown'} years | Style: ${tree.style ?? 'Unknown'} | Location: ${tree.location ?? 'Unknown'}
+- Substrate: ${tree.substrate ?? 'Unknown'} | Season: ${season}
+
+Recent treatments:
+${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}`).join('\n') || 'None'}
+
+User's question: "${question}"
+
+Answer in ${lang}. Be concise, practical, and specific to this tree. Use emoji.`
+      : `You are an expert bonsai mentor. Based on this tree profile, provide personalized care recommendations.
 
 Tree: ${tree.custom_name}
 ${speciesInfo || `Species: ${tree.species_free_text ?? 'Unknown'}`}

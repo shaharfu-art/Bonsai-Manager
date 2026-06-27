@@ -12,11 +12,13 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const [loading, setLoading] = useState(false)
   const [insights, setInsights] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [question, setQuestion] = useState('')
+  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'ai'; text: string }>>([])
 
-  const fetchInsights = async () => {
+  const fetchInsights = async (userQuestion?: string) => {
     setLoading(true)
     setError('')
-    setInsights(null)
+    if (!userQuestion) setInsights(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
@@ -31,7 +33,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
           'Authorization': `Bearer ${session.access_token}`,
           'apikey': anonKey,
         },
-        body: JSON.stringify({ tree_id: treeId, language: i18n.language }),
+        body: JSON.stringify({ tree_id: treeId, language: i18n.language, question: userQuestion }),
       })
 
       if (!response.ok) {
@@ -40,7 +42,11 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
       }
 
       const data = await response.json()
-      setInsights(data.insights)
+      if (userQuestion) {
+        setChatHistory(prev => [...prev, { role: 'user', text: userQuestion }, { role: 'ai', text: data.insights }])
+      } else {
+        setInsights(data.insights)
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t('common.error'))
     } finally {
@@ -48,9 +54,16 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     }
   }
 
+  const handleAsk = () => {
+    if (!question.trim()) return
+    const q = question.trim()
+    setQuestion('')
+    fetchInsights(q)
+  }
+
   const handleOpen = () => {
     setOpen(true)
-    if (!insights && !loading) fetchInsights()
+    if (!insights && !loading && chatHistory.length === 0) fetchInsights()
   }
 
   if (!open) {
@@ -112,7 +125,6 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
           {insights && !loading && (
             <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap" dir={i18n.language === 'he' ? 'rtl' : 'ltr'}>
               {insights.split('\n').map((line, i) => {
-                // Bold headers (markdown-like)
                 if (line.startsWith('**') && line.endsWith('**')) {
                   return <h4 key={i} className="text-sm font-bold text-purple-800 mt-3 mb-1">{line.replace(/\*\*/g, '')}</h4>
                 }
@@ -128,6 +140,46 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
               })}
             </div>
           )}
+
+          {/* Chat history */}
+          {chatHistory.length > 0 && (
+            <div className="mt-4 space-y-3 border-t border-gray-100 pt-3">
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`${msg.role === 'user' ? 'text-right' : ''}`}>
+                  <div className={`inline-block max-w-[85%] rounded-xl px-3 py-2 text-xs ${
+                    msg.role === 'user'
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-gray-100 text-gray-700'
+                  }`} dir={i18n.language === 'he' ? 'rtl' : 'ltr'}>
+                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Question input */}
+        <div className="px-4 py-3 border-t border-gray-100">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAsk() }}
+              placeholder={i18n.language === 'he' ? 'שאל את היועץ...' : 'Ask the mentor...'}
+              disabled={loading}
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-50"
+              dir={i18n.language === 'he' ? 'rtl' : 'ltr'}
+            />
+            <button
+              onClick={handleAsk}
+              disabled={loading || !question.trim()}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-50 transition-colors"
+            >
+              {loading ? '...' : '→'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
