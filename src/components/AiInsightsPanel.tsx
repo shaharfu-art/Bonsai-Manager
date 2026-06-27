@@ -6,8 +6,6 @@ interface AiInsightsPanelProps {
   treeId: string
 }
 
-const GEMINI_API_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string || '').trim()
-
 const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -20,60 +18,29 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     setError('')
     setInsights(null)
     try {
-      // Fetch tree data directly
-      const { data: tree } = await supabase.from('trees').select('*').eq('id', treeId).single()
-      if (!tree) throw new Error('Tree not found')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Not authenticated')
 
-      // Fetch species
-      let speciesInfo = ''
-      if (tree.species_id) {
-        const { data: species } = await supabase.from('species').select('name_en, name_he, name_latin, type').eq('id', tree.species_id).single()
-        if (species) speciesInfo = `Species: ${species.name_en} (${species.name_latin ?? ''}, ${species.type})`
+      const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
+      const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
+
+      const response = await fetch(`${url}/functions/v1/ai-insights`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ tree_id: treeId, language: i18n.language }),
+      })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || `Error ${response.status}`)
       }
 
-      // Fetch recent treatments
-      const { data: treatments } = await supabase.from('treatment_logs').select('treatment_type, treatment_date, notes').eq('tree_id', treeId).eq('status', 'completed').order('treatment_date', { ascending: false }).limit(10)
-
-      // Build context
-      const month = new Date().getMonth() + 1
-      const season = month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter'
-      const lang = i18n.language === 'he' ? 'Hebrew' : 'English'
-
-      const prompt = `You are an expert bonsai mentor. Based on this tree profile, provide personalized care recommendations.
-
-Tree: ${tree.custom_name}
-${speciesInfo || `Species: ${tree.species_free_text ?? 'Unknown'}`}
-Age: ${tree.age_years ?? 'Unknown'} years | Style: ${tree.style ?? 'Unknown'} | Location: ${tree.location ?? 'Unknown'}
-Pot: ${tree.pot_type ?? 'Unknown'} | Substrate: ${tree.substrate ?? 'Unknown'} | Season: ${season}
-
-Recent treatments:
-${treatments?.map(t => `- ${t.treatment_date}: ${t.treatment_type}${t.notes ? ` (${t.notes})` : ''}`).join('\n') || 'None'}
-
-Respond in ${lang}. Structure:
-1. **Health Assessment** - Brief assessment
-2. **This Week** - 2-3 actionable items
-3. **Seasonal Tips** - For ${season}
-4. **Warning** - Any concerns (or "none")
-
-Keep it concise (max 250 words), practical, with emoji.`
-
-      // Call Gemini directly
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 600 },
-          }),
-        }
-      )
-
-      if (!response.ok) throw new Error(`Gemini error: ${response.status}`)
       const data = await response.json()
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'No response'
-      setInsights(aiText)
+      setInsights(data.insights)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t('common.error'))
     } finally {
