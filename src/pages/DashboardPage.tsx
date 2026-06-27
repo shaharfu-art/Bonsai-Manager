@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
+import InstallPromptBanner from '../components/InstallPromptBanner'
 import { useTrees } from '../hooks/useTrees'
 import { useSpecies } from '../hooks/useSpecies'
 import { supabase } from '../lib/supabase-client'
@@ -366,6 +367,9 @@ const DashboardPage: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Install & notification prompts */}
+        <InstallPromptBanner />
+
         {/* Stats bar */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl shadow p-4 text-center">
