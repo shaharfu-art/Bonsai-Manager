@@ -1,4 +1,4 @@
-import React, { useEffect, Component, type ReactNode } from 'react'
+import React, { useEffect, useState, Component, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { supabase } from './lib/supabase-client'
@@ -41,24 +41,26 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 // Auth callback page for OAuth (e.g. Google)
 const AuthCallbackPage: React.FC = () => {
+  const [ready, setReady] = useState(false)
+
   useEffect(() => {
-    // Wait for Supabase to process the OAuth callback and set the session
-    // onAuthStateChange in AuthContext will pick it up
     const checkSession = async () => {
-      // Give Supabase SDK time to process the hash/query params
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        window.location.href = '/dashboard'
+        setReady(true)
+        // Small delay to ensure session is persisted
+        setTimeout(() => { window.location.href = '/dashboard' }, 500)
         return
       }
-      // If no session yet, listen for auth change
+      // Listen for auth change
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session) {
           subscription.unsubscribe()
-          window.location.href = '/dashboard'
+          setReady(true)
+          setTimeout(() => { window.location.href = '/dashboard' }, 500)
         }
       })
-      // Fallback timeout (10 seconds)
+      // Fallback
       setTimeout(() => {
         subscription.unsubscribe()
         window.location.href = '/dashboard'
@@ -68,10 +70,12 @@ const AuthCallbackPage: React.FC = () => {
   }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
+    <div className="min-h-screen flex items-center justify-center bg-[#f0f7f4]">
+      <div className="flex flex-col items-center gap-3 text-center px-6">
         <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-green-800 text-sm">Authenticating...</p>
+        <p className="text-green-800 text-sm">
+          {ready ? 'מתחבר...' : 'מאמת...'}
+        </p>
       </div>
     </div>
   )

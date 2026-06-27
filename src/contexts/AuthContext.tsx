@@ -65,34 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    // In standalone PWA mode, OAuth redirect doesn't return to the app.
-    // Use a workaround: open OAuth in a new window/tab that redirects back.
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      || (window.navigator as any).standalone === true
-
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        skipBrowserRedirect: isStandalone,
       },
     })
     if (error) throw error
-
-    if (isStandalone && data?.url) {
-      // Open in external browser which will redirect back
-      window.open(data.url, '_blank')
-      // Poll for session (user will come back to the app)
-      const pollInterval = setInterval(async () => {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          clearInterval(pollInterval)
-          window.location.href = '/dashboard'
-        }
-      }, 1000)
-      // Stop polling after 2 minutes
-      setTimeout(() => clearInterval(pollInterval), 120000)
-    } else if (data?.url) {
+    // Force redirect in all cases (including PWA standalone)
+    if (data?.url) {
       window.location.href = data.url
     }
   }
