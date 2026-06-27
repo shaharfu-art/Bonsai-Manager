@@ -384,31 +384,33 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
         if (dueAlerts.length === 0) return null
 
         return (
-          <div className="mb-4 space-y-2">
+          <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-amber-800 mb-3">🔔 {t('treatment.reminder')}</h3>
+            <ul className="space-y-2">
             {dueAlerts.map(alert => (
-              <div
+              <li
                 key={alert.type}
-                className={`flex items-center gap-3 px-5 py-4 rounded-xl border ${
+                className={`flex items-center gap-3 bg-white rounded-lg px-4 py-3 shadow-sm border ${
                   alert.status === 'due'
-                    ? 'bg-red-50 border-red-200'
-                    : 'bg-amber-50 border-amber-200'
+                    ? 'border-red-200'
+                    : 'border-amber-100'
                 }`}
               >
-                <span className="text-2xl">{ICONS[alert.type] ?? '📝'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-base font-semibold ${alert.status === 'due' ? 'text-red-800' : 'text-amber-800'}`}>
-                    🔔 {t(`treatment.${alert.type}`)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{alert.dueDate}</p>
-                </div>
-                <span className={`text-xs font-bold px-2 py-1 rounded ${
+                <span className="text-xl">{ICONS[alert.type] ?? '📝'}</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
                   alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
                 }`}>
                   {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
                 </span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${alert.status === 'due' ? 'text-red-800' : 'text-amber-800'}`}>
+                    {t(`treatment.${alert.type}`)}
+                  </p>
+                  <p className="text-xs text-gray-500">{alert.dueDate}</p>
+                </div>
                 <button
                   onClick={() => { setShowForm(true); setFormType(alert.type); setFormDate(todayStr) }}
-                  className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 ${
                     alert.status === 'due'
                       ? 'bg-red-600 hover:bg-red-700 text-white'
                       : 'bg-amber-600 hover:bg-amber-700 text-white'
@@ -416,8 +418,9 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                 >
                   ✓ {t('treatment.markDone')}
                 </button>
-              </div>
+              </li>
             ))}
+            </ul>
           </div>
         )
       })()}
