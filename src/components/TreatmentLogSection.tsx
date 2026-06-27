@@ -26,11 +26,12 @@ const TREATMENT_ICONS: Record<string, string> = {
 interface Props {
   treeId: string
   initialTreatmentType?: string | null
+  hideAlertsBanner?: boolean
 }
 
 const today = () => new Date().toISOString().split('T')[0]
 
-const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) => {
+const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType, hideAlertsBanner }) => {
   const { t } = useTranslation()
   const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment } = useTreatments(treeId)
   const { getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
@@ -344,7 +345,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
   return (
     <div>
       {/* Due alerts banner */}
-      {(() => {
+      {!hideAlertsBanner && (() => {
         const todayDate = new Date()
         const todayStr = todayDate.toISOString().split('T')[0]
         const { configs } = { configs: [] as { treatment_type: string; interval_days: number | null; snoozed_until: string | null }[] }

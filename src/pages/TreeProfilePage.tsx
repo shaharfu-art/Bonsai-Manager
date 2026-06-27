@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase-client'
 import { useSpecies } from '../hooks/useSpecies'
 import { usePhotos } from '../hooks/usePhotos'
 import { useAlertConfigs } from '../hooks/useAlertConfigs'
+import { useTreatments } from '../hooks/useTreatments'
 import { TREATMENT_TYPES } from '../lib/treatment-validator'
 import type { Tree } from '../hooks/useTrees'
 import TreatmentLogSection from '../components/TreatmentLogSection'
@@ -355,6 +356,9 @@ const TreeProfilePage: React.FC = () => {
           </div>
         )}
 
+        {/* Due alerts - outside the card for full width */}
+        {activeTab === 'treatments' && <TreeAlertsBanner treeId={id!} onMarkDone={(type) => { setActiveTab('treatments') }} />}
+
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow overflow-hidden">
           <div className="flex border-b border-gray-100">
@@ -368,7 +372,7 @@ const TreeProfilePage: React.FC = () => {
             })}
           </div>
           <div className="p-5">
-            {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} />}
+            {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} hideAlertsBanner />}
             {activeTab === 'photos' && <PhotoTimelineSection treeId={id!} onCoverPhotoChange={() => {}} />}
           </div>
         </div>
@@ -507,6 +511,81 @@ const AlertsTabContent: React.FC<{ treeId: string }> = ({ treeId }) => {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Tree Alerts Banner (same style as dashboard) ────────────
+const TreeAlertsBanner: React.FC<{ treeId: string; onMarkDone?: (type: string) => void }> = ({ treeId }) => {
+  const { t } = useTranslation()
+  const { getConfig } = useAlertConfigs(treeId)
+  const { treatments } = useTreatments(treeId)
+  const navigate = useNavigate()
+
+  const todayDate = new Date()
+  const todayStr = todayDate.toISOString().split('T')[0]
+
+  const dueAlerts: { type: string; dueDate: string; status: 'due' | 'upcoming' }[] = []
+
+  for (const type of TREATMENT_TYPES) {
+    const cfg = getConfig(type)
+    if (!cfg) continue
+    const doneToday = treatments.find(tr => tr.treatment_type === type && tr.treatment_date === todayStr && tr.status === 'completed')
+    if (doneToday) continue
+
+    if (cfg.snoozed_until) {
+      const d = new Date(cfg.snoozed_until)
+      const diff = Math.ceil((d.getTime() - todayDate.getTime()) / (1000*60*60*24))
+      if (diff <= 0) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'due' })
+      else if (diff <= 3) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'upcoming' })
+    } else if (cfg.interval_days && cfg.interval_days > 0) {
+      const lastLog = treatments.filter(tr => tr.treatment_type === type && tr.status === 'completed').sort((a,b) => b.treatment_date.localeCompare(a.treatment_date))[0]
+      const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
+      const next = new Date(lastDate.getTime() + cfg.interval_days * 24*60*60*1000)
+      const diff = Math.ceil((next.getTime() - todayDate.getTime()) / (1000*60*60*24))
+      const dueStr = next.toISOString().split('T')[0]
+      if (diff <= 0) dueAlerts.push({ type, dueDate: dueStr, status: 'due' })
+      else if (diff <= 3) dueAlerts.push({ type, dueDate: dueStr, status: 'upcoming' })
+    }
+  }
+
+  if (dueAlerts.length === 0) return null
+
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+      <h2 className="text-sm font-semibold text-amber-800 mb-3">
+        🔔 {t('treatment.reminder')} ({dueAlerts.length})
+      </h2>
+      <ul className="space-y-2">
+        {dueAlerts.map(alert => (
+          <li
+            key={alert.type}
+            className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors"
+            onClick={() => navigate(`/trees/${treeId}`, { state: { openTreatment: alert.type } })}
+          >
+            <span className="text-lg">{TREATMENT_ICONS[alert.type] ?? '📝'}</span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
+              alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+            }`}>
+              {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-800">{t(`treatment.${alert.type}`)}</p>
+              <p className="text-xs text-gray-500">{alert.dueDate}</p>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/trees/${treeId}`, { state: { openTreatment: alert.type } }) }}
+              className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors flex-shrink-0 ${
+                alert.status === 'due'
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-amber-600 hover:bg-amber-700 text-white'
+              }`}
+            >
+              ✓ {t('treatment.markDone')}
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
