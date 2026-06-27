@@ -409,8 +409,7 @@ const TreeProfilePage: React.FC = () => {
         <ShareCard
           tree={tree}
           speciesName={displaySpecies}
-          coverPhotoUrl={coverPhoto?.public_url ?? null}
-          recentPhotos={photos.slice(0, 4).filter(p => p.public_url).map(p => ({ url: p.public_url! }))}
+          photos={photos.filter(p => p.public_url).map(p => ({ id: p.id, url: p.public_url! }))}
           onClose={() => setShowShareCard(false)}
         />
       )}
