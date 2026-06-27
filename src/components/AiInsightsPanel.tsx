@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase-client'
 
@@ -14,7 +14,16 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const [error, setError] = useState('')
   const [question, setQuestion] = useState('')
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'ai'; text: string }>>([])
+  const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }
+    }, 100)
+  }
   const fetchInsights = async (userQuestion?: string) => {
     setLoading(true)
     setError('')
@@ -43,9 +52,18 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
 
       const data = await response.json()
       if (userQuestion) {
-        setChatHistory(prev => [...prev, { role: 'user', text: userQuestion }, { role: 'ai', text: data.insights }])
+        setChatHistory(prev => {
+          // Only add AI response (user message already added in handleAsk)
+          const last = prev[prev.length - 1]
+          if (last?.role === 'user' && last.text === userQuestion) {
+            return [...prev, { role: 'ai', text: data.insights }]
+          }
+          return [...prev, { role: 'user', text: userQuestion }, { role: 'ai', text: data.insights }]
+        })
+        scrollToBottom()
       } else {
         setInsights(data.insights)
+        scrollToBottom()
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t('common.error'))
@@ -58,6 +76,8 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     if (!question.trim()) return
     const q = question.trim()
     setQuestion('')
+    setChatHistory(prev => [...prev, { role: 'user', text: q }])
+    scrollToBottom()
     fetchInsights(q)
   }
 
@@ -108,7 +128,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4">
           {loading && (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
               <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
