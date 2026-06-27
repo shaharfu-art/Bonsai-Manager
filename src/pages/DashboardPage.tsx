@@ -411,7 +411,9 @@ const DashboardPage: React.FC = () => {
               {alerts.map((alert, idx) => (
                 <li
                   key={`alert-${alert.tree_id}-${alert.treatment_type}-${idx}`}
-                  className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors"
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors ${
+                    alert.status === 'due' ? 'bg-red-50 border border-red-200' : 'bg-white border border-amber-100'
+                  }`}
                   onClick={() => handleAlertClick(alert)}
                 >
                   <span className="text-lg" aria-hidden="true">
