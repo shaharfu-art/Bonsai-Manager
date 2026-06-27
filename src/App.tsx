@@ -1,6 +1,7 @@
 import React, { useEffect, Component, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { supabase } from './lib/supabase-client'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
@@ -41,12 +42,29 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 // Auth callback page for OAuth (e.g. Google)
 const AuthCallbackPage: React.FC = () => {
   useEffect(() => {
-    // Supabase handles the token exchange automatically via onAuthStateChange
-    // Just redirect to dashboard after a short delay
-    const timer = setTimeout(() => {
-      window.location.href = '/dashboard'
-    }, 1000)
-    return () => clearTimeout(timer)
+    // Wait for Supabase to process the OAuth callback and set the session
+    // onAuthStateChange in AuthContext will pick it up
+    const checkSession = async () => {
+      // Give Supabase SDK time to process the hash/query params
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        window.location.href = '/dashboard'
+        return
+      }
+      // If no session yet, listen for auth change
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          subscription.unsubscribe()
+          window.location.href = '/dashboard'
+        }
+      })
+      // Fallback timeout (10 seconds)
+      setTimeout(() => {
+        subscription.unsubscribe()
+        window.location.href = '/dashboard'
+      }, 10000)
+    }
+    checkSession()
   }, [])
 
   return (
