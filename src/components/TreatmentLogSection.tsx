@@ -384,7 +384,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
         if (dueAlerts.length === 0) return null
 
         return (
-          <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="-mx-5 -mt-5 mb-5 bg-amber-50 border-b border-amber-200 p-5">
             <h3 className="text-sm font-semibold text-amber-800 mb-3">🔔 {t('treatment.reminder')}</h3>
             <ul className="space-y-2">
             {dueAlerts.map(alert => (
