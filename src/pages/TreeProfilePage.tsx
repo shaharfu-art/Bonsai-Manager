@@ -12,10 +12,11 @@ import type { Tree } from '../hooks/useTrees'
 import TreatmentLogSection from '../components/TreatmentLogSection'
 import PhotoTimelineSection from '../components/PhotoTimelineSection'
 import AiInsightsPanel from '../components/AiInsightsPanel'
+import ShareCard from '../components/ShareCard'
 
 // ─── Three-dots menu ────────────────────────────────────────
-const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring?: () => void }> = ({ onEdit, onDelete, onRecurring }) => {
-  const { t } = useTranslation()
+const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring?: () => void; onShare?: () => void }> = ({ onEdit, onDelete, onRecurring, onShare }) => {
+  const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
 
   return (
@@ -42,6 +43,14 @@ const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring
                 className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 ⚙️ {t('treatment.reminder')}
+              </button>
+            )}
+            {onShare && (
+              <button
+                onClick={() => { setOpen(false); onShare() }}
+                className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                📤 {i18n.language === 'he' ? 'שתף' : 'Share'}
               </button>
             )}
             <button
@@ -96,9 +105,10 @@ interface IDCardProps {
   onEdit: () => void
   onDelete: () => void
   onRecurring: () => void
+  onShare: () => void
 }
 
-const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete, onRecurring }) => {
+const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete, onRecurring, onShare }) => {
   const { t, i18n } = useTranslation()
   const isRtl = i18n.language === 'he'
   const [editing, setEditing] = useState(false)
@@ -144,7 +154,7 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
       {/* More menu - top left */}
       {!editing && (
         <div className="absolute top-3 left-3">
-          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} />
+          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} onShare={onShare} />
         </div>
       )}
 
@@ -222,6 +232,7 @@ const TreeProfilePage: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [activeTab, setActiveTab] = useState<'treatments' | 'photos'>('treatments')
+  const [showShareCard, setShowShareCard] = useState(false)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
   const [showRecurringSettings, setShowRecurringSettings] = useState(false)
   const coverUploadRef = useRef<HTMLInputElement>(null)
@@ -334,7 +345,7 @@ const TreeProfilePage: React.FC = () => {
         </div>
 
         {/* Smart ID Card */}
-        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} onRecurring={() => setShowRecurringSettings(true)} />
+        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} onRecurring={() => setShowRecurringSettings(true)} onShare={() => setShowShareCard(true)} />
 
         {/* Cover photo picker */}
         {showCoverPicker && (
@@ -392,6 +403,17 @@ const TreeProfilePage: React.FC = () => {
       )}
 
       {showDeleteDialog && <DeleteDialog treeName={tree.custom_name} onConfirm={handleDelete} onCancel={() => setShowDeleteDialog(false)} loading={deleting} />}
+
+      {/* Share Card */}
+      {showShareCard && (
+        <ShareCard
+          tree={tree}
+          speciesName={displaySpecies}
+          coverPhotoUrl={coverPhoto?.public_url ?? null}
+          recentPhotos={photos.slice(0, 4).filter(p => p.public_url).map(p => ({ url: p.public_url! }))}
+          onClose={() => setShowShareCard(false)}
+        />
+      )}
 
       {/* AI Insights floating button */}
       <AiInsightsPanel treeId={id!} />
