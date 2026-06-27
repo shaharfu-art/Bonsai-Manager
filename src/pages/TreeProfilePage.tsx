@@ -138,7 +138,7 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-md p-5 -mt-8 relative z-10 mx-3"
+      className="bg-white rounded-2xl shadow-md p-5 -mt-8 relative z-10"
       onDoubleClick={() => !editing && setEditing(true)}
     >
       {/* More menu - top left */}
