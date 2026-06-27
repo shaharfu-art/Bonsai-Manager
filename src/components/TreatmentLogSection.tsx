@@ -151,6 +151,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
       resetForm()
       setReminderEnabled(false)
       setShowForm(false)
+      // Invalidate AI insights cache for this tree
+      localStorage.removeItem(`ai-insights-${treeId}`)
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : t('common.error'))
     } finally {

@@ -24,7 +24,46 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
       }
     }, 100)
   }
-  const fetchInsights = async (userQuestion?: string) => {
+  // Cache helpers
+  const CACHE_KEY = `ai-insights-${treeId}`
+  const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+  const getCachedInsights = (): string | null => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY)
+      if (!raw) return null
+      const { text, timestamp } = JSON.parse(raw)
+      if (Date.now() - timestamp > CACHE_EXPIRY_MS) {
+        localStorage.removeItem(CACHE_KEY)
+        return null
+      }
+      return text
+    } catch {
+      return null
+    }
+  }
+
+  const setCacheInsights = (text: string) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ text, timestamp: Date.now() }))
+    } catch { /* ignore quota errors */ }
+  }
+
+  const clearCache = () => {
+    localStorage.removeItem(CACHE_KEY)
+  }
+
+  const fetchInsights = async (userQuestion?: string, skipCache = false) => {
+    // For initial insights (no question), check cache first
+    if (!userQuestion && !skipCache) {
+      const cached = getCachedInsights()
+      if (cached) {
+        setInsights(cached)
+        scrollToBottom()
+        return
+      }
+    }
+
     setLoading(true)
     setError('')
     if (!userQuestion) setInsights(null)
@@ -53,7 +92,6 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
       const data = await response.json()
       if (userQuestion) {
         setChatHistory(prev => {
-          // Only add AI response (user message already added in handleAsk)
           const last = prev[prev.length - 1]
           if (last?.role === 'user' && last.text === userQuestion) {
             return [...prev, { role: 'ai', text: data.insights }]
@@ -63,6 +101,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
         scrollToBottom()
       } else {
         setInsights(data.insights)
+        setCacheInsights(data.insights)
         scrollToBottom()
       }
     } catch (err: unknown) {
@@ -112,7 +151,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchInsights}
+              onClick={() => { clearCache(); fetchInsights(undefined, true) }}
               disabled={loading}
               className="text-xs text-purple-600 hover:text-purple-800 border border-purple-200 px-2 py-1 rounded-lg disabled:opacity-50"
             >
