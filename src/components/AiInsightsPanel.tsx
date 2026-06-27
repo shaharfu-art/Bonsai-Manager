@@ -158,12 +158,9 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
               {/* Typing indicator when waiting for AI response */}
               {loading && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user' && (
                 <div>
-                  <div className="inline-block bg-gray-100 rounded-xl px-4 py-2">
-                    <div className="flex gap-1 items-center">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
+                  <div className="inline-flex items-center gap-2 bg-gray-100 rounded-xl px-4 py-2.5">
+                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs text-gray-500">{i18n.language === 'he' ? 'חושב...' : 'Thinking...'}</span>
                   </div>
                 </div>
               )}
