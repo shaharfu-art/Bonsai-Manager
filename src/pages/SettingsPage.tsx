@@ -83,6 +83,12 @@ const SettingsPage: React.FC = () => {
           <h2 className="text-base font-semibold text-gray-800 mb-3">{t('settings.notifications')}</h2>
           <NotificationToggle isRtl={isRtl} />
         </section>
+
+        {/* Dark Mode */}
+        <section className="bg-white rounded-2xl shadow p-5">
+          <h2 className="text-base font-semibold text-gray-800 mb-3">{isRtl ? 'מצב תצוגה' : 'Display Mode'}</h2>
+          <DarkModeToggle isRtl={isRtl} />
+        </section>
       </div>
     </Layout>
   )
@@ -131,6 +137,38 @@ const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
       </label>
       {loading && <p className="text-xs text-gray-400 mt-2">{t('common.loading')}</p>}
     </>
+  )
+}
+
+// Dark mode toggle sub-component
+const DarkModeToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
+  const [dark, setDark] = useState(() => localStorage.getItem('darkMode') === 'true')
+
+  const handleToggle = () => {
+    const newValue = !dark
+    setDark(newValue)
+    localStorage.setItem('darkMode', String(newValue))
+    if (newValue) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
+
+  return (
+    <label className={`flex items-center gap-3 cursor-pointer ${isRtl ? 'flex-row-reverse' : ''}`}>
+      <div className="relative inline-flex items-center">
+        <input
+          type="checkbox"
+          checked={dark}
+          onChange={handleToggle}
+          className="sr-only peer"
+        />
+        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#2d6a4f] transition-colors" />
+        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-1'}`} />
+      </div>
+      <span className="text-sm text-gray-600">{isRtl ? '🌙 מצב כהה' : '🌙 Dark Mode'}</span>
+    </label>
   )
 }
 

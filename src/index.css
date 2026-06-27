@@ -1,3 +1,93 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dark mode overrides */
+.dark body {
+  background-color: #1a1a2e;
+  color: #e0e0e0;
+}
+
+.dark .bg-\[\#f0f7f4\] {
+  background-color: #1a1a2e;
+}
+
+.dark .bg-white {
+  background-color: #16213e;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1a1a2e;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1a1a2e;
+}
+
+.dark .text-gray-900 {
+  color: #f0f0f0;
+}
+
+.dark .text-gray-800 {
+  color: #e0e0e0;
+}
+
+.dark .text-gray-700 {
+  color: #d0d0d0;
+}
+
+.dark .text-gray-600 {
+  color: #b0b0b0;
+}
+
+.dark .text-gray-500 {
+  color: #909090;
+}
+
+.dark .text-gray-400 {
+  color: #787878;
+}
+
+.dark .border-gray-100 {
+  border-color: #2a2a4a;
+}
+
+.dark .border-gray-200 {
+  border-color: #2a2a4a;
+}
+
+.dark .border-gray-300 {
+  border-color: #3a3a5a;
+}
+
+.dark .shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #1a1a2e;
+  color: #e0e0e0;
+  border-color: #3a3a5a;
+}
+
+.dark .bg-green-50 {
+  background-color: #1a2e1a;
+}
+
+.dark .bg-amber-50 {
+  background-color: #2e2a1a;
+}
+
+.dark .bg-red-50 {
+  background-color: #2e1a1a;
+}
+
+.dark .bg-purple-100 {
+  background-color: #2a1a3e;
+}
