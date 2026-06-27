@@ -112,7 +112,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
           {loading && (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
               <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-gray-500">מנתח את העץ שלך...</p>
+              <p className="text-sm text-gray-500">{i18n.language === 'he' ? 'חושב...' : 'Thinking...'}</p>
             </div>
           )}
 
