@@ -148,7 +148,7 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
         </div>
       )}
 
-      <h2 className="text-base font-bold text-[#2d6a4f] mb-3">🪪 {tree.custom_name}</h2>
+      <h2 className="text-lg font-bold text-[#2d6a4f] mb-4">🪪 {tree.custom_name}</h2>
 
       {editing ? (
         <div className="space-y-3">
@@ -190,14 +190,14 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4">
-          {displaySpecies && <p className="text-xs text-gray-600">🌳 {displaySpecies}</p>}
-          {tree.age_years && <p className="text-xs text-gray-600">🗓️ {tree.age_years} {isRtl ? 'שנים' : 'years'}</p>}
-          {tree.style && <p className="text-xs text-gray-600">✨ {t(`style.${tree.style}`)}</p>}
-          {tree.location && <p className="text-xs text-gray-600">📍 {t(`location.${tree.location}`)}</p>}
-          {tree.pot_type && <p className="text-xs text-gray-600">🪴 {tree.pot_type}</p>}
-          {tree.substrate && <p className="text-xs text-gray-600">🧱 {tree.substrate}</p>}
-          {tree.date_added && <p className="text-xs text-gray-600">📅 {tree.date_added}</p>}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-4">
+          {displaySpecies && <p className="text-sm text-gray-700 font-medium">🌳 {displaySpecies}</p>}
+          {tree.age_years && <p className="text-sm text-gray-700 font-medium">🗓️ {tree.age_years} {isRtl ? 'שנים' : 'years'}</p>}
+          {tree.style && <p className="text-sm text-gray-700 font-medium">✨ {t(`style.${tree.style}`)}</p>}
+          {tree.location && <p className="text-sm text-gray-700 font-medium">📍 {t(`location.${tree.location}`)}</p>}
+          {tree.pot_type && <p className="text-sm text-gray-700 font-medium">🪴 {tree.pot_type}</p>}
+          {tree.substrate && <p className="text-sm text-gray-700 font-medium">🧱 {tree.substrate}</p>}
+          {tree.date_added && <p className="text-sm text-gray-700 font-medium">📅 {tree.date_added}</p>}
           {!displaySpecies && !tree.age_years && !tree.style && !tree.location && (
             <p className="text-xs text-gray-400 col-span-2">{t('common.edit')} ✏️</p>
           )}
