@@ -129,9 +129,9 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
 
         {/* Content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4">
-          {loading && (
+          {loading && !insights && (
             <div className="flex items-center justify-center py-10">
-              <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-[3px] border-purple-600 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
@@ -178,7 +178,7 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
               {loading && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user' && (
                 <div>
                   <div className="inline-flex items-center bg-gray-100 rounded-xl px-4 py-2.5">
-                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-[2px] border-purple-500 border-t-transparent rounded-full animate-spin" />
                   </div>
                 </div>
               )}
