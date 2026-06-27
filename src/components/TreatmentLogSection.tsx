@@ -26,12 +26,11 @@ const TREATMENT_ICONS: Record<string, string> = {
 interface Props {
   treeId: string
   initialTreatmentType?: string | null
-  hideAlertsBanner?: boolean
 }
 
 const today = () => new Date().toISOString().split('T')[0]
 
-const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType, hideAlertsBanner }) => {
+const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) => {
   const { t } = useTranslation()
   const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment } = useTreatments(treeId)
   const { getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
@@ -344,88 +343,6 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType, hi
 
   return (
     <div>
-      {/* Due alerts banner */}
-      {!hideAlertsBanner && (() => {
-        const todayDate = new Date()
-        const todayStr = todayDate.toISOString().split('T')[0]
-        const { configs } = { configs: [] as { treatment_type: string; interval_days: number | null; snoozed_until: string | null }[] }
-        // Compute due alerts from alert configs
-        const dueAlerts: { type: string; dueDate: string; status: 'due' | 'upcoming' }[] = []
-
-        // We use getConfig to check each treatment type
-        const ICONS: Record<string, string> = {
-          watering: '💧', fertilizing: '🌱', branch_pruning: '✂️', root_pruning: '🌿',
-          wiring: '🔧', wire_removal: '🔓', repotting: '🪴', pest_treatment: '🐛',
-          shading: '⛱️', sun_exposure: '☀️', winter_dormancy: '❄️', other: '📝',
-        }
-
-        for (const type of TREATMENT_TYPES) {
-          const cfg = getConfig(type)
-          if (!cfg) continue
-          // Check if done today
-          const doneToday = treatments.find(tr => tr.treatment_type === type && tr.treatment_date === todayStr && tr.status === 'completed')
-          if (doneToday) continue
-
-          if (cfg.snoozed_until) {
-            const d = new Date(cfg.snoozed_until)
-            const diff = Math.ceil((d.getTime() - todayDate.getTime()) / (1000*60*60*24))
-            if (diff <= 0) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'due' })
-            else if (diff <= 3) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'upcoming' })
-          } else if (cfg.interval_days && cfg.interval_days > 0) {
-            const lastLog = treatments.filter(tr => tr.treatment_type === type && tr.status === 'completed').sort((a,b) => b.treatment_date.localeCompare(a.treatment_date))[0]
-            const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
-            const next = new Date(lastDate.getTime() + cfg.interval_days * 24*60*60*1000)
-            const diff = Math.ceil((next.getTime() - todayDate.getTime()) / (1000*60*60*24))
-            const dueStr = next.toISOString().split('T')[0]
-            if (diff <= 0) dueAlerts.push({ type, dueDate: dueStr, status: 'due' })
-            else if (diff <= 3) dueAlerts.push({ type, dueDate: dueStr, status: 'upcoming' })
-          }
-        }
-
-        if (dueAlerts.length === 0) return null
-
-        return (
-          <div className="-mx-5 -mt-5 mb-5 bg-amber-50 border-b border-amber-200 p-5">
-            <h3 className="text-sm font-semibold text-amber-800 mb-3">🔔 {t('treatment.reminder')}</h3>
-            <ul className="space-y-2">
-            {dueAlerts.map(alert => (
-              <li
-                key={alert.type}
-                className={`flex items-center gap-3 bg-white rounded-lg px-4 py-3 shadow-sm border ${
-                  alert.status === 'due'
-                    ? 'border-red-200'
-                    : 'border-amber-100'
-                }`}
-              >
-                <span className="text-xl">{ICONS[alert.type] ?? '📝'}</span>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
-                  alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${alert.status === 'due' ? 'text-red-800' : 'text-amber-800'}`}>
-                    {t(`treatment.${alert.type}`)}
-                  </p>
-                  <p className="text-xs text-gray-500">{alert.dueDate}</p>
-                </div>
-                <button
-                  onClick={() => { setShowForm(true); setFormType(alert.type); setFormDate(todayStr) }}
-                  className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 ${
-                    alert.status === 'due'
-                      ? 'bg-red-600 hover:bg-red-700 text-white'
-                      : 'bg-amber-600 hover:bg-amber-700 text-white'
-                  }`}
-                >
-                  ✓ {t('treatment.markDone')}
-                </button>
-              </li>
-            ))}
-            </ul>
-          </div>
-        )
-      })()}
-
       {/* Heading + Add button */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-[#2d6a4f]">

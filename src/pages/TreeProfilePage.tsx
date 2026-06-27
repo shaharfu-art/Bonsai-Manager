@@ -357,7 +357,7 @@ const TreeProfilePage: React.FC = () => {
         )}
 
         {/* Due alerts - outside the card for full width */}
-        {activeTab === 'treatments' && <TreeAlertsBanner treeId={id!} onMarkDone={(type) => { setActiveTab('treatments') }} />}
+        {activeTab === 'treatments' && <TreeAlertsBanner treeId={id!} />}
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow overflow-hidden">
@@ -372,7 +372,7 @@ const TreeProfilePage: React.FC = () => {
             })}
           </div>
           <div className="p-5">
-            {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} hideAlertsBanner />}
+            {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} />}
             {activeTab === 'photos' && <PhotoTimelineSection treeId={id!} onCoverPhotoChange={() => {}} />}
           </div>
         </div>
@@ -516,7 +516,7 @@ const AlertsTabContent: React.FC<{ treeId: string }> = ({ treeId }) => {
 }
 
 // ─── Tree Alerts Banner (same style as dashboard) ────────────
-const TreeAlertsBanner: React.FC<{ treeId: string; onMarkDone?: (type: string) => void }> = ({ treeId }) => {
+const TreeAlertsBanner: React.FC<{ treeId: string }> = ({ treeId }) => {
   const { t } = useTranslation()
   const { getConfig } = useAlertConfigs(treeId)
   const { treatments } = useTreatments(treeId)
@@ -560,7 +560,11 @@ const TreeAlertsBanner: React.FC<{ treeId: string; onMarkDone?: (type: string) =
         {dueAlerts.map(alert => (
           <li
             key={alert.type}
-            className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors ${
+              alert.status === 'due'
+                ? 'bg-red-50 border border-red-200'
+                : 'bg-white border border-amber-100'
+            }`}
             onClick={() => navigate(`/trees/${treeId}`, { state: { openTreatment: alert.type } })}
           >
             <span className="text-lg">{TREATMENT_ICONS[alert.type] ?? '📝'}</span>
