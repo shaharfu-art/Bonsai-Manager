@@ -388,27 +388,27 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
             {dueAlerts.map(alert => (
               <div
                 key={alert.type}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                className={`flex items-center gap-3 px-5 py-4 rounded-xl border ${
                   alert.status === 'due'
                     ? 'bg-red-50 border-red-200'
                     : 'bg-amber-50 border-amber-200'
                 }`}
               >
-                <span className="text-lg">{ICONS[alert.type] ?? '📝'}</span>
+                <span className="text-2xl">{ICONS[alert.type] ?? '📝'}</span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${alert.status === 'due' ? 'text-red-800' : 'text-amber-800'}`}>
+                  <p className={`text-base font-semibold ${alert.status === 'due' ? 'text-red-800' : 'text-amber-800'}`}>
                     🔔 {t(`treatment.${alert.type}`)}
                   </p>
-                  <p className="text-[10px] text-gray-500">{alert.dueDate}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{alert.dueDate}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                <span className={`text-xs font-bold px-2 py-1 rounded ${
                   alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
                 }`}>
                   {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
                 </span>
                 <button
                   onClick={() => { setShowForm(true); setFormType(alert.type); setFormDate(todayStr) }}
-                  className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${
+                  className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
                     alert.status === 'due'
                       ? 'bg-red-600 hover:bg-red-700 text-white'
                       : 'bg-amber-600 hover:bg-amber-700 text-white'
