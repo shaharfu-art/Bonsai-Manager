@@ -15,8 +15,8 @@ import AiInsightsPanel from '../components/AiInsightsPanel'
 import ShareCard from '../components/ShareCard'
 
 // ─── Three-dots menu ────────────────────────────────────────
-const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring?: () => void; onShare?: () => void }> = ({ onEdit, onDelete, onRecurring, onShare }) => {
-  const { t, i18n } = useTranslation()
+const MoreMenu: React.FC<{ onEdit?: () => void; onDelete: () => void; onRecurring?: () => void }> = ({ onDelete, onRecurring }) => {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   return (
@@ -31,26 +31,12 @@ const MoreMenu: React.FC<{ onEdit: () => void; onDelete: () => void; onRecurring
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute top-9 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-36">
-            <button
-              onClick={() => { setOpen(false); onEdit() }}
-              className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              ✏️ {t('common.edit')}
-            </button>
             {onRecurring && (
               <button
                 onClick={() => { setOpen(false); onRecurring() }}
                 className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 ⚙️ {t('treatment.reminder')}
-              </button>
-            )}
-            {onShare && (
-              <button
-                onClick={() => { setOpen(false); onShare() }}
-                className="w-full text-right px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                📤 {i18n.language === 'he' ? 'שתף' : 'Share'}
               </button>
             )}
             <button
@@ -151,10 +137,26 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
       className="bg-white rounded-2xl shadow-md p-5 -mt-8 relative z-10"
       onDoubleClick={() => !editing && setEditing(true)}
     >
-      {/* More menu - top left */}
+      {/* Action buttons - top left */}
       {!editing && (
-        <div className="absolute top-3 left-3">
-          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} onShare={onShare} />
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} />
+          <button
+            onClick={onEdit}
+            className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm shadow-sm"
+            title={t('common.edit')}
+          >
+            ✏️
+          </button>
+          <button
+            onClick={onShare}
+            className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"
+            title={i18n.language === 'he' ? 'שתף' : 'Share'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+            </svg>
+          </button>
         </div>
       )}
 
