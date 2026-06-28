@@ -153,8 +153,8 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
             className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"
             title={i18n.language === 'he' ? 'שתף' : 'Share'}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M21 11.5a1 1 0 0 1-.29.71l-7 7a1 1 0 0 1-1.71-.71V15c-5.52 0-10 2-10 2s1.56-7.58 10-9v-3.5a1 1 0 0 1 1.71-.71l7 7a1 1 0 0 1 .29.71z" />
             </svg>
           </button>
         </div>
