@@ -33,17 +33,22 @@ const OnboardingWizard: React.FC = () => {
     const checkShouldShow = async () => {
       // Quick localStorage check first for fast UX
       if (localStorage.getItem(WIZARD_DONE_KEY)) {
+        console.log('[Wizard] localStorage says done, skipping')
         setCheckDone(true)
         return
       }
       // Check DB
+      console.log('[Wizard] Checking DB for user:', user.id)
       const { data, error } = await supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
+      console.log('[Wizard] DB result:', { data, error: error?.message })
       
       if (error || !data || data.trees_lat === null || data.trees_lat === undefined) {
         // Location not set — show wizard
+        console.log('[Wizard] Showing wizard')
         setShow(true)
       } else {
         // Location exists — mark as done
+        console.log('[Wizard] Location exists, hiding')
         localStorage.setItem(WIZARD_DONE_KEY, 'true')
       }
       setCheckDone(true)
