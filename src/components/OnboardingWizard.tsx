@@ -16,8 +16,8 @@ const OnboardingWizard: React.FC = () => {
   const { user } = useAuth()
   const isRtl = i18n.language === 'he'
 
-  const [show, setShow] = useState(false)
-  const [checkDone, setCheckDone] = useState(false)
+  // Start hidden, only show after DB check confirms no location
+  const [visible, setVisible] = useState(false)
   const [step, setStep] = useState(0) // 0=install, 1=notifications, 2=location
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isIOS, setIsIOS] = useState(false)
@@ -26,37 +26,34 @@ const OnboardingWizard: React.FC = () => {
   const [cityName, setCityName] = useState('')
   const [manualCity, setManualCity] = useState('')
   const [showManual, setShowManual] = useState(false)
+  const [checked, setChecked] = useState(false)
 
   useEffect(() => {
+    // Don't run until we have a user
     if (!user) return
+    // Don't run twice
+    if (checked) return
 
-    const checkShouldShow = async () => {
-      // Quick localStorage check first for fast UX
-      if (localStorage.getItem(WIZARD_DONE_KEY)) {
-        console.log('[Wizard] localStorage says done, skipping')
-        setCheckDone(true)
-        return
-      }
-      // Check DB
-      console.log('[Wizard] Checking DB for user:', user.id)
-      const { data, error } = await supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
-      console.log('[Wizard] DB result:', { data, error: error?.message })
-      
-      if (error || !data || data.trees_lat === null || data.trees_lat === undefined) {
-        // Location not set — show wizard
-        console.log('[Wizard] Showing wizard')
-        setShow(true)
-      } else {
-        // Location exists — mark as done
-        console.log('[Wizard] Location exists, hiding')
-        localStorage.setItem(WIZARD_DONE_KEY, 'true')
-      }
-      setCheckDone(true)
+    // Fast exit: localStorage says done
+    if (localStorage.getItem(WIZARD_DONE_KEY)) {
+      setChecked(true)
+      return
     }
 
-    checkShouldShow()
+    // Check DB
+    supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
+      .then(({ data, error }) => {
+        if (error || !data || data.trees_lat === null || data.trees_lat === undefined) {
+          setVisible(true)
+        } else {
+          localStorage.setItem(WIZARD_DONE_KEY, 'true')
+        }
+        setChecked(true)
+      })
+  }, [user, checked])
 
-    // Check if already standalone
+  useEffect(() => {
+    // Setup install prompt listener and detect iOS
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as any).standalone === true
     if (isStandalone) setStep(1)
@@ -66,7 +63,7 @@ const OnboardingWizard: React.FC = () => {
     const handler = (e: Event) => { e.preventDefault(); setDeferredPrompt(e as BeforeInstallPromptEvent) }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [user])
+  }, [])
 
   const handleInstall = async () => {
     if (deferredPrompt) {
@@ -147,7 +144,7 @@ const OnboardingWizard: React.FC = () => {
 
   const handleFinish = () => {
     localStorage.setItem(WIZARD_DONE_KEY, 'true')
-    setShow(false)
+    setVisible(false)
   }
 
   const handleSkip = () => {
@@ -155,7 +152,7 @@ const OnboardingWizard: React.FC = () => {
     else { handleFinish() }
   }
 
-  if (!show || !checkDone) return null
+  if (!visible) return null
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
