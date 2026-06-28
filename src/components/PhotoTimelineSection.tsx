@@ -114,13 +114,6 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
           {t('tabs.photos')}
         </h2>
         <div className="flex items-center gap-2">
-          {/* Sort toggle */}
-          <button
-            onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
-            className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-colors"
-          >
-            {sortDir === 'desc' ? t('photo.newestFirst') : t('photo.oldestFirst')}
-          </button>
           {/* Add photo button */}
           <button
             onClick={() => { setShowForm(v => !v); if (showForm) resetForm() }}
@@ -246,39 +239,6 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
         <p className="text-center text-gray-400 text-sm py-6">
           {t('photo.noPhotos')}
         </p>
-      )}
-
-      {/* Timeline view - horizontal scrollable evolution strip */}
-      {!loading && sorted.length > 1 && (
-        <div className="mb-6">
-          <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
-            {t('photo.oldestFirst') === 'Oldest first' ? '📅 Evolution Timeline' : '📅 ציר זמן התפתחות'}
-          </h3>
-          <div className="relative">
-            {/* Timeline line */}
-            <div className="absolute top-[52px] left-0 right-0 h-0.5 bg-gradient-to-r from-[#2d6a4f] to-[#52b788] rounded-full" />
-            {/* Scrollable photos */}
-            <div className="flex gap-3 overflow-x-auto pb-3 pt-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-              {sortPhotosByDate(photos, 'asc').map((photo, idx) => (
-                <div key={photo.id} className="flex-shrink-0 flex flex-col items-center" onClick={() => setLightboxPhotoId(photo.id)}>
-                  <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform">
-                    {photo.public_url ? (
-                      <img src={photo.public_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-lg">🖼️</div>
-                    )}
-                  </div>
-                  {/* Timeline dot */}
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#2d6a4f] border-2 border-white shadow mt-1.5" />
-                  {/* Date label */}
-                  <p className="text-[9px] text-gray-500 mt-1 whitespace-nowrap">
-                    {photo.photo_date.slice(5)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Photo grid */}
