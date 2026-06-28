@@ -23,7 +23,7 @@ const MoreMenu: React.FC<{ onEdit?: () => void; onDelete: () => void; onRecurrin
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg font-bold shadow-sm"
+        className="bg-white/90 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg font-bold shadow border border-gray-200"
       >
         ⋮
       </button>
@@ -140,23 +140,23 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
       {/* Action buttons - top left */}
       {!editing && (
         <div className="absolute top-3 left-3 flex items-center gap-1.5">
-          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} />
-          <button
-            onClick={onEdit}
-            className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm shadow-sm"
-            title={t('common.edit')}
-          >
-            ✏️
-          </button>
           <button
             onClick={onShare}
-            className="bg-[#2d6a4f] hover:bg-[#245a42] text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"
+            className="bg-white/90 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow border border-gray-200"
             title={i18n.language === 'he' ? 'שתף' : 'Share'}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M21 11.5a1 1 0 0 1-.29.71l-7 7a1 1 0 0 1-1.71-.71V15c-5.52 0-10 2-10 2s1.56-7.58 10-9v-3.5a1 1 0 0 1 1.71-.71l7 7a1 1 0 0 1 .29.71z" />
             </svg>
           </button>
+          <button
+            onClick={onEdit}
+            className="bg-white/90 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm shadow border border-gray-200"
+            title={t('common.edit')}
+          >
+            ✏️
+          </button>
+          <MoreMenu onEdit={onEdit} onDelete={onDelete} onRecurring={onRecurring} />
         </div>
       )}
 
