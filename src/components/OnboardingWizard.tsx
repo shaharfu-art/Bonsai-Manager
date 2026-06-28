@@ -27,22 +27,33 @@ const OnboardingWizard: React.FC = () => {
   const [showManual, setShowManual] = useState(false)
 
   useEffect(() => {
-    // Only show if not completed before
-    if (localStorage.getItem(WIZARD_DONE_KEY)) return
+    if (!user) return
+    // Check if wizard should show:
+    // Show wizard if location is not set in DB (regardless of localStorage flag)
+    // This handles: app reinstall, cleared data, new device
+    supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (!data?.trees_lat) {
+          // Location not set — show wizard (reset localStorage flag)
+          localStorage.removeItem(WIZARD_DONE_KEY)
+          setShow(true)
+        } else if (!localStorage.getItem(WIZARD_DONE_KEY)) {
+          // Location exists but wizard flag missing (rare) — mark as done
+          localStorage.setItem(WIZARD_DONE_KEY, 'true')
+        }
+      })
+
     // Check if already standalone
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as any).standalone === true
-    if (isStandalone) {
-      // Skip install step
-      setStep(1)
-    }
-    setShow(true)
+    if (isStandalone) setStep(1)
+
     setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream)
 
     const handler = (e: Event) => { e.preventDefault(); setDeferredPrompt(e as BeforeInstallPromptEvent) }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
+  }, [user])
 
   const handleInstall = async () => {
     if (deferredPrompt) {
