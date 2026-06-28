@@ -67,6 +67,7 @@ const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClos
       console.error('Share failed:', err)
     } finally {
       setSharing(false)
+      onClose()
     }
   }
 
