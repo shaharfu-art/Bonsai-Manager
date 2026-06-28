@@ -28,20 +28,22 @@ const OnboardingWizard: React.FC = () => {
 
   useEffect(() => {
     if (!user) return
-    // Check if wizard should show:
-    // Show wizard if location is not set in DB (regardless of localStorage flag)
-    // This handles: app reinstall, cleared data, new device
-    supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
-      .then(({ data }) => {
-        if (!data?.trees_lat) {
-          // Location not set — show wizard (reset localStorage flag)
-          localStorage.removeItem(WIZARD_DONE_KEY)
-          setShow(true)
-        } else if (!localStorage.getItem(WIZARD_DONE_KEY)) {
-          // Location exists but wizard flag missing (rare) — mark as done
-          localStorage.setItem(WIZARD_DONE_KEY, 'true')
-        }
-      })
+
+    const checkShouldShow = async () => {
+      // Check if location is set in DB
+      const { data } = await supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
+      
+      if (!data || data.trees_lat === null || data.trees_lat === undefined) {
+        // Location not set — show wizard
+        setShow(true)
+      } else {
+        // Location exists — mark as done and don't show
+        localStorage.setItem(WIZARD_DONE_KEY, 'true')
+        setShow(false)
+      }
+    }
+
+    checkShouldShow()
 
     // Check if already standalone
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
