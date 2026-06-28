@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase-client'
 import { useAuth } from '../contexts/AuthContext'
+import { cacheGet, cacheSet, cacheInvalidate } from '../lib/cache'
 
 export interface Tree {
   id: string
@@ -63,7 +64,18 @@ export function useTrees(): UseTreesResult {
       setLoading(false)
       return
     }
-    setLoading(true)
+
+    // Check cache first
+    const cacheKey = `trees:${user.id}`
+    const cached = cacheGet<Tree[]>(cacheKey)
+    if (cached) {
+      setTrees(cached)
+      setLoading(false)
+      // Still fetch in background to refresh
+    } else {
+      setLoading(true)
+    }
+
     setError(null)
     try {
       const { data, error: fetchError } = await supabase
@@ -74,8 +86,9 @@ export function useTrees(): UseTreesResult {
 
       if (fetchError) throw fetchError
       setTrees(data ?? [])
+      cacheSet(cacheKey, data ?? [])
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch trees')
+      if (!cached) setError(err instanceof Error ? err.message : 'Failed to fetch trees')
     } finally {
       setLoading(false)
     }

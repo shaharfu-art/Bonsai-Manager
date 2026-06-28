@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
 import { supabase } from '../lib/supabase-client'
+import { cacheGet, cacheSet } from '../lib/cache'
 import { useSpecies } from '../hooks/useSpecies'
 import { usePhotos } from '../hooks/usePhotos'
 import { useAlertConfigs } from '../hooks/useAlertConfigs'
@@ -261,10 +262,19 @@ const TreeProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (!id) return
-    setLoading(true); setError('')
+    // Check cache first for instant display
+    const cacheKey = `tree:${id}`
+    const cached = cacheGet<Tree>(cacheKey)
+    if (cached) {
+      setTree(cached)
+      setLoading(false)
+    } else {
+      setLoading(true)
+    }
+    setError('')
     supabase.from('trees').select('*').eq('id', id).single().then(({ data, error: fetchError }) => {
-      if (fetchError) setError(fetchError.message)
-      else setTree(data as Tree)
+      if (fetchError) { if (!cached) setError(fetchError.message) }
+      else { setTree(data as Tree); cacheSet(cacheKey, data as Tree) }
       setLoading(false)
     })
   }, [id])

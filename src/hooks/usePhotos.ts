@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase-client'
 import { type Photo, applyNewCoverPhoto, isImageSizeValid } from '../lib/photo-utils'
+import { cacheGet, cacheSet } from '../lib/cache'
 
 async function getSignedUrl(storagePath: string): Promise<string | null> {
   const { data, error } = await supabase.storage
@@ -32,7 +33,18 @@ export function usePhotos(treeId: string): UsePhotosResult {
 
   const fetchPhotos = useCallback(async () => {
     if (!treeId) return
-    setLoading(true)
+
+    // Check cache first
+    const cacheKey = `photos:${treeId}`
+    const cached = cacheGet<Photo[]>(cacheKey)
+    if (cached) {
+      setPhotos(cached)
+      setLoading(false)
+      // Still refresh in background
+    } else {
+      setLoading(true)
+    }
+
     setError(null)
     try {
       const { data, error: fetchError } = await supabase
@@ -51,8 +63,9 @@ export function usePhotos(treeId: string): UsePhotosResult {
         })
       )
       setPhotos(enriched)
+      cacheSet(cacheKey, enriched)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch photos')
+      if (!cached) setError(err instanceof Error ? err.message : 'Failed to fetch photos')
     } finally {
       setLoading(false)
     }
