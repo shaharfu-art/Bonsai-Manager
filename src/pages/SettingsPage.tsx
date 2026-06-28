@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase-client'
 import { subscribeToPush, unsubscribeFromPush } from '../lib/push-notifications'
 
 const SettingsPage: React.FC = () => {
@@ -89,6 +90,12 @@ const SettingsPage: React.FC = () => {
           <h2 className="text-base font-semibold text-gray-800 mb-3">{isRtl ? 'מצב תצוגה' : 'Display Mode'}</h2>
           <DarkModeToggle isRtl={isRtl} />
         </section>
+
+        {/* Location */}
+        <section className="bg-white rounded-2xl shadow p-5">
+          <h2 className="text-base font-semibold text-gray-800 mb-3">{isRtl ? '📍 מיקום העצים' : '📍 Trees Location'}</h2>
+          <LocationSetting isRtl={isRtl} />
+        </section>
       </div>
     </Layout>
   )
@@ -137,6 +144,60 @@ const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
       </label>
       {loading && <p className="text-xs text-gray-400 mt-2">{t('common.loading')}</p>}
     </>
+  )
+}
+
+// Location setting sub-component
+const LocationSetting: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
+  const { user } = useAuth()
+  const [city, setCity] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('user_profiles').select('trees_city').eq('id', user.id).single()
+      .then(({ data }) => { setCity(data?.trees_city ?? null); setLoading(false) })
+  }, [user])
+
+  const handleUpdateLocation = () => {
+    if (!navigator.geolocation) return
+    setUpdating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${isRtl ? 'he' : 'en'}`)
+          const data = await res.json()
+          const cityName = data.address?.city || data.address?.town || data.address?.village || ''
+          if (user) {
+            await supabase.from('user_profiles').update({ trees_lat: latitude, trees_lng: longitude, trees_city: cityName }).eq('id', user.id)
+          }
+          setCity(cityName)
+        } catch { /* ignore */ }
+        setUpdating(false)
+      },
+      () => { setUpdating(false) },
+      { enableHighAccuracy: false, timeout: 10000 }
+    )
+  }
+
+  if (loading) return <p className="text-xs text-gray-400">...</p>
+
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-700">{city || (isRtl ? 'לא הוגדר' : 'Not set')}</p>
+        {!city && <p className="text-xs text-gray-400">{isRtl ? 'נדרש להתראות מזג אוויר' : 'Required for weather alerts'}</p>}
+      </div>
+      <button
+        onClick={handleUpdateLocation}
+        disabled={updating}
+        className="text-xs bg-[#2d6a4f] hover:bg-[#245a42] text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+      >
+        {updating ? '...' : (isRtl ? '📍 עדכן' : '📍 Update')}
+      </button>
+    </div>
   )
 }
 
