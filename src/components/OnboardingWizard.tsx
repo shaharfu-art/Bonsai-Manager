@@ -34,22 +34,15 @@ const OnboardingWizard: React.FC = () => {
     // Don't run twice
     if (checked) return
 
-    // Fast exit: localStorage says done
+    // Simple check: if localStorage says done, skip
     if (localStorage.getItem(WIZARD_DONE_KEY)) {
       setChecked(true)
       return
     }
 
-    // Check DB
-    supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
-      .then(({ data, error }) => {
-        if (error || !data || data.trees_lat === null || data.trees_lat === undefined) {
-          setVisible(true)
-        } else {
-          localStorage.setItem(WIZARD_DONE_KEY, 'true')
-        }
-        setChecked(true)
-      })
+    // Show wizard!
+    setVisible(true)
+    setChecked(true)
   }, [user, checked])
 
   useEffect(() => {
