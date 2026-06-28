@@ -23,7 +23,7 @@ const MoreMenu: React.FC<{ onEdit?: () => void; onDelete: () => void; onRecurrin
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-white/90 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg font-bold shadow border border-gray-200"
+        className="bg-sky-200/50 hover:bg-sky-200/80 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg font-bold backdrop-blur-sm"
       >
         ⋮
       </button>
@@ -142,7 +142,7 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
         <div className="absolute top-3 left-3 flex items-center gap-1.5">
           <button
             onClick={onShare}
-            className="bg-white/90 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow border border-gray-200"
+            className="bg-sky-200/50 hover:bg-sky-200/80 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
             title={i18n.language === 'he' ? 'שתף' : 'Share'}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
           </button>
           <button
             onClick={onEdit}
-            className="bg-white/90 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm shadow border border-gray-200"
+            className="bg-sky-200/50 hover:bg-sky-200/80 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-sm backdrop-blur-sm"
             title={t('common.edit')}
           >
             ✏️
