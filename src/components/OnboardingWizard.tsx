@@ -17,6 +17,7 @@ const OnboardingWizard: React.FC = () => {
   const isRtl = i18n.language === 'he'
 
   const [show, setShow] = useState(false)
+  const [checkDone, setCheckDone] = useState(false)
   const [step, setStep] = useState(0) // 0=install, 1=notifications, 2=location
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isIOS, setIsIOS] = useState(false)
@@ -30,17 +31,22 @@ const OnboardingWizard: React.FC = () => {
     if (!user) return
 
     const checkShouldShow = async () => {
-      // Check if location is set in DB
-      const { data } = await supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
+      // Quick localStorage check first for fast UX
+      if (localStorage.getItem(WIZARD_DONE_KEY)) {
+        setCheckDone(true)
+        return
+      }
+      // Check DB
+      const { data, error } = await supabase.from('user_profiles').select('trees_lat').eq('id', user.id).single()
       
-      if (!data || data.trees_lat === null || data.trees_lat === undefined) {
+      if (error || !data || data.trees_lat === null || data.trees_lat === undefined) {
         // Location not set — show wizard
         setShow(true)
       } else {
-        // Location exists — mark as done and don't show
+        // Location exists — mark as done
         localStorage.setItem(WIZARD_DONE_KEY, 'true')
-        setShow(false)
       }
+      setCheckDone(true)
     }
 
     checkShouldShow()
@@ -144,7 +150,7 @@ const OnboardingWizard: React.FC = () => {
     else { handleFinish() }
   }
 
-  if (!show) return null
+  if (!show || !checkDone) return null
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
