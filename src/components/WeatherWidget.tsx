@@ -8,7 +8,8 @@ interface WeatherData {
   icon: string
   isDay: boolean
   city: string
-  description: string
+  humidity: number
+  windSpeed: number
 }
 
 // Weather codes from Open-Meteo → icon + description
@@ -61,13 +62,15 @@ const WeatherWidget: React.FC = () => {
       // Fetch from Open-Meteo
       try {
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${profile.trees_lat}&longitude=${profile.trees_lng}&current=temperature_2m,is_day,weather_code&timezone=auto`
+          `https://api.open-meteo.com/v1/forecast?latitude=${profile.trees_lat}&longitude=${profile.trees_lng}&current=temperature_2m,is_day,weather_code,relative_humidity_2m,wind_speed_10m&timezone=auto`
         )
         const data = await res.json()
         const current = data.current
         const temp = Math.round(current?.temperature_2m ?? 0)
         const isDay = current?.is_day === 1
         const weatherCode = current?.weather_code ?? 0
+        const humidity = Math.round(current?.relative_humidity_2m ?? 0)
+        const windSpeed = Math.round(current?.wind_speed_10m ?? 0)
         const { icon } = getWeatherIcon(weatherCode, isDay)
 
         const weatherData: WeatherData = {
@@ -75,7 +78,8 @@ const WeatherWidget: React.FC = () => {
           icon,
           isDay,
           city: profile.trees_city || '',
-          description: '',
+          humidity,
+          windSpeed,
         }
         setWeather(weatherData)
 
@@ -121,11 +125,15 @@ const WeatherWidget: React.FC = () => {
     <div className={`${bgGradient} rounded-xl px-5 py-2 flex items-center gap-3 text-white shadow-md min-w-[200px]`}>
       <span className="text-4xl leading-none drop-shadow-lg">{weather.icon}</span>
       <div className="flex flex-col items-start flex-1">
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline gap-1.5">
           <span className="text-xl font-bold leading-tight drop-shadow">{weather.temp}°C</span>
           {weather.city && (
             <span className="text-[10px] opacity-70">{weather.city}</span>
           )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] opacity-80">💧{weather.humidity}%</span>
+          <span className="text-[10px] opacity-80">💨{weather.windSpeed}km/h</span>
         </div>
         <span className="text-[10px] opacity-90 leading-tight mt-0.5">{tip}</span>
       </div>
