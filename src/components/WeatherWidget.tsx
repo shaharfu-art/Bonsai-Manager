@@ -96,6 +96,9 @@ const WeatherWidget: React.FC = () => {
 
   if (!weather) return null
 
+  // Check if current conditions are hazardous
+  const isHazard = weather.temp > 37 || weather.temp < 3 || weather.windSpeed > 50 || weather.humidity < 25
+
   // Dynamic gradient based on day/night + temperature
   let bgGradient: string
   if (!weather.isDay) {
@@ -137,6 +140,7 @@ const WeatherWidget: React.FC = () => {
       <div className="flex flex-col items-start flex-1 relative z-10">
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-bold leading-tight drop-shadow">{weather.temp}°</span>
+          {isHazard && <span className="text-sm animate-pulse">⚠️</span>}
           {weather.city && (
             <span className="text-[10px] opacity-70">{weather.city}</span>
           )}
