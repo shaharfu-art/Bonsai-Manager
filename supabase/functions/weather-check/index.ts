@@ -111,6 +111,19 @@ serve(async (req) => {
       const { data: trees } = await supabase.from('trees').select('custom_name, species_free_text').eq('user_id', user.id).limit(5)
       const treeNames = (trees ?? []).map(t => t.custom_name || t.species_free_text || '').filter(Boolean).join(', ')
 
+      // Get recent treatments (last 3 days)
+      const threeDaysAgo = new Date()
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+      const { data: recentTreatments } = await supabase
+        .from('treatment_logs')
+        .select('treatment_type, treatment_date')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .gte('treatment_date', threeDaysAgo.toISOString().split('T')[0])
+        .order('treatment_date', { ascending: false })
+        .limit(10)
+      const recentActivity = (recentTreatments ?? []).map(t => `${t.treatment_type} (${t.treatment_date})`).join(', ')
+
       // Get push subscriptions
       const { data: subs, error: subsErr } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth').eq('user_id', user.id)
       if (!subs || subs.length === 0) {
@@ -131,7 +144,7 @@ serve(async (req) => {
       try {
         const { GoogleGenAI } = await import('npm:@google/genai')
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
-        const prompt = `You are a bonsai expert. Weather forecast: ${alertSummary}. Trees: ${treeNames || 'bonsai trees'}. Write a SHORT push notification (max 120 chars) in Hebrew with actionable advice. Include emoji.`
+        const prompt = `You are a bonsai expert. Weather forecast: ${alertSummary}. Trees: ${treeNames || 'bonsai trees'}. Recent care activities: ${recentActivity || 'none in last 3 days'}. Write a SHORT push notification (max 120 chars) in Hebrew with actionable advice. Consider what was already done recently. Include emoji.`
         const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt })
         if (response.text) recommendation = response.text.slice(0, 180)
       } catch { /* use fallback */ }
