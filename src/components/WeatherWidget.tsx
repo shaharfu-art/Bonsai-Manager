@@ -26,7 +26,7 @@ function getWeatherIcon(code: number, isDay: boolean): { icon: string; desc: str
   return { icon: isDay ? '🌤️' : '🌙', desc: '' }
 }
 
-const CACHE_KEY = 'weather-cache'
+const CACHE_KEY = 'weather-cache-v2'
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
 
 const WeatherWidget: React.FC = () => {
@@ -142,8 +142,8 @@ const WeatherWidget: React.FC = () => {
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] opacity-80">💧{weather.humidity}%</span>
-          <span className="text-[10px] opacity-80">💨{weather.windSpeed}km/h</span>
+          <span className="text-[10px] opacity-80">💧 {weather.humidity}%</span>
+          <span className="text-[10px] opacity-80">💨 {weather.windSpeed}km/h</span>
         </div>
       </div>
     </div>
