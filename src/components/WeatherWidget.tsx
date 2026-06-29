@@ -108,14 +108,26 @@ const WeatherWidget: React.FC = () => {
     bgGradient = 'bg-gradient-to-r from-blue-700 to-indigo-800'
   }
 
+  // Temperature-based tip for bonsai
+  let tip: string
+  const isRtl = i18n.language === 'he'
+  if (weather.temp > 35) tip = isRtl ? '🔥 חמסין! העבר לצל' : '🔥 Heatwave! Move to shade'
+  else if (weather.temp > 25) tip = isRtl ? '💧 חם, השקה בבוקר' : '💧 Hot, water in AM'
+  else if (weather.temp > 15) tip = isRtl ? '✨ מושלם לבונסאי' : '✨ Perfect for bonsai'
+  else if (weather.temp > 5) tip = isRtl ? '🍂 קריר, הפחת השקיה' : '🍂 Cool, reduce watering'
+  else tip = isRtl ? '❄️ הגן מכפור!' : '❄️ Protect from frost!'
+
   return (
-    <div className={`${bgGradient} rounded-xl px-3.5 py-1.5 flex items-center gap-2 text-white shadow-md min-w-[100px]`}>
-      <span className="text-2xl leading-none drop-shadow">{weather.icon}</span>
-      <div className="flex flex-col items-start">
-        <span className="text-base font-bold leading-tight drop-shadow">{weather.temp}°</span>
-        {weather.city && (
-          <span className="text-[9px] opacity-80 leading-tight">{weather.city}</span>
-        )}
+    <div className={`${bgGradient} rounded-xl px-5 py-2 flex items-center gap-3 text-white shadow-md min-w-[200px]`}>
+      <span className="text-4xl leading-none drop-shadow-lg">{weather.icon}</span>
+      <div className="flex flex-col items-start flex-1">
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl font-bold leading-tight drop-shadow">{weather.temp}°C</span>
+          {weather.city && (
+            <span className="text-[10px] opacity-70">{weather.city}</span>
+          )}
+        </div>
+        <span className="text-[10px] opacity-90 leading-tight mt-0.5">{tip}</span>
       </div>
     </div>
   )
