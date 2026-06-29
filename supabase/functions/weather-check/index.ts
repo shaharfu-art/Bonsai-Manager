@@ -14,8 +14,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
 }
 
-const THRESHOLDS = { heatwave: 37, extreme_heat: 40, frost: 3, strong_wind: 50, heavy_rain: 30 }
-const TEST_THRESHOLDS = { heatwave: 20, extreme_heat: 25, frost: 15, strong_wind: 5, heavy_rain: 1 }
+const THRESHOLDS = { heatwave: 37, extreme_heat: 40, frost: 3, strong_wind: 50, heavy_rain: 30, dry_east_wind_humidity: 30, haze_humidity: 25, haze_temp: 30 }
+const TEST_THRESHOLDS = { heatwave: 20, extreme_heat: 25, frost: 15, strong_wind: 5, heavy_rain: 1, dry_east_wind_humidity: 80, haze_humidity: 80, haze_temp: 20 }
 
 interface WeatherAlert { type: string; day: string; value: number; unit: string }
 
@@ -25,24 +25,35 @@ function checkAlerts(daily: any, t: typeof THRESHOLDS): WeatherAlert[] {
   const maxT = daily.temperature_2m_max ?? []
   const minT = daily.temperature_2m_min ?? []
   const wind = daily.wind_speed_10m_max ?? []
+  const windDir = daily.wind_direction_10m_dominant ?? []
   const rain = daily.precipitation_sum ?? []
+  const humidity = daily.relative_humidity_2m_mean ?? []
   for (let i = 0; i < Math.min(dates.length, 3); i++) {
     if (maxT[i] >= t.extreme_heat) alerts.push({ type: 'extreme_heat', day: dates[i], value: Math.round(maxT[i]), unit: '°C' })
     else if (maxT[i] >= t.heatwave) alerts.push({ type: 'heatwave', day: dates[i], value: Math.round(maxT[i]), unit: '°C' })
     if (minT[i] <= t.frost) alerts.push({ type: 'frost', day: dates[i], value: Math.round(minT[i]), unit: '°C' })
     if (wind[i] >= t.strong_wind) alerts.push({ type: 'strong_wind', day: dates[i], value: Math.round(wind[i]), unit: 'km/h' })
     if (rain[i] >= t.heavy_rain) alerts.push({ type: 'heavy_rain', day: dates[i], value: Math.round(rain[i]), unit: 'mm' })
+    // Dry east wind: direction 45-135° + low humidity
+    const dir = windDir[i] ?? 0
+    if (dir >= 45 && dir <= 135 && humidity[i] <= t.dry_east_wind_humidity) {
+      alerts.push({ type: 'dry_east_wind', day: dates[i], value: Math.round(humidity[i]), unit: '% לחות' })
+    }
+    // Haze/Sharav: very low humidity + high temp
+    if (humidity[i] <= t.haze_humidity && maxT[i] >= t.haze_temp) {
+      alerts.push({ type: 'haze', day: dates[i], value: Math.round(humidity[i]), unit: '% לחות' })
+    }
   }
   return alerts
 }
 
 function alertEmoji(type: string): string {
-  const map: Record<string, string> = { extreme_heat: '🔥', heatwave: '☀️', frost: '🥶', strong_wind: '💨', heavy_rain: '🌧️' }
+  const map: Record<string, string> = { extreme_heat: '🔥', heatwave: '☀️', frost: '🥶', strong_wind: '💨', heavy_rain: '🌧️', dry_east_wind: '🏜️', haze: '🌫️' }
   return map[type] ?? '⚠️'
 }
 
 function alertTitle(type: string): string {
-  const map: Record<string, string> = { extreme_heat: 'התראת חמסין קיצוני!', heatwave: 'התראת חום', frost: 'התראת כפור!', strong_wind: 'רוחות חזקות', heavy_rain: 'גשם כבד צפוי' }
+  const map: Record<string, string> = { extreme_heat: 'התראת חמסין קיצוני!', heatwave: 'התראת חום', frost: 'התראת כפור!', strong_wind: 'רוחות חזקות', heavy_rain: 'גשם כבד צפוי', dry_east_wind: 'רוח מזרחית יבשה', haze: 'אובך ושרב' }
   return map[type] ?? 'התראת מזג אוויר'
 }
 
@@ -50,14 +61,19 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
-    // Auth
+    // Auth: check secret from header OR query param
     const authHeader = req.headers.get('authorization') || ''
+    const url = new URL(req.url)
+    const secretParam = url.searchParams.get('secret') || ''
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     
     let isAuthorized = false
-    if (CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`) {
+    // Cron secret via header or URL param
+    if (CRON_SECRET && (authHeader === `Bearer ${CRON_SECRET}` || secretParam === CRON_SECRET)) {
       isAuthorized = true
-    } else if (authHeader.startsWith('Bearer ')) {
+    }
+    // Authenticated user (from app)
+    if (!isAuthorized && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '')
       const { data: { user } } = await supabase.auth.getUser(token)
       if (user) isAuthorized = true
@@ -84,7 +100,7 @@ serve(async (req) => {
     for (const user of users) {
       // Fetch 3-day forecast
       const weatherRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${user.trees_lat}&longitude=${user.trees_lng}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum&timezone=auto&forecast_days=3`
+        `https://api.open-meteo.com/v1/forecast?latitude=${user.trees_lat}&longitude=${user.trees_lng}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_sum,relative_humidity_2m_mean&timezone=auto&forecast_days=3`
       )
       const weatherData = await weatherRes.json()
       const alerts = checkAlerts(weatherData.daily, thresholds)
