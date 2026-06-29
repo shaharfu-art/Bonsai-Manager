@@ -96,6 +96,9 @@ const SettingsPage: React.FC = () => {
           <h2 className="text-base font-semibold text-gray-800 mb-3">{isRtl ? '📍 מיקום העצים' : '📍 Trees Location'}</h2>
           <LocationSetting isRtl={isRtl} />
         </section>
+
+        {/* Admin: Weather Test */}
+        <WeatherTestButton isRtl={isRtl} />
       </div>
     </Layout>
   )
@@ -230,6 +233,74 @@ const DarkModeToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
       </div>
       <span className="text-sm text-gray-600">{isRtl ? '🌙 מצב כהה' : '🌙 Dark Mode'}</span>
     </label>
+  )
+}
+
+// Weather test button (admin only)
+const WeatherTestButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
+  const { user } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [result, setResult] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('user_profiles').select('role').eq('id', user.id).single()
+      .then(({ data }) => { setIsAdmin(data?.role === 'admin') })
+  }, [user])
+
+  if (!isAdmin) return null
+
+  const handleTest = async () => {
+    setTesting(true)
+    setResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Not authenticated')
+
+      const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
+      const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
+
+      const res = await fetch(`${url}/functions/v1/weather-check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ test: true }),
+      })
+
+      const data = await res.json()
+      setResult(JSON.stringify(data, null, 2))
+    } catch (err: any) {
+      setResult(`Error: ${err.message}`)
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  return (
+    <section className="bg-white rounded-2xl shadow p-5">
+      <h2 className="text-base font-semibold text-gray-800 mb-3">
+        {isRtl ? '🧪 בדיקת התראות מזג אוויר' : '🧪 Weather Alert Test'}
+      </h2>
+      <p className="text-xs text-gray-500 mb-3">
+        {isRtl ? 'סימולציה עם סף נמוך — יישלח push אם יש מיקום והתראות מופעלות' : 'Simulation with low thresholds — sends push if location and notifications are set'}
+      </p>
+      <button
+        onClick={handleTest}
+        disabled={testing}
+        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm"
+      >
+        {testing ? '🔄 ...' : (isRtl ? '🧪 הרץ בדיקה' : '🧪 Run Test')}
+      </button>
+      {result && (
+        <pre className="mt-3 text-[10px] bg-gray-50 border rounded-lg p-2 overflow-x-auto max-h-32 text-gray-600">
+          {result}
+        </pre>
+      )}
+    </section>
   )
 }
 
