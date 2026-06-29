@@ -103,10 +103,12 @@ const WeatherWidget: React.FC = () => {
   if (!weather) return null
 
   return (
-    <div className={`${weather.bgClass} rounded-full px-4 py-1.5 flex items-center gap-2 ${weather.textClass} text-sm font-medium shadow-sm`}>
-      <span className="text-base">{weather.icon}</span>
-      <span className="font-bold">{weather.temp}°</span>
-      <span className="hidden sm:inline text-xs opacity-80">{weather.tip}</span>
+    <div className={`${weather.bgClass} rounded-xl px-4 py-2 flex items-center gap-2.5 ${weather.textClass} font-medium shadow-sm`}>
+      <span className="text-2xl leading-none">{weather.icon}</span>
+      <div className="flex flex-col">
+        <span className="text-sm font-bold">{weather.temp}°C</span>
+        <span className="text-[10px] opacity-75 leading-tight">{weather.tip}</span>
+      </div>
     </div>
   )
 }
