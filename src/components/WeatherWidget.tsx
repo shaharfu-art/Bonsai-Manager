@@ -8,33 +8,39 @@ interface WeatherData {
   icon: string
   tip: string
   bgClass: string
+  textClass: string
 }
 
-function getWeatherInfo(temp: number, isRtl: boolean): { icon: string; tip: string; bgClass: string } {
+function getWeatherInfo(temp: number, isRtl: boolean): { icon: string; tip: string; bgClass: string; textClass: string } {
   if (temp < 5) return {
     icon: '🥶',
     tip: isRtl ? 'הגן מכפור!' : 'Frost risk!',
-    bgClass: 'bg-blue-800',
+    bgClass: 'bg-blue-100/90',
+    textClass: 'text-blue-800',
   }
   if (temp < 15) return {
     icon: '🌥️',
     tip: isRtl ? 'קריר, הפחת השקיה' : 'Cool, reduce watering',
-    bgClass: 'bg-blue-500',
+    bgClass: 'bg-sky-100/90',
+    textClass: 'text-sky-800',
   }
   if (temp <= 25) return {
     icon: '🌤️',
     tip: isRtl ? 'מושלם לבונסאי' : 'Perfect for bonsai',
-    bgClass: 'bg-[#2d6a4f]',
+    bgClass: 'bg-green-100/90',
+    textClass: 'text-green-800',
   }
   if (temp <= 35) return {
     icon: '☀️',
     tip: isRtl ? 'חם, השקה בבוקר' : 'Hot, water in AM',
-    bgClass: 'bg-orange-500',
+    bgClass: 'bg-orange-100/90',
+    textClass: 'text-orange-800',
   }
   return {
     icon: '🔥',
     tip: isRtl ? 'חמסין! העבר לצל' : 'Heatwave! Move to shade',
-    bgClass: 'bg-red-600',
+    bgClass: 'bg-red-100/90',
+    textClass: 'text-red-800',
   }
 }
 
@@ -97,10 +103,10 @@ const WeatherWidget: React.FC = () => {
   if (!weather) return null
 
   return (
-    <div className={`${weather.bgClass} rounded-full px-3 py-1 flex items-center gap-1.5 text-white text-xs font-medium transition-colors shadow-sm`}>
-      <span>{weather.icon}</span>
+    <div className={`${weather.bgClass} rounded-full px-4 py-1.5 flex items-center gap-2 ${weather.textClass} text-sm font-medium shadow-sm`}>
+      <span className="text-base">{weather.icon}</span>
       <span className="font-bold">{weather.temp}°</span>
-      <span className="hidden sm:inline text-white/80 text-[10px]">{weather.tip}</span>
+      <span className="hidden sm:inline text-xs opacity-80">{weather.tip}</span>
     </div>
   )
 }

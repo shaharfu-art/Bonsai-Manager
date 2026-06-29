@@ -51,9 +51,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Right group (or left in RTL): weather + actions */}
           <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-            {/* Weather widget */}
-            <WeatherWidget />
-
             {/* Settings link */}
             <Link
               to="/settings"
@@ -81,6 +78,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 />
               </svg>
             </Link>
+
+            {/* Weather widget */}
+            <WeatherWidget />
           </div>
         </div>
       </nav>
