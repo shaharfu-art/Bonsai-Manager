@@ -122,9 +122,19 @@ const WeatherWidget: React.FC = () => {
   else tip = isRtl ? '❄️ הגן מכפור!' : '❄️ Protect from frost!'
 
   return (
-    <div className={`${bgGradient} rounded-xl px-5 py-2 flex items-center gap-3 text-white shadow-md min-w-[200px]`}>
-      <span className="text-4xl leading-none drop-shadow-lg">{weather.icon}</span>
-      <div className="flex flex-col items-start flex-1">
+    <div className={`${bgGradient} rounded-xl px-5 py-2 flex items-center gap-3 text-white shadow-md min-w-[200px] relative overflow-hidden`}>
+      {/* Twinkling stars for night */}
+      {!weather.isDay && (
+        <>
+          <span className="absolute top-1 left-8 w-1 h-1 bg-white rounded-full animate-pulse opacity-60" />
+          <span className="absolute top-3 left-16 w-0.5 h-0.5 bg-white rounded-full animate-pulse opacity-40" style={{ animationDelay: '0.5s' }} />
+          <span className="absolute bottom-2 left-24 w-0.5 h-0.5 bg-white rounded-full animate-pulse opacity-50" style={{ animationDelay: '1s' }} />
+          <span className="absolute top-1.5 right-12 w-1 h-1 bg-white rounded-full animate-pulse opacity-50" style={{ animationDelay: '1.5s' }} />
+          <span className="absolute bottom-1 right-20 w-0.5 h-0.5 bg-white rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.8s' }} />
+        </>
+      )}
+      <span className="text-4xl leading-none drop-shadow-lg relative z-10">{weather.icon}</span>
+      <div className="flex flex-col items-start flex-1 relative z-10">
         <div className="flex items-baseline gap-1.5">
           <span className="text-xl font-bold leading-tight drop-shadow">{weather.temp}°C</span>
           {weather.city && (
