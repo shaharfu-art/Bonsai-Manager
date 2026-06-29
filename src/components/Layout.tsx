@@ -84,14 +84,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {user.email}
               </span>
             )}
-
-            {/* Logout button */}
-            <button
-              onClick={handleSignOut}
-              className="text-xs text-green-100 hover:text-white border border-green-400 rounded px-2 py-1 transition-colors"
-            >
-              {t('auth.logout')}
-            </button>
           </div>
         </div>
       </nav>
