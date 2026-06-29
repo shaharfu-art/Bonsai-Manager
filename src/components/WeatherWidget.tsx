@@ -122,7 +122,7 @@ const WeatherWidget: React.FC = () => {
   else tip = isRtl ? '❄️ הגן מכפור!' : '❄️ Protect from frost!'
 
   return (
-    <div className={`${bgGradient} rounded-xl px-5 py-2 flex items-center gap-3 text-white shadow-md min-w-[200px] relative overflow-hidden`}>
+    <div className={`${bgGradient} rounded-xl px-4 py-1 flex items-center gap-2.5 text-white shadow-md min-w-[220px] relative overflow-hidden`}>
       {/* Twinkling stars for night */}
       {!weather.isDay && (
         <>
@@ -133,17 +133,17 @@ const WeatherWidget: React.FC = () => {
           <span className="absolute bottom-1 right-20 w-0.5 h-0.5 bg-white rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.8s' }} />
         </>
       )}
-      <span className="text-4xl leading-none drop-shadow-lg relative z-10">{weather.icon}</span>
+      <span className="text-3xl leading-none drop-shadow-lg relative z-10">{weather.icon}</span>
       <div className="flex flex-col items-start flex-1 relative z-10">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-xl font-bold leading-tight drop-shadow">{weather.temp}°C</span>
+          <span className="text-lg font-bold leading-tight drop-shadow">{weather.temp}°</span>
           {weather.city && (
             <span className="text-[10px] opacity-70">{weather.city}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] opacity-80">💧 {weather.humidity}%</span>
-          <span className="text-[10px] opacity-80">💨 {weather.windSpeed}km/h</span>
+        <div className="flex items-center gap-3 mt-0.5">
+          <span className="text-xs opacity-90">💧 {weather.humidity}%</span>
+          <span className="text-xs opacity-90">💨 {weather.windSpeed}km/h</span>
         </div>
       </div>
     </div>
