@@ -27,8 +27,8 @@ function getWeatherInfo(temp: number, isRtl: boolean): { icon: string; tip: stri
   if (temp <= 25) return {
     icon: '🌤️',
     tip: isRtl ? 'מושלם לבונסאי' : 'Perfect for bonsai',
-    bgClass: 'bg-green-100/90',
-    textClass: 'text-green-800',
+    bgClass: 'bg-white/90',
+    textClass: 'text-emerald-700',
   }
   if (temp <= 35) return {
     icon: '☀️',
