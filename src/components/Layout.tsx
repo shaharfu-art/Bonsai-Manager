@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import WeatherWidget from './WeatherWidget'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -48,8 +49,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           </div>
 
-          {/* Right group (or left in RTL): actions + user */}
+          {/* Right group (or left in RTL): weather + actions */}
           <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            {/* Weather widget */}
+            <WeatherWidget />
+
             {/* Settings link */}
             <Link
               to="/settings"
@@ -77,13 +81,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 />
               </svg>
             </Link>
-
-            {/* User email (truncated) */}
-            {user?.email && (
-              <span className="hidden md:block text-xs text-green-200 max-w-[140px] truncate">
-                {user.email}
-              </span>
-            )}
           </div>
         </div>
       </nav>
