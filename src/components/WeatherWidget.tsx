@@ -122,7 +122,7 @@ const WeatherWidget: React.FC = () => {
   else tip = isRtl ? '❄️ הגן מכפור!' : '❄️ Protect from frost!'
 
   return (
-    <div className={`${bgGradient} rounded-xl px-4 py-1 flex items-center gap-2.5 text-white shadow-md min-w-[220px] relative overflow-hidden`}>
+    <div className={`${bgGradient} rounded-2xl px-4 py-1 flex items-center gap-2.5 text-white min-w-[220px] relative overflow-hidden`} style={{ boxShadow: '0 0 12px 2px rgba(0,0,0,0.15), inset 0 0 8px rgba(255,255,255,0.1)' }}>
       {/* Twinkling stars for night */}
       {!weather.isDay && (
         <>
