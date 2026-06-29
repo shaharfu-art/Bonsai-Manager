@@ -135,7 +135,6 @@ const WeatherWidget: React.FC = () => {
           <span className="text-[10px] opacity-80">💧{weather.humidity}%</span>
           <span className="text-[10px] opacity-80">💨{weather.windSpeed}km/h</span>
         </div>
-        <span className="text-[10px] opacity-90 leading-tight mt-0.5">{tip}</span>
       </div>
     </div>
   )
