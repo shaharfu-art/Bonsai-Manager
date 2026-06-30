@@ -12,6 +12,7 @@ export interface TreatmentLog {
   /** Multiple photo IDs (up to 2) linked via photos.treatment_log_id */
   photo_ids: string[]
   status: 'pending' | 'completed'
+  repeat_days: number | null
   created_at: string
 }
 
@@ -22,6 +23,7 @@ interface AddTreatmentInput {
   photo_id?: string
   photo_ids?: string[]
   status?: 'pending' | 'completed'
+  repeat_days?: number | null
 }
 
 interface UseTreatmentsResult {
@@ -104,7 +106,10 @@ export function useTreatments(treeId: string): UseTreatmentsResult {
     const { data: userData, error: userError } = await supabase.auth.getUser()
     if (userError || !userData.user) throw new Error('Not authenticated')
 
-    const status = input.status ?? 'completed'
+    // Auto-determine status: future date = pending, past/today = completed
+    const today = new Date().toISOString().split('T')[0]
+    const status = input.status ?? (input.treatment_date > today ? 'pending' : 'completed')
+    const repeat_days = input.repeat_days ?? null
     const optimisticId = `temp-${Date.now()}`
     const optimistic: TreatmentLog = {
       id: optimisticId,
@@ -116,6 +121,7 @@ export function useTreatments(treeId: string): UseTreatmentsResult {
       photo_id: input.photo_id ?? null,
       photo_ids: input.photo_ids ?? (input.photo_id ? [input.photo_id] : []),
       status,
+      repeat_days,
       created_at: new Date().toISOString(),
     }
 
@@ -140,6 +146,7 @@ export function useTreatments(treeId: string): UseTreatmentsResult {
           notes: input.notes ?? null,
           photo_id: input.photo_id ?? null,
           status,
+          repeat_days,
         })
         .select()
         .single()
@@ -182,49 +189,42 @@ export function useTreatments(treeId: string): UseTreatmentsResult {
 
       const completed = { ...(data as TreatmentLog), photo_ids: previous?.photo_ids ?? [] }
 
-      // If there's a recurring alert config for this treatment type, create next pending
-      if (previous) {
-        const { data: configs } = await supabase
-          .from('alert_configs')
-          .select('*')
-          .eq('tree_id', treeId)
-          .eq('treatment_type', previous.treatment_type)
-          .single()
+      // If treatment has repeat_days, create next pending treatment
+      const repeatDays = previous?.repeat_days ?? completed.repeat_days
+      if (repeatDays && repeatDays > 0) {
+        const nextDate = new Date()
+        nextDate.setDate(nextDate.getDate() + repeatDays)
+        const nextDateStr = nextDate.toISOString().split('T')[0]
 
-        if (configs && configs.interval_days && configs.interval_days > 0) {
-          const nextDate = new Date()
-          nextDate.setDate(nextDate.getDate() + configs.interval_days)
-          const nextDateStr = nextDate.toISOString().split('T')[0]
+        const { data: userData } = await supabase.auth.getUser()
+        if (userData.user) {
+          const { data: newPending } = await supabase
+            .from('treatment_logs')
+            .insert({
+              tree_id: treeId,
+              user_id: userData.user.id,
+              treatment_date: nextDateStr,
+              treatment_type: previous?.treatment_type ?? completed.treatment_type,
+              notes: null,
+              photo_id: null,
+              status: 'pending',
+              repeat_days: repeatDays,
+            })
+            .select()
+            .single()
 
-          const { data: userData } = await supabase.auth.getUser()
-          if (userData.user) {
-            const { data: newPending } = await supabase
-              .from('treatment_logs')
-              .insert({
-                tree_id: treeId,
-                user_id: userData.user.id,
-                treatment_date: nextDateStr,
-                treatment_type: previous.treatment_type,
-                notes: null,
-                photo_id: null,
-                status: 'pending',
+          if (newPending) {
+            const pendingTreatment = { ...(newPending as TreatmentLog), photo_ids: [] }
+            setTreatments(prev => {
+              const updated = [...prev.map(t => t.id === id ? completed : t), pendingTreatment]
+              updated.sort((a, b) => {
+                if (a.status === 'pending' && b.status !== 'pending') return -1
+                if (a.status !== 'pending' && b.status === 'pending') return 1
+                return new Date(b.treatment_date).getTime() - new Date(a.treatment_date).getTime()
               })
-              .select()
-              .single()
-
-            if (newPending) {
-              const pendingTreatment = { ...(newPending as TreatmentLog), photo_ids: [] }
-              setTreatments(prev => {
-                const updated = [...prev.map(t => t.id === id ? completed : t), pendingTreatment]
-                updated.sort((a, b) => {
-                  if (a.status === 'pending' && b.status !== 'pending') return -1
-                  if (a.status !== 'pending' && b.status === 'pending') return 1
-                  return new Date(b.treatment_date).getTime() - new Date(a.treatment_date).getTime()
-                })
-                return updated
-              })
-              return completed
-            }
+              return updated
+            })
+            return completed
           }
         }
       }

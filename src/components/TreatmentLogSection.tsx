@@ -44,6 +44,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
   const [formType, setFormType] = useState<string>(TREATMENT_TYPES[0])
   const [formNotes, setFormNotes] = useState('')
   const [formPhotos, setFormPhotos] = useState<File[]>([])
+  const [formRepeatDays, setFormRepeatDays] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -85,6 +86,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     setFormType(TREATMENT_TYPES[0])
     setFormNotes('')
     setFormPhotos([])
+    setFormRepeatDays(null)
     setSubmitError('')
   }
 
@@ -93,11 +95,12 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     setSubmitting(true)
     setSubmitError('')
     try {
-      // First create the treatment (without photos)
+      // Create the treatment (with repeat_days if set)
       const result = await addTreatment({
         treatment_date: formDate,
         treatment_type: formType,
         notes: formNotes || undefined,
+        repeat_days: formRepeatDays,
       })
 
       // Upload photos (up to 2) and link to treatment
@@ -116,40 +119,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
         await supabase.from('treatment_logs').update({ photo_id: photoIds[0] }).eq('id', result.id)
       }
 
-      // Save reminder if enabled and create a pending treatment for next occurrence
-      if (reminderEnabled) {
-        let nextDateStr: string
-        if (reminderMode === 'fixed') {
-          nextDateStr = reminderFixedDate
-          await setConfig(formType, 0, reminderFixedDate)
-        } else {
-          let totalDays = reminderValue
-          if (reminderUnit === 'months') totalDays = reminderValue * 30
-          if (reminderUnit === 'years') totalDays = reminderValue * 365
-          await setConfig(formType, totalDays, null)
-          const nextDate = new Date()
-          nextDate.setDate(nextDate.getDate() + totalDays)
-          nextDateStr = nextDate.toISOString().split('T')[0]
-        }
-        await requestNotificationPermission()
-        // Create pending treatment for next time
-        await addTreatment({
-          treatment_date: nextDateStr,
-          treatment_type: formType,
-          status: 'pending',
-        })
-      }
-
-      // Delete any pending treatment of the same type (alert was fulfilled)
-      const existingPending = treatments.find(
-        tr => tr.treatment_type === formType && tr.status === 'pending'
-      )
-      if (existingPending) {
-        await deleteTreatment(existingPending.id)
-      }
-
       resetForm()
-      setReminderEnabled(false)
       setShowForm(false)
       // Invalidate AI insights cache for this tree
       localStorage.removeItem(`ai-insights-${treeId}`)
