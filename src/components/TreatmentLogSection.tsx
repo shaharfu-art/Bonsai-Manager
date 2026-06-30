@@ -531,23 +531,46 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
         </div>
       )}
 
-      {/* Treatment list */}
-      {!loading && treatments.length === 0 && (
+      {/* Pending treatments (future activities) */}
+      {!loading && treatments.filter(t => t.status === 'pending').length > 0 && (
+        <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-amber-800 mb-3">🔔 {t('treatment.pending')} ({treatments.filter(t => t.status === 'pending').length})</h3>
+          <ul className="space-y-2">
+            {treatments.filter(t => t.status === 'pending').map(treatment => (
+              <li key={treatment.id} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-amber-100">
+                <span className="text-lg">{TREATMENT_ICONS[treatment.treatment_type] ?? '📝'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">{t(`treatment.${treatment.treatment_type}`)}</p>
+                  <p className="text-xs text-gray-500">{treatment.treatment_date}</p>
+                  {treatment.repeat_days && (
+                    <p className="text-[10px] text-amber-600">🔁 {t('treatment.reminderEvery')} {treatment.repeat_days} {t('treatment.unit_days')}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => completeTreatment(treatment.id)}
+                  className="text-xs font-medium px-2.5 py-1 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors flex-shrink-0"
+                >
+                  ✓ {t('treatment.markDone')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Completed treatment list */}
+      {!loading && treatments.filter(t => t.status === 'completed').length === 0 && treatments.filter(t => t.status === 'pending').length === 0 && (
         <p className="text-center text-gray-400 text-sm py-6">
           {t('treatment.noTreatments')}
         </p>
       )}
 
-      {!loading && treatments.length > 0 && (
+      {!loading && treatments.filter(t => t.status === 'completed').length > 0 && (
         <ul className="space-y-2">
-          {treatments.map(treatment => (
+          {treatments.filter(t => t.status === 'completed').map(treatment => (
             <li
               key={treatment.id}
-              className={`rounded-xl px-4 py-3 ${
-                treatment.status === 'pending'
-                  ? 'bg-amber-50 border border-amber-200'
-                  : 'bg-gray-50'
-              }`}
+              className="rounded-xl px-4 py-3 bg-gray-50"
               onDoubleClick={() => { if (editingId !== treatment.id) handleEditStart(treatment.id) }}
             >
               {editingId === treatment.id ? (
