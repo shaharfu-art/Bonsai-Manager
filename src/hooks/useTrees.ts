@@ -19,6 +19,11 @@ export interface Tree {
   notes: string | null
   substrate: string | null
   cover_photo_id: string | null
+  sun_exposure: string | null
+  sun_hours: number | null
+  facing: string | null
+  is_public: boolean
+  likes_count: number
   created_at: string
   updated_at: string
 }
