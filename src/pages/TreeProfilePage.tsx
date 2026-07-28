@@ -405,6 +405,9 @@ type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
         {/* Smart ID Card */}
         <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} onRecurring={() => setShowRecurringSettings(true)} onShare={() => setShowShareCard(true)} />
 
+        {/* Social section (likes + comments) inside card */}
+        <TreeSocialSection treeId={id!} likesCount={tree.likes_count ?? 0} isRtl={isRtl} userId={user?.id ?? null} treeOwnerId={tree.user_id} />
+
         {/* Cover photo picker */}
         {showCoverPicker && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -711,5 +714,169 @@ return null
   )
 }
 
+
+// ─── Tree Social Section (likes + comments) ─────────────────
+const TreeSocialSection: React.FC<{ treeId: string; likesCount: number; isRtl: boolean; userId: string | null; treeOwnerId: string }> = ({ treeId, likesCount, isRtl, userId, treeOwnerId }) => {
+  const [likes, setLikes] = useState(likesCount)
+  const [likedByMe, setLikedByMe] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [commentsCount, setCommentsCount] = useState(0)
+
+  useEffect(() => {
+    if (!userId) return
+    supabase.from('tree_likes').select('tree_id').eq('tree_id', treeId).eq('user_id', userId).maybeSingle()
+      .then(({ data }) => setLikedByMe(!!data))
+    supabase.from('tree_comments').select('*', { count: 'exact', head: true }).eq('tree_id', treeId)
+      .then(({ count }) => setCommentsCount(count ?? 0))
+  }, [treeId, userId])
+
+  const handleToggleLike = async () => {
+    if (!userId) return
+    if (likedByMe) {
+      await supabase.from('tree_likes').delete().eq('tree_id', treeId).eq('user_id', userId)
+      await supabase.from('trees').update({ likes_count: Math.max(0, likes - 1) }).eq('id', treeId)
+      setLikes(prev => Math.max(0, prev - 1))
+      setLikedByMe(false)
+    } else {
+      await supabase.from('tree_likes').insert({ tree_id: treeId, user_id: userId })
+      await supabase.from('trees').update({ likes_count: likes + 1 }).eq('id', treeId)
+      setLikes(prev => prev + 1)
+      setLikedByMe(true)
+      if (treeOwnerId !== userId) {
+        supabase.from('notifications').insert({ user_id: treeOwnerId, type: 'like', from_user_id: userId, tree_id: treeId }).then(() => {})
+      }
+    }
+  }
+
+  return (
+    <>
+      <div className="bg-white rounded-xl shadow px-4 py-2 -mt-2 flex items-center gap-4">
+        <button
+          onClick={handleToggleLike}
+          className={`flex items-center gap-1 text-sm font-medium transition-colors ${likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}`}
+        >
+          {likedByMe ? '❤️' : '🤍'} {likes > 0 && likes}
+        </button>
+        <button
+          onClick={() => setShowComments(true)}
+          className="flex items-center gap-1 text-sm font-medium text-gray-400 hover:text-[#2d6a4f] transition-colors"
+        >
+          💬 {commentsCount > 0 && commentsCount}
+        </button>
+      </div>
+
+      {/* Comments popup */}
+      {showComments && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-4" onClick={() => setShowComments(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[70vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900">💬 {isRtl ? 'תגובות' : 'Comments'}</h3>
+              <button onClick={() => setShowComments(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <TreeProfileComments treeId={treeId} isRtl={isRtl} onCountChange={setCommentsCount} treeOwnerId={treeOwnerId} />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─── Tree Profile Comments ──────────────────────────────────
+const TreeProfileComments: React.FC<{ treeId: string; isRtl: boolean; onCountChange?: (c: number) => void; treeOwnerId?: string }> = ({ treeId, isRtl, onCountChange, treeOwnerId }) => {
+  const [comments, setComments] = useState<Array<{ id: string; user_id: string; text: string; created_at: string; name: string | null; avatar: string | null }>>([])
+  const [loading, setLoading] = useState(true)
+  const [newComment, setNewComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [longPressId, setLongPressId] = useState<string | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    supabase.from('tree_comments').select('*').eq('tree_id', treeId).order('created_at', { ascending: true })
+      .then(async ({ data }) => {
+        if (!data || data.length === 0) { setComments([]); setLoading(false); return }
+        const userIds = [...new Set(data.map(c => c.user_id))]
+        const { data: profiles } = await supabase.from('user_profiles').select('id, display_name, username, avatar_url').in('id', userIds)
+        setComments(data.map(c => {
+          const p = (profiles ?? []).find(pr => pr.id === c.user_id)
+          return { ...c, name: p?.display_name ?? p?.username ?? null, avatar: p?.avatar_url ?? null }
+        }))
+        setLoading(false)
+      })
+  }, [treeId])
+
+  useEffect(() => { if (onCountChange) onCountChange(comments.length) }, [comments.length])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newComment.trim() || submitting) return
+    setSubmitting(true)
+    if (!user) { setSubmitting(false); return }
+    const { data } = await supabase.from('tree_comments').insert({ tree_id: treeId, user_id: user.id, text: newComment.trim() }).select().single()
+    if (data) {
+      const { data: myProfile } = await supabase.from('user_profiles').select('display_name, username, avatar_url').eq('id', user.id).single()
+      setComments(prev => [...prev, { ...data, name: myProfile?.display_name ?? myProfile?.username ?? null, avatar: myProfile?.avatar_url ?? null }])
+    }
+    setNewComment('')
+    setSubmitting(false)
+  }
+
+  const handleLongPressStart = (commentId: string, commentUserId: string) => {
+    if (user?.id !== commentUserId && user?.id !== treeOwnerId) return
+    longPressTimer.current = setTimeout(() => setLongPressId(commentId), 500)
+  }
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+  }
+
+  const handleDelete = async (commentId: string) => {
+    await supabase.from('tree_comments').delete().eq('id', commentId)
+    setComments(prev => prev.filter(c => c.id !== commentId))
+    setLongPressId(null)
+  }
+
+  if (loading) return <div className="animate-pulse h-10 bg-gray-100 rounded" />
+
+  return (
+    <div className="space-y-3">
+      {comments.length === 0 && <p className="text-xs text-gray-400 text-center">{isRtl ? 'אין תגובות' : 'No comments'}</p>}
+      {comments.map(c => (
+        <div
+          key={c.id}
+          className="flex items-start gap-2 relative"
+          onTouchStart={() => handleLongPressStart(c.id, c.user_id)}
+          onTouchEnd={handleLongPressEnd}
+          onTouchCancel={handleLongPressEnd}
+          onContextMenu={(e) => { if (user?.id === c.user_id || user?.id === treeOwnerId) { e.preventDefault(); setLongPressId(c.id) } }}
+        >
+          <div className="w-6 h-6 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+            {c.avatar ? <img src={c.avatar} alt="" className="w-full h-full rounded-full object-cover" /> : (c.name ?? '?').charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs"><span className="font-medium text-gray-800">{c.name ?? (isRtl ? 'משתמש' : 'User')}</span></p>
+            <p className="text-xs text-gray-600">{c.text}</p>
+          </div>
+          {longPressId === c.id && (
+            <div className="absolute top-0 right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 px-1">
+              <button onClick={() => handleDelete(c.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded transition-colors">
+                🗑️ {isRtl ? 'מחק' : 'Delete'}
+              </button>
+              <button onClick={() => setLongPressId(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 rounded transition-colors">
+                ✕ {isRtl ? 'ביטול' : 'Cancel'}
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <input type="text" value={newComment} onChange={e => setNewComment(e.target.value)} placeholder={isRtl ? 'הוסף תגובה...' : 'Add comment...'} className="flex-1 border border-gray-200 rounded-full px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[#2d6a4f]/30" maxLength={300} />
+        <button type="submit" disabled={!newComment.trim() || submitting} className="bg-[#2d6a4f] text-white text-xs px-3 py-1.5 rounded-full disabled:opacity-40">{isRtl ? 'שלח' : 'Send'}</button>
+      </form>
+    </div>
+  )
+}
 
 export default TreeProfilePage
