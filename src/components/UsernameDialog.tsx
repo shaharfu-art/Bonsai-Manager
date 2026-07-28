@@ -7,11 +7,11 @@ interfaceUsernameDialogProps{
 onComplete:(username:string)=>void
 }
 
-constUsernameDialog:React.FC<UsernameDialogProps>=({onComplete})=>{
+const UsernameDialog:React.FC<UsernameDialogProps>=({onComplete})=>{
 const{i18n}=useTranslation()
 
 const{user}=useAuth()
-constisRtl=i18n.language==='he'
+const isRtl=i18n.language==='he'
 const[username,setUsername]=useState('')
 
 const[checking,setChecking]=useState(false)
@@ -21,7 +21,7 @@ const[available,setAvailable]=useState<boolean|null>(null)
 const[error,setError]=useState('')
 
 const[saving,setSaving]=useState(false)
-constdebounceRef=useRef<ReturnType<typeofsetTimeout>|null>(null)
+const debounceRef=useRef<ReturnType<typeofsetTimeout>|null>(null)
 
 //Validateandcheckavailabilityasusertypes
 useEffect(()=>{
@@ -33,7 +33,7 @@ return
 }
 
 //Validateformat:3-20chars,lowercaseletters,numbers,underscores
-constisValid=/^[a-z0-9_]{3,20}$/.test(username)
+const isValid=/^[a-z0-9_]{3,20}$/.test(username)
 if(!isValid){
 setAvailable(null)
 setError(isRtl
@@ -65,7 +65,7 @@ if(debounceRef.current)clearTimeout(debounceRef.current)
 }
 },[username,isRtl])
 
-consthandleSubmit=async(e:React.FormEvent)=>{
+const handleSubmit=async(e:React.FormEvent)=>{
 e.preventDefault()
 if(!available||!user)
 return

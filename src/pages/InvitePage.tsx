@@ -1,15 +1,15 @@
 import React,{useEffect} from 'react'
 import {useParams,useNavigate} from 'react-router-dom'
 
-constINVITE_KEY='inviter_user_id'
+const INVITE_KEY='inviter_user_id'
 
 /**
 */invite/:userId—savestheinviter'sIDandredirectstoinstallflow
 *Flow:invitelink→install(PWA)→signup→dashboardwith"Xinvitedyou!"banner
 */
-constInvitePage:React.FC=()=>{
+const InvitePage:React.FC=()=>{
 const{userId}=useParams<{userId:string}>()
-constnavigate=useNavigate()
+const navigate=useNavigate()
 
 useEffect(()=>{
 if(userId){

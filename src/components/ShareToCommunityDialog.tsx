@@ -11,9 +11,9 @@ onClose:()=>void
 onSuccess?:()=>void
 }
 
-constShareToCommunityDialog:React.FC<ShareToCommunityDialogProps>=({treeId,treeName,photos,onClose,onSuccess})=>{
+const ShareToCommunityDialog:React.FC<ShareToCommunityDialogProps>=({treeId,treeName,photos,onClose,onSuccess})=>{
 const{i18n}=useTranslation()
-constisRtl=i18n.language==='he'
+const isRtl=i18n.language==='he'
 const{createPost,submitting}=useCommunityPost()
 
 const[selectedPhotoId,setSelectedPhotoId]=useState<string|null>(photos[0]?.id??null)
@@ -24,9 +24,9 @@ const[error,setError]=useState<string|null>(null)
 
 const[success,setSuccess]=useState(false)
 
-constphotosWithUrl=photos.filter(p=>p.public_url)
+const photosWithUrl=photos.filter(p=>p.public_url)
 
-consthandleSubmit=async()=>{
+const handleSubmit=async()=>{
 setError(null)
 try{
 awaitcreatePost({

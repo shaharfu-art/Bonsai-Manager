@@ -3,10 +3,10 @@ import {useTranslation} from 'react-i18next'
 import {useNavigate} from 'react-router-dom'
 import {PLAN_PRICING} from '../hooks/usePlan'
 
-constPricingPage:React.FC=()=>{
+const PricingPage:React.FC=()=>{
 const{i18n}=useTranslation()
-constnavigate=useNavigate()
-constisRtl=i18n.language==='he'
+const navigate=useNavigate()
+const isRtl=i18n.language==='he'
 
 return(
 <divclassName="min-h-screenbg-gradient-to-bfrom-[#f0f7f4]to-white">
@@ -103,7 +103,7 @@ className="mt-6w-fullborder-2border-gray-800text-gray-800font-semiboldpy-3rounde
 )
 }
 
-constPlanFeature:React.FC<{text:string;highlight?:boolean}>=({text,highlight})=>(
+const PlanFeature:React.FC<{text:string;highlight?:boolean}>=({text,highlight})=>(
 <liclassName={`flexitems-centergap-2text-sm${highlight?'text-[#2d6a4f]font-medium':'text-gray-600'}`}>
 <spanclassName="text-green-500flex-shrink-0">✓</span>
 {text}

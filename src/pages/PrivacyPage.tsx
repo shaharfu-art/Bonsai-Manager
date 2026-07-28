@@ -2,10 +2,10 @@ import Reactfrom 'react'
 import {useTranslation} from 'react-i18next'
 import {useNavigate} from 'react-router-dom'
 
-constPrivacyPage:React.FC=()=>{
+const PrivacyPage:React.FC=()=>{
 const{i18n}=useTranslation()
-constnavigate=useNavigate()
-constisRtl=i18n.language==='he'
+const navigate=useNavigate()
+const isRtl=i18n.language==='he'
 
 return(
 <divclassName="min-h-screenbg-[#f0f7f4]p-4">

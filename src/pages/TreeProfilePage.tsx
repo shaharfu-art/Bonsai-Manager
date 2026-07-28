@@ -633,7 +633,7 @@ const todayStr = todayDate.toISOString().split('T')[0]
 
   const dueAlerts: { type: string; dueDate: string; status: 'due' | 'upcoming' }[] = []
 
-  for (constType of TREATMENT_TYPES) {
+  for (const type of TREATMENT_TYPES) {
     const cfg = getConfig(type)
     if (!cfg) continue
     const doneToday = treatments.find(tr => tr.treatment_type === type && tr.treatment_date === todayStr && tr.status === 'completed')

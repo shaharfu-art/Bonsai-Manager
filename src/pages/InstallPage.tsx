@@ -2,17 +2,17 @@ import React,{useState,useEffect} from 'react'
 import {useTranslation} from 'react-i18next'
 import OnboardingWizardfrom '../components/OnboardingWizard'
 
-constINSTALL_DONE_KEY='install-completed'
+const INSTALL_DONE_KEY='install-completed'
 
-constInstallPage:React.FC=()=>{
+const InstallPage:React.FC=()=>{
 const{i18n}=useTranslation()
-constisRtl=i18n.language==='he'
+const isRtl=i18n.language==='he'
 const[done,setDone]=useState(()=>!!localStorage.getItem(INSTALL_DONE_KEY))
 
 const[isIOS,setIsIOS]=useState(false)
 
 useEffect(()=>{
-constios=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!(windowasany).MSStream
+const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!(windowasany).MSStream
 ||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)
 setIsIOS(ios)
 //iOS:redirecttomainapp(installisdonefromthereviabanner)
@@ -21,7 +21,7 @@ window.location.href='/'
 }
 },[])
 
-consthandleDone=()=>{
+const handleDone=()=>{
 localStorage.setItem(INSTALL_DONE_KEY,'1')
 setDone(true)
 }

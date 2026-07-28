@@ -1,10 +1,10 @@
 import Reactfrom 'react'
 
-constWHATSAPP_NUMBER='972507388838'
-constWHATSAPP_MESSAGE='שלום,אנימשתמשבאפליקצייתYUTAKABonsaiוישלימשוב:'
+const WHATSAPP_NUMBER='972507388838'
+const WHATSAPP_MESSAGE='שלום,אנימשתמשבאפליקצייתYUTAKABonsaiוישלימשוב:'
 
-constWhatsAppFab:React.FC=()=>{
-consturl=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
+const WhatsAppFab:React.FC=()=>{
+const url=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
 
 return(
 <a

@@ -6,12 +6,12 @@ import {useNotifications,typeNotification} from '../hooks/useNotifications'
 import {renderAvatar} from '../components/AvatarPicker'
 
 functiontimeAgo(dateStr:string,isRtl:boolean):string{
-constnow=Date.now()
-constdate=newDate(dateStr).getTime()
-constdiffMs=now-date
-constdiffMin=Math.floor(diffMs/60000)
-constdiffHours=Math.floor(diffMs/3600000)
-constdiffDays=Math.floor(diffMs/86400000)
+const now=Date.now()
+const date=newDate(dateStr).getTime()
+const diffMs=now-date
+const diffMin=Math.floor(diffMs/60000)
+const diffHours=Math.floor(diffMs/3600000)
+const diffDays=Math.floor(diffMs/86400000)
 
 if(diffMin<1)returnisRtl?'עכשיו':'now'
 if(diffMin<60)returnisRtl?`לפני${diffMin}דק׳`:`${diffMin}mago`
@@ -21,8 +21,8 @@ returnnewDate(dateStr).toLocaleDateString()
 }
 
 functiongetNotificationText(n:Notification,isRtl:boolean):string{
-constname=n.from_display_name??(isRtl?'משתמש':'User')
-consttreeName=n.tree_name??(isRtl?'עץ':'tree')
+const name=n.from_display_name??(isRtl?'משתמש':'User')
+const treeName=n.tree_name??(isRtl?'עץ':'tree')
 
 switch(n.type){
 case'like':
@@ -40,13 +40,13 @@ return''
 }
 }
 
-constNotificationsPage:React.FC=()=>{
+const NotificationsPage:React.FC=()=>{
 const{i18n}=useTranslation()
-constnavigate=useNavigate()
-constisRtl=i18n.language==='he'
+const navigate=useNavigate()
+const isRtl=i18n.language==='he'
 const{notifications,unreadCount,markAsRead,markAllRead,loading}=useNotifications()
 
-consthandleClick=(n:Notification)=>{
+const handleClick=(n:Notification)=>{
 markAsRead(n.id)
 switch(n.type){
 case'like':

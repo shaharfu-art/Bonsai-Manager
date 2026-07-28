@@ -9,20 +9,20 @@ reason:'trees'|'ai'
 onClose:()=>void
 }
 
-constPaywall:React.FC<Props>=({reason,onClose})=>{
+const Paywall:React.FC<Props>=({reason,onClose})=>{
 const{i18n}=useTranslation()
 
 const{user}=useAuth()
-constisRtl=i18n.language==='he'
+const isRtl=i18n.language==='he'
 
-consthandleUpgrade=(plan:'premium'|'pro',billing:'monthly'|'yearly')=>{
+const handleUpgrade=(plan:'premium'|'pro',billing:'monthly'|'yearly')=>{
 if(!user?.email||!user?.id){
 alert(isRtl?'ישלהתחברתחילה':'Pleasesigninfirst')
 
 return
 }
 
-consturl=getCheckoutUrl({
+const url=getCheckoutUrl({
 plan:`${plan}_${billing}`as'premium_monthly'|'premium_yearly'|'pro_monthly'|'pro_yearly',
 userEmail:user.email,
 userId:user.id,

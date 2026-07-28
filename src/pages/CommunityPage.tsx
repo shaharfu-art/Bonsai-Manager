@@ -8,9 +8,9 @@ import {supabase} from '../lib/supabase-client'
 import {useFriends,usePeopleYouMayKnow} from '../hooks/useFriends'
 import type{SuggestedUser} from '../hooks/useFriends'
 
-constCommunityPage:React.FC=()=>{
+const CommunityPage:React.FC=()=>{
 const{i18n}=useTranslation()
-constisRtl=i18n.language==='he'
+const isRtl=i18n.language==='he'
 const{friends,pendingReceived,acceptRequest,rejectRequest,sendRequest}=useFriends()
 
 const{suggestions:peopleYouMayKnow,loading:suggestionsLoading}=usePeopleYouMayKnow()
@@ -29,15 +29,15 @@ if(!user)
 return
 supabase.from('user_profiles').select('username').eq('id',user.id).single()
 .then(({data})=>{
-consthas=!!(data?.username)
+const has=!!(data?.username)
 setHasUsername(has)
 if(!has)setShowUsernameDialog(true)
 })
 },[user])
 
-consthandleInvite=async()=>{
-constinviteUrl=`${window.location.origin}/invite/${user?.id??''}`
-constshareData={
+const handleInvite=async()=>{
+const inviteUrl=`${window.location.origin}/invite/${user?.id??''}`
+const shareData={
 title:isRtl?'הצטרףלקהילתבונסאיYUTAKA':'JoinYUTAKABonsaiCommunity',
 text:isRtl?'בואלשתףולגלותעציבונסאי!':'Comeshareanddiscoverbonsaitrees!',
 url:inviteUrl,
@@ -136,11 +136,11 @@ className="text-gray-400hover:text-red-500transition-colorstext-lg"
 }
 
 //───FriendsList───────────────────────────────────────────
-constFriendsList:React.FC<{friends:string[];isRtl:boolean}>=({friends,isRtl})=>{
+const FriendsList:React.FC<{friends:string[];isRtl:boolean}>=({friends,isRtl})=>{
 const[profiles,setProfiles]=useState<Array<{id:string;display_name:string|null;username:string|null;avatar_url:string|null}>>([])
 
 const[loadingProfiles,setLoadingProfiles]=useState(true)
-constnavigate=useNavigate()
+const navigate=useNavigate()
 
 useEffect(()=>{
 if(friends.length===0){setLoadingProfiles(false);return}
@@ -189,14 +189,14 @@ className="bg-whiterounded-xlshadowp-3flexitems-centergap-3w-fulltext-lefthover:
 }
 
 //───UserSearch────────────────────────────────────────────
-constUserSearch:React.FC<{isRtl:boolean}>=({isRtl})=>{
+const UserSearch:React.FC<{isRtl:boolean}>=({isRtl})=>{
 const[query,setQuery]=useState('')
 
 const[results,setResults]=useState<Array<{id:string;username:string|null;display_name:string|null;avatar_url:string|null;email?:string|null}>>([])
 
 const[searching,setSearching]=useState(false)
-constnavigate=useNavigate()
-constdebounceRef=useRef<ReturnType<typeofsetTimeout>|null>(null)
+const navigate=useNavigate()
+const debounceRef=useRef<ReturnType<typeofsetTimeout>|null>(null)
 
 useEffect(()=>{
 if(query.length<2){setResults([]);return}
@@ -204,7 +204,7 @@ if(query.length<2){setResults([]);return}
 setSearching(true)
 if(debounceRef.current)clearTimeout(debounceRef.current)
 debounceRef.current=setTimeout(async()=>{
-constsearchTerm=query.replace('@','').toLowerCase()
+const searchTerm=query.replace('@','').toLowerCase()
 
 const{data}=awaitsupabase
 .from('user_profiles')
@@ -285,15 +285,15 @@ isRtl:boolean
 onSendRequest:(userId:string)=>void
 }
 
-constPeopleYouMayKnow:React.FC<PeopleYouMayKnowProps>=({suggestions,loading,isRtl,onSendRequest})=>{
-constnavigate=useNavigate()
+const PeopleYouMayKnow:React.FC<PeopleYouMayKnowProps>=({suggestions,loading,isRtl,onSendRequest})=>{
+const navigate=useNavigate()
 
 const[sentIds,setSentIds]=useState<string[]>([])
 
 if(loading)returnnull
 if(suggestions.length===0)returnnull
 
-consthandleSendRequest=(userId:string)=>{
+const handleSendRequest=(userId:string)=>{
 onSendRequest(userId)
 setSentIds(prev=>[...prev,userId])
 }

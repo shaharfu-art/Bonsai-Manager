@@ -4,17 +4,17 @@ interfaceProps{
 onDone:()=>void
 }
 
-constInstallGate:React.FC<Props>=({onDone})=>{
+const InstallGate:React.FC<Props>=({onDone})=>{
 const[deferredPrompt,setDeferredPrompt]=useState<any>(null)
 
 const[isIOS,setIsIOS]=useState(false)
 
 const[installing,setInstalling]=useState(false)
-constpromptRef=useRef<any>(null)
+const promptRef=useRef<any>(null)
 
 useEffect(()=>{
 //CheckifalreadyinstalledasPWA
-constisStandalone=window.matchMedia('(display-mode:standalone)').matches
+const isStandalone=window.matchMedia('(display-mode:standalone)').matches
 ||(window.navigatorasany).standalone===true
 if(isStandalone){
 onDone()
@@ -30,12 +30,12 @@ return
 }
 
 //DetectiOS
-constua=navigator.userAgent
-constisiOS=/iPad|iPhone|iPod/.test(ua)&&!(windowasany).MSStream
+const ua=navigator.userAgent
+const isiOS=/iPad|iPhone|iPod/.test(ua)&&!(windowasany).MSStream
 setIsIOS(isiOS)
 
 //Listenforbeforeinstallprompt(Android/Chrome/Edge)
-consthandler=(e:Event)=>{
+const handler=(e:Event)=>{
 e.preventDefault()
 promptRef.current=e
 setDeferredPrompt(e)
@@ -46,11 +46,11 @@ window.addEventListener('beforeinstallprompt',handler)
 return()=>window.removeEventListener('beforeinstallprompt',handler)
 },[onDone])
 
-consthandleInstall=async()=>{
+const handleInstall=async()=>{
 if(promptRef.current){
 setInstalling(true)
 promptRef.current.prompt()
-constresult=awaitpromptRef.current.userChoice
+const result=awaitpromptRef.current.userChoice
 if(result.outcome==='accepted'){
 sessionStorage.setItem('install-gate-dismissed','1')
 onDone()
@@ -59,7 +59,7 @@ setInstalling(false)
 }
 }
 
-consthandleSkip=()=>{
+const handleSkip=()=>{
 sessionStorage.setItem('install-gate-dismissed','1')
 onDone()
 }

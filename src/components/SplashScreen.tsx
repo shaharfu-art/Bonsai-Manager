@@ -4,12 +4,12 @@ interfaceProps{
 onDone:()=>void
 }
 
-constSplashScreen:React.FC<Props>=({onDone})=>{
+const SplashScreen:React.FC<Props>=({onDone})=>{
 const[phase,setPhase]=useState<'visible'|'out'>('visible')
 
 useEffect(()=>{
-constoutTimer=setTimeout(()=>setPhase('out'),3500)
-constdoneTimer=setTimeout(()=>onDone(),4200)
+const outTimer=setTimeout(()=>setPhase('out'),3500)
+const doneTimer=setTimeout(()=>onDone(),4200)
 
 return()=>{
 clearTimeout(outTimer)

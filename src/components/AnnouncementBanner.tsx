@@ -12,9 +12,9 @@ target_users:string[]
 created_at:string
 }
 
-constDISMISSED_KEY='dismissed-announcements'
+const DISMISSED_KEY='dismissed-announcements'
 
-constAnnouncementBanner:React.FC=()=>{
+const AnnouncementBanner:React.FC=()=>{
 const{user}=useAuth()
 
 const[announcement,setAnnouncement]=useState<Announcement|null>(null)
@@ -23,7 +23,7 @@ useEffect(()=>{
 if(!user)
 return
 
-constfetchAnnouncement=async()=>{
+const fetchAnnouncement=async()=>{
 const{data}=awaitsupabase
 .from('announcements')
 .select('*')
@@ -35,13 +35,13 @@ if(!data||data.length===0)
 return
 
 //Filterbytarget
-constdismissed=(()=>{
+const dismissed=(()=>{
 try{returnJSON.parse(localStorage.getItem(DISMISSED_KEY)||'[]')}
 catch{return[]}
 })()
 
 //TODO:getuserrolefromprofilefor'free'/'premium'targeting
-constapplicable=data.find((a:Announcement)=>{
+const applicable=data.find((a:Announcement)=>{
 if(dismissed.includes(a.id))returnfalse
 if(a.target==='all')returntrue
 if(a.target==='specific')returna.target_users?.includes(user.id)
@@ -55,11 +55,11 @@ if(applicable)setAnnouncement(applicableasAnnouncement)
 fetchAnnouncement()
 },[user])
 
-consthandleDismiss=()=>{
+const handleDismiss=()=>{
 if(!announcement)
 return
 try{
-constdismissed=JSON.parse(localStorage.getItem(DISMISSED_KEY)||'[]')
+const dismissed=JSON.parse(localStorage.getItem(DISMISSED_KEY)||'[]')
 dismissed.push(announcement.id)
 localStorage.setItem(DISMISSED_KEY,JSON.stringify(dismissed))
 }catch{/*ignore*/}
@@ -68,13 +68,13 @@ setAnnouncement(null)
 
 if(!announcement)returnnull
 
-constcolors={
+const colors={
 info:'bg-blue-50border-blue-200text-blue-800',
 warning:'bg-amber-50border-amber-200text-amber-800',
 success:'bg-green-50border-green-200text-green-800',
 }
 
-consticons={info:'ℹ️',warning:'⚠️',success:'✅'}
+const icons={info:'ℹ️',warning:'⚠️',success:'✅'}
 
 
 return(

@@ -28,12 +28,12 @@ location:string|null
 likes_count:number
 }
 
-constUserProfilePage:React.FC=()=>{
+const UserProfilePage:React.FC=()=>{
 const{id}=useParams<{id:string}>()
 
 const{i18n}=useTranslation()
-constisRtl=i18n.language==='he'
-constnavigate=useNavigate()
+const isRtl=i18n.language==='he'
+const navigate=useNavigate()
 
 const{user}=useAuth()
 
@@ -56,7 +56,7 @@ const[loading,setLoading]=useState(true)
 
 const[error,setError]=useState<string|null>(null)
 
-constisOwnProfile=user?.id===id
+const isOwnProfile=user?.id===id
 
 useEffect(()=>{
 if(!id)
@@ -64,7 +64,7 @@ return
 setLoading(true)
 setError(null)
 
-constfetchProfile=async()=>{
+const fetchProfile=async()=>{
 try{
 //Fetchuserprofile
 const{data:profileData,error:profileError}=awaitsupabase
@@ -106,8 +106,8 @@ const{count:allTreesCount}=awaitsupabase
 setTotalTreesCount(allTreesCount??0)
 
 //GetcoverphotoURLsfortrees
-consttreesWithPhotos:PublicTree[]=[]
-for(consttreeoftreesData??[]){
+const treesWithPhotos:PublicTree[]=[]
+for (const treeoftreesData??[]){
 letcoverUrl:string|null=null
 if(tree.cover_photo_id){
 const{data:photo}=awaitsupabase
@@ -168,7 +168,7 @@ setLoading(false)
 fetchProfile()
 },[id,isRtl])
 
-consthandleFriendAction=async()=>{
+const handleFriendAction=async()=>{
 if(!id)
 return
 if(isFriend(id)){
@@ -343,7 +343,7 @@ onClose={()=>setShowAvatarPicker(false)}
 }
 
 //───FriendTreeCard(withIDcardinfo+likes/comments+lightbox)───
-constFriendTreeCard:React.FC<{tree:PublicTree;isRtl:boolean;userId:string|null;treeOwnerId:string}>=({tree,isRtl,userId,treeOwnerId})=>{
+const FriendTreeCard:React.FC<{tree:PublicTree;isRtl:boolean;userId:string|null;treeOwnerId:string}>=({tree,isRtl,userId,treeOwnerId})=>{
 const{t}=useTranslation()
 
 const[likes,setLikes]=useState(tree.likes_count)
@@ -365,7 +365,7 @@ supabase.from('tree_comments').select('*',{count:'exact',head:true}).eq('tree_id
 .then(({count})=>setCommentsCount(count??0))
 },[tree.id,userId])
 
-consthandleToggleLike=async()=>{
+const handleToggleLike=async()=>{
 if(!userId)
 return
 if(likedByMe){
@@ -455,7 +455,7 @@ className="flexitems-centergap-1text-smfont-mediumtext-gray-400hover:text-[#2d6a
 }
 
 //───InlineComments(forfriendtreecardpopup)──────────
-constInlineComments:React.FC<{treeId:string;isRtl:boolean;onCountChange?:(c:number)=>void;treeOwnerId?:string}>=({treeId,isRtl,onCountChange,treeOwnerId})=>{
+const InlineComments:React.FC<{treeId:string;isRtl:boolean;onCountChange?:(c:number)=>void;treeOwnerId?:string}>=({treeId,isRtl,onCountChange,treeOwnerId})=>{
 const[comments,setComments]=useState<Array<{id:string;user_id:string;text:string;created_at:string;name:string|null;avatar:string|null}>>([])
 
 const[loading,setLoading]=useState(true)
@@ -465,8 +465,8 @@ const[newComment,setNewComment]=useState('')
 const[submitting,setSubmitting]=useState(false)
 
 const[longPressId,setLongPressId]=useState<string|null>(null)
-constlongPressTimer=React.useRef<ReturnType<typeofsetTimeout>|null>(null)
-constnavigate=useNavigate()
+const longPressTimer=React.useRef<ReturnType<typeofsetTimeout>|null>(null)
+const navigate=useNavigate()
 
 const{user}=useAuth()
 
@@ -474,10 +474,10 @@ useEffect(()=>{
 supabase.from('tree_comments').select('*').eq('tree_id',treeId).order('created_at',{ascending:true})
 .then(async({data})=>{
 if(!data||data.length===0){setComments([]);setLoading(false);return}
-constuserIds=[...newSet(data.map(c=>c.user_id))]
+const userIds=[...newSet(data.map(c=>c.user_id))]
 const{data:profiles}=awaitsupabase.from('user_profiles').select('id,display_name,username,avatar_url').in('id',userIds)
 setComments(data.map(c=>{
-constp=(profiles??[]).find(pr=>pr.id===c.user_id)
+const p=(profiles??[]).find(pr=>pr.id===c.user_id)
 
 return{...c,name:p?.display_name??p?.username??null,avatar:p?.avatar_url??null}
 }))
@@ -487,7 +487,7 @@ setLoading(false)
 
 useEffect(()=>{if(onCountChange)onCountChange(comments.length)},[comments.length])
 
-consthandleSubmit=async(e:React.FormEvent)=>{
+const handleSubmit=async(e:React.FormEvent)=>{
 e.preventDefault()
 if(!newComment.trim()||submitting)
 return
@@ -505,17 +505,17 @@ setNewComment('')
 setSubmitting(false)
 }
 
-consthandleLongPressStart=(commentId:string,commentUserId:string)=>{
+const handleLongPressStart=(commentId:string,commentUserId:string)=>{
 if(user?.id!==commentUserId&&user?.id!==treeOwnerId)
 return
 longPressTimer.current=setTimeout(()=>setLongPressId(commentId),500)
 }
 
-consthandleLongPressEnd=()=>{
+const handleLongPressEnd=()=>{
 if(longPressTimer.current){clearTimeout(longPressTimer.current);longPressTimer.current=null}
 }
 
-consthandleDelete=async(commentId:string)=>{
+const handleDelete=async(commentId:string)=>{
 awaitsupabase.from('tree_comments').delete().eq('id',commentId)
 setComments(prev=>prev.filter(c=>c.id!==commentId))
 setLongPressId(null)
