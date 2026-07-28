@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase-client'
 import { cacheGet, cacheSet } from '../lib/cache'
 import { useSpecies } from '../hooks/useSpecies'
 import { usePhotos } from '../hooks/usePhotos'
+import { useAuth } from '../contexts/AuthContext'
 import { useAlertConfigs } from '../hooks/useAlertConfigs'
 import { useTreatments } from '../hooks/useTreatments'
 import { TREATMENT_TYPES } from '../lib/treatment-validator'
@@ -242,16 +243,12 @@ const styles = ['formal_upright','informal_upright','slanting','cascade','semi_c
 // ─── Main component ─────────────────────────────────────────
 const TreeProfilePage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  
-const { id } = useParams<{ id: string }>()
-  
-const navigate = useNavigate()
-  
-const location = useLocation()
-  
-const { getSpeciesById } = useSpecies()
-  
-const { photos, setCoverPhoto, uploadPhoto } = usePhotos(id ?? '')
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { getSpeciesById } = useSpecies()
+  const { photos, setCoverPhoto, uploadPhoto } = usePhotos(id ?? '')
+  const { user } = useAuth()
 
   
 const [tree, setTree] = useState<Tree | null>(null)
@@ -717,6 +714,7 @@ return null
 
 // ─── Tree Social Section (likes + comments) ─────────────────
 const TreeSocialSection: React.FC<{ treeId: string; likesCount: number; isRtl: boolean; userId: string | null; treeOwnerId: string }> = ({ treeId, likesCount, isRtl, userId, treeOwnerId }) => {
+  const { user } = useAuth()
   const [likes, setLikes] = useState(likesCount)
   const [likedByMe, setLikedByMe] = useState(false)
   const [showComments, setShowComments] = useState(false)
