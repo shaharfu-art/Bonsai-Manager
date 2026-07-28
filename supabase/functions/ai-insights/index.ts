@@ -73,7 +73,7 @@ ${forecastLines}`
     // Build prompt
     const month = new Date().getMonth() + 1
     const season = month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter'
-    const lang = language === 'he' ? 'Hebrew' : 'English'
+    const fallbackLang = language === 'he' ? 'Hebrew' : 'English'
 
     const prompt = question
       ? `You are an expert bonsai mentor. The user has a question about their tree.
@@ -92,7 +92,7 @@ ${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}`).join
 
 User's question: "${question}"
 
-Answer in ${lang}. Be concise, practical, and specific to this tree. Factor in current weather. Use emoji.`
+Answer in the same language the user wrote their question in. Be concise, practical, and specific to this tree. Factor in current weather. Use emoji.`
       : `You are an expert bonsai mentor. Based on this tree profile, provide personalized care recommendations.
 
 Tree: ${tree.custom_name}
@@ -106,7 +106,7 @@ ${weatherContext}
 Recent treatments:
 ${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}${t.notes ? ` (${t.notes})` : ''}`).join('\n') || 'None'}
 
-Respond in ${lang}. Structure:
+Respond in ${fallbackLang}. Structure:
 1. **Health Assessment** - Brief assessment
 2. **This Week** - 2-3 actionable items based on current + forecast weather
 3. **Seasonal Tips** - For ${season}

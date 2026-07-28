@@ -12,7 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const WIZARD_DONE_KEY = 'onboarding-wizard-done'
 
-const OnboardingWizard: React.FC = () => {
+const OnboardingWizard: React.FC<{ forceShow?: boolean; onComplete?: () => void }> = ({ forceShow = false, onComplete }) => {
   const { i18n } = useTranslation()
   
 const { user } = useAuth()
@@ -41,23 +41,27 @@ const [checked, setChecked] = useState(false)
 
   useEffect(() => {
     // Don't run until we have a user
-    if (!user) 
-return
+    if (!user && !forceShow) return
     // Don't run twice
-    if (checked) 
-return
+    if (checked) return
+
+    // If forceShow, always show
+    if (forceShow) {
+      setVisible(true)
+      setChecked(true)
+      return
+    }
 
     // Simple check: if localStorage says done, skip
     if (localStorage.getItem(WIZARD_DONE_KEY)) {
       setChecked(true)
-      
-return
+      return
     }
 
     // Show wizard!
     setVisible(true)
     setChecked(true)
-  }, [user, checked])
+  }, [user, checked, forceShow])
 
   useEffect(() => {
     // Setup install prompt listener and detect iOS
@@ -163,6 +167,7 @@ const data = await res.json()
 const handleFinish = () => {
     localStorage.setItem(WIZARD_DONE_KEY, 'true')
     setVisible(false)
+    onComplete?.()
   }
 
   
