@@ -53,7 +53,7 @@ const isRtl = i18n.language === 'he'
   return (
     <button
       onClick={onClick}
-      className="bg-white rounded-xl shadow hover:shadow-md transition-shadow overflow-hidden text-left w-full focus:outline-none focus:ring-2 focus:ring-[#52b788] relative"
+      className="bg-white rounded-xl shadow hover:shadow-md transition-shadow overflow-hidden text-left w-full focus:outline-none focus:ring-2 focus:ring-[#52b788] relative h-[280px] flex flex-col"
     >
       {/* Alert badge */}
       {alertCount != null && alertCount > 0 && (
@@ -62,7 +62,7 @@ const isRtl = i18n.language === 'he'
         </span>
       )}
       {/* Cover image / placeholder */}
-      <div className="h-32 bg-gradient-to-br from-[#2d6a4f] to-[#52b788] flex items-center justify-center overflow-hidden">
+      <div className="h-32 bg-gradient-to-br from-[#2d6a4f] to-[#52b788] flex items-center justify-center overflow-hidden flex-shrink-0">
         {coverPhotoUrl ? (
           <img src={coverPhotoUrl} alt={tree.custom_name} className="w-full h-full object-cover" />
         ) : (
@@ -70,7 +70,7 @@ const isRtl = i18n.language === 'he'
         )}
       </div>
 
-      <div className="p-3 space-y-1">
+      <div className="p-3 space-y-1 flex-1 overflow-hidden">
         <h3 className="font-bold text-gray-900 truncate text-sm">🪪 {tree.custom_name}</h3>
         <p className="text-[11px] text-green-700 font-medium truncate">
           🌳 {speciesName || tree.species_free_text || '—'}
@@ -579,7 +579,7 @@ return (
 
         {/* Grid view */}
         {!loading && !error && filteredTrees.length > 0 && viewMode === 'grid' && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 items-start">
             {filteredTrees.map((tree) => (
               <TreeCard
                 key={tree.id}
