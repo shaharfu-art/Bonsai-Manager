@@ -179,7 +179,7 @@ const styles = ['formal_upright','informal_upright','slanting','cascade','semi_c
         </div>
       )}
 
-      <h2 className="text-lg font-bold text-[#2d6a4f] mb-4">🪪 {tree.custom_name}</h2>
+      <h2 className="text-lg font-bold text-[#2d6a4f] mb-4 pr-28">🪪 {tree.custom_name}</h2>
 
       {editing ? (
         <div className="space-y-3">
