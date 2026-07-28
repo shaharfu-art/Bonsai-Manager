@@ -156,9 +156,9 @@ const styles = ['formal_upright','informal_upright','slanting','cascade','semi_c
       className="bg-white rounded-2xl shadow-md p-5 -mt-8 relative z-10"
       onDoubleClick={() => !editing && setEditing(true)}
     >
-      {/* Action buttons - top left */}
+      {/* Action buttons - top right */}
       {!editing && (
-        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+        <div className="absolute top-3 right-3 flex items-center gap-1.5">
           <button
             onClick={onShare}
             className="bg-sky-200/50 hover:bg-sky-200/80 text-sky-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
