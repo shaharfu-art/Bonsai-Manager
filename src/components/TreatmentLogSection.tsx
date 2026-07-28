@@ -23,55 +23,83 @@ const TREATMENT_ICONS: Record<string, string> = {
   other: '📝',
 }
 
+
 interface Props {
   treeId: string
   initialTreatmentType?: string | null
 }
 
+
 const today = () => new Date().toISOString().split('T')[0]
 
 const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) => {
   const { t } = useTranslation()
-  const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment } = useTreatments(treeId)
-  const { getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
-  const { uploadPhoto, photos: allPhotos } = usePhotos(treeId)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const editFileInputRef = useRef<HTMLInputElement>(null)
+  
+const { treatments, loading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment } = useTreatments(treeId)
+  
+const { getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
+  
+const { uploadPhoto, photos: allPhotos } = usePhotos(treeId)
+  
+const fileInputRef = useRef<HTMLInputElement>(null)
+  
+const editFileInputRef = useRef<HTMLInputElement>(null)
 
   // Add form state
   const [showForm, setShowForm] = useState(false)
-  const [formDate, setFormDate] = useState(today())
-  const [formType, setFormType] = useState<string>(TREATMENT_TYPES[0])
-  const [formNotes, setFormNotes] = useState('')
-  const [formPhotos, setFormPhotos] = useState<File[]>([])
-  const [formRepeatDays, setFormRepeatDays] = useState<number | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  
+const [formDate, setFormDate] = useState(today())
+  
+const [formType, setFormType] = useState<string>(TREATMENT_TYPES[0])
+  
+const [formNotes, setFormNotes] = useState('')
+  
+const [formPhotos, setFormPhotos] = useState<File[]>([])
+  
+const [formRepeatDays, setFormRepeatDays] = useState<number | null>(null)
+  
+const [submitting, setSubmitting] = useState(false)
+  
+const [submitError, setSubmitError] = useState('')
+  
+const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editDate, setEditDate] = useState('')
-  const [editType, setEditType] = useState('')
-  const [editNotes, setEditNotes] = useState('')
-  const [editPhotos, setEditPhotos] = useState<File[]>([])
-  const [editSubmitting, setEditSubmitting] = useState(false)
-  const [editError, setEditError] = useState('')
+  
+const [editDate, setEditDate] = useState('')
+  
+const [editType, setEditType] = useState('')
+  
+const [editNotes, setEditNotes] = useState('')
+  
+const [editPhotos, setEditPhotos] = useState<File[]>([])
+  
+const [editSubmitting, setEditSubmitting] = useState(false)
+  
+const [editError, setEditError] = useState('')
 
   // Lightbox state
   const [lightboxImages, setLightboxImages] = useState<{ url: string; alt?: string }[]>([])
-  const [lightboxIndex, setLightboxIndex] = useState(0)
+  
+const [lightboxIndex, setLightboxIndex] = useState(0)
 
   // Reminder panel state: treatmentId -> open/closed
   const [reminderOpenId, setReminderOpenId] = useState<string | null>(null)
   // Per-treatment-type reminder UI state
   const [reminderEnabled, setReminderEnabled] = useState(false)
-  const [reminderValue, setReminderValue] = useState(7)
-  const [reminderUnit, setReminderUnit] = useState<'days' | 'months' | 'years'>('days')
-  const [reminderMode, setReminderMode] = useState<'interval' | 'fixed'>('interval')
-  const [reminderFixedDate, setReminderFixedDate] = useState('')
-  const [reminderSaving, setReminderSaving] = useState(false)
-  const [reminderToast, setReminderToast] = useState<string | null>(null)
+  
+const [reminderValue, setReminderValue] = useState(7)
+  
+const [reminderUnit, setReminderUnit] = useState<'days' | 'months' | 'years'>('days')
+  
+const [reminderMode, setReminderMode] = useState<'interval' | 'fixed'>('interval')
+  
+const [reminderFixedDate, setReminderFixedDate] = useState('')
+  
+const [reminderSaving, setReminderSaving] = useState(false)
+  
+const [reminderToast, setReminderToast] = useState<string | null>(null)
 
   // Auto-open form when navigated from an alert click
   useEffect(() => {
@@ -81,7 +109,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     }
   }, [initialTreatmentType])
 
-  const resetForm = () => {
+  
+const resetForm = () => {
     setFormDate(today())
     setFormType(TREATMENT_TYPES[0])
     setFormNotes('')
@@ -90,13 +119,15 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     setSubmitError('')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setSubmitError('')
     try {
       // Create the treatment (with repeat_days if set)
-      const result = await addTreatment({
+      
+const result = await addTreatment({
         treatment_date: formDate,
         treatment_type: formType,
         notes: formNotes || undefined,
@@ -130,7 +161,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     }
   }
 
-  const handleDelete = async (id: string) => {
+  
+const handleDelete = async (id: string) => {
     try {
       await deleteTreatment(id)
     } finally {
@@ -138,15 +170,17 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     }
   }
 
-  const handleEditStart = (id: string) => {
+  
+const handleEditStart = (id: string) => {
     const treatment = treatments.find(t => t.id === id)
-    if (!treatment) return
+    if (!treatment) 
+return
     setEditingId(id)
     setEditDate(treatment.treatment_date)
     setEditType(treatment.treatment_type)
     setEditNotes(treatment.notes ?? '')
     setEditError('')
-    // Initialize reminder state for this treatment type
+    // Initialize reminder state for this treatmentType
     const existing = getConfig(treatment.treatment_type)
     setReminderEnabled(!!existing && (existing.interval_days != null || existing.snoozed_until != null))
     if (existing?.snoozed_until) {
@@ -156,7 +190,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
       setReminderUnit('days')
     } else {
       setReminderMode('interval')
-      const days = existing?.interval_days ?? 7
+      
+const days = existing?.interval_days ?? 7
       if (days >= 365 && days % 365 === 0) { setReminderValue(days / 365); setReminderUnit('years') }
       else if (days >= 30 && days % 30 === 0) { setReminderValue(days / 30); setReminderUnit('months') }
       else { setReminderValue(days); setReminderUnit('days') }
@@ -164,20 +199,25 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     }
   }
 
-  const handleEditCancel = () => {
+  
+const handleEditCancel = () => {
     setEditingId(null)
     setEditPhotos([])
     setEditError('')
   }
 
-  const handleEditSave = async (id: string) => {
+  
+const handleEditSave = async (id: string) => {
     setEditSubmitting(true)
     setEditError('')
     try {
       // Upload new photos if provided (up to 2 total)
-      const treatment = treatments.find(t => t.id === id)
-      const existingPhotoIds = treatment?.photo_ids ?? (treatment?.photo_id ? [treatment.photo_id] : [])
-      const maxNew = 2 - existingPhotoIds.length
+      
+const treatment = treatments.find(t => t.id === id)
+      
+const existingPhotoIds = treatment?.photo_ids ?? (treatment?.photo_id ? [treatment.photo_id] : [])
+      
+const maxNew = 2 - existingPhotoIds.length
 
       const newPhotoIds: string[] = []
       for (const file of editPhotos.slice(0, maxNew)) {
@@ -189,7 +229,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
         newPhotoIds.push(photo.id)
       }
 
-      const allPhotoIds = [...existingPhotoIds, ...newPhotoIds].slice(0, 2)
+      
+const allPhotoIds = [...existingPhotoIds, ...newPhotoIds].slice(0, 2)
 
       await updateTreatment(id, {
         treatment_date: editDate,
@@ -221,7 +262,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     }
   }
 
-  const handleReminderOpen = (treatmentId: string, treatmentType: string) => {
+  
+const handleReminderOpen = (treatmentId: string, treatmentType: string) => {
     const existing = getConfig(treatmentType)
     setReminderEnabled(!!existing && (existing.interval_days != null || existing.snoozed_until != null))
     
@@ -233,7 +275,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
       setReminderUnit('days')
     } else {
       setReminderMode('interval')
-      const days = existing?.interval_days ?? 7
+      
+const days = existing?.interval_days ?? 7
       // Convert days to best unit
       if (days >= 365 && days % 365 === 0) {
         setReminderValue(days / 365)
@@ -250,16 +293,19 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     setReminderOpenId(treatmentId)
   }
 
-  const handleReminderClose = () => {
+  
+const handleReminderClose = () => {
     setReminderOpenId(null)
   }
 
-  const handleReminderSave = async (treatmentType: string) => {
+  
+const handleReminderSave = async (treatmentType: string) => {
     setReminderSaving(true)
     try {
       if (reminderEnabled) {
         await requestNotificationPermission()
-        let nextDateStr: string
+        
+let nextDateStr: string
         if (reminderMode === 'fixed') {
           nextDateStr = reminderFixedDate
           await setConfig(treatmentType, 0, reminderFixedDate)
@@ -272,7 +318,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
           if (reminderUnit === 'months') totalDays = reminderValue * 30
           if (reminderUnit === 'years') totalDays = reminderValue * 365
           await setConfig(treatmentType, totalDays, null)
-          const nextDate = new Date()
+          
+const nextDate = new Date()
           nextDate.setDate(nextDate.getDate() + totalDays)
           nextDateStr = nextDate.toISOString().split('T')[0]
           const unitLabel = t(`treatment.unit_${reminderUnit}`)
@@ -282,7 +329,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
           )
         }
         // Create a pending treatment for the next occurrence
-        // Check if there's already a pending treatment of this type
+        // Check if there's already a pending treatment of thisType
         const existingPending = treatments.find(
           tr => tr.treatment_type === treatmentType && tr.status === 'pending'
         )
@@ -295,7 +342,7 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
         }
       } else {
         await removeConfig(treatmentType)
-        // Also remove any pending treatments of this type
+        // Also remove any pending treatments of thisType
         const pendingOfType = treatments.find(
           tr => tr.treatment_type === treatmentType && tr.status === 'pending'
         )
@@ -311,7 +358,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     }
   }
 
-  return (
+  
+return (
     <div>
       {/* Heading + Add button */}
       <div className="flex items-center justify-between mb-4">
@@ -380,7 +428,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
             </label>
             <input
               ref={fileInputRef}
-              type="file"
+              
+type="file"
               accept="image/*"
               multiple
               className="hidden"
@@ -624,13 +673,15 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                     </label>
                     <input
                       ref={editFileInputRef}
-                      type="file"
+                      
+type="file"
                       accept="image/*"
                       multiple
                       className="hidden"
                       onChange={e => {
                         const existingCount = treatment.photo_ids?.length ?? (treatment.photo_id ? 1 : 0)
-                        const maxNew = 2 - existingCount
+                        
+const maxNew = 2 - existingCount
                         const files = Array.from(e.target.files ?? []).slice(0, maxNew)
                         setEditPhotos(files)
                       }}
@@ -638,8 +689,10 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                     {/* Show existing photos */}
                     {(() => {
                       const photoIds = treatment.photo_ids?.length ? treatment.photo_ids : (treatment.photo_id ? [treatment.photo_id] : [])
-                      const existingPhotos = photoIds.map(pid => allPhotos.find(p => p.id === pid)).filter(Boolean)
-                      if (existingPhotos.length === 0) return null
+                      
+const existingPhotos = photoIds.map(pid => allPhotos.find(p => p.id === pid)).filter(Boolean)
+                      if (existingPhotos.length === 0) 
+return null
                       return (
                         <div className="flex gap-2 mb-2">
                           {existingPhotos.map(photo => photo?.public_url && (
@@ -671,7 +724,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                       onClick={() => editFileInputRef.current?.click()}
                       disabled={(() => {
                         const existingCount = treatment.photo_ids?.length ?? (treatment.photo_id ? 1 : 0)
-                        return existingCount + editPhotos.length >= 2
+                        
+return existingCount + editPhotos.length >= 2
                       })()}
                       className={`w-full border-2 border-dashed rounded-lg px-3 py-2 text-xs text-center transition-colors ${
                         editPhotos.length > 0 ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-300 text-gray-500 hover:border-[#2d6a4f]'
@@ -694,7 +748,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                     <div className="flex items-center gap-2 mb-2">
                       <input
                         id={`edit-reminder-toggle-${treatment.id}`}
-                        type="checkbox"
+                        
+type="checkbox"
                         checked={reminderEnabled}
                         onChange={e => setReminderEnabled(e.target.checked)}
                         className="w-4 h-4 rounded accent-[#2d6a4f]"
@@ -802,14 +857,17 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                       {/* Show treatment photo thumbnails with lightbox */}
                       {(() => {
                         const photoIds = treatment.photo_ids?.length ? treatment.photo_ids : (treatment.photo_id ? [treatment.photo_id] : [])
-                        const treatmentPhotos = photoIds.map(pid => allPhotos.find(p => p.id === pid)).filter(p => p?.public_url)
-                        if (treatmentPhotos.length === 0) return null
+                        
+const treatmentPhotos = photoIds.map(pid => allPhotos.find(p => p.id === pid)).filter(p => p?.public_url)
+                        if (treatmentPhotos.length === 0) 
+return null
                         return (
                           <div className="flex gap-1.5 mt-1.5">
                             {treatmentPhotos.map((photo, idx) => (
                               <button
                                 key={photo!.id}
-                                type="button"
+                                
+type="button"
                                 onClick={() => {
                                   setLightboxImages(treatmentPhotos.map(p => ({ url: p!.public_url!, alt: t('treatment.attachPhoto') })))
                                   setLightboxIndex(idx)
@@ -829,7 +887,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                       {/* Show active reminder info */}
                       {(() => {
                         const cfg = getConfig(treatment.treatment_type)
-                        if (!cfg) return null
+                        if (!cfg) 
+return null
                         if (cfg.snoozed_until) {
                           return (
                             <p className="text-xs text-yellow-600 mt-0.5">
@@ -849,7 +908,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                             </p>
                           )
                         }
-                        return null
+                        
+return null
                       })()}
                     </div>
                     {/* Action buttons */}
@@ -908,7 +968,8 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
                       <div className="flex items-center gap-2">
                         <input
                           id={`reminder-toggle-${treatment.id}`}
-                          type="checkbox"
+                          
+type="checkbox"
                           checked={reminderEnabled}
                           onChange={e => setReminderEnabled(e.target.checked)}
                           className="w-4 h-4 rounded accent-[#2d6a4f]"
@@ -1050,5 +1111,6 @@ const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) 
     </div>
   )
 }
+
 
 export default TreatmentLogSection

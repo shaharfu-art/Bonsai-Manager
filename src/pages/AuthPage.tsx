@@ -7,18 +7,28 @@ type AuthMode = 'login' | 'signup' | 'forgotPassword'
 
 const AuthPage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
-  const { signIn, signUp, resetPassword, signInWithGoogle } = useAuth()
+  
+const navigate = useNavigate()
+  
+const { signIn, signUp, resetPassword, signInWithGoogle } = useAuth()
 
-  const [mode, setMode] = useState<AuthMode>('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
-  const [loading, setLoading] = useState(false)
+  
+const [mode, setMode] = useState<AuthMode>('login')
+  
+const [email, setEmail] = useState('')
+  
+const [password, setPassword] = useState('')
+  
+const [confirmPassword, setConfirmPassword] = useState('')
+  
+const [error, setError] = useState('')
+  
+const [successMsg, setSuccessMsg] = useState('')
+  
+const [loading, setLoading] = useState(false)
 
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
   const dir = isRtl ? 'rtl' : 'ltr'
 
   const resetForm = () => {
@@ -29,12 +39,14 @@ const AuthPage: React.FC = () => {
     setSuccessMsg('')
   }
 
-  const switchMode = (newMode: AuthMode) => {
+  
+const switchMode = (newMode: AuthMode) => {
     resetForm()
     setMode(newMode)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccessMsg('')
@@ -48,7 +60,8 @@ const AuthPage: React.FC = () => {
         if (password !== confirmPassword) {
           setError(t('auth.passwordsMismatch'))
           setLoading(false)
-          return
+          
+return
         }
         await signUp(email, password)
         navigate('/dashboard', { replace: true })
@@ -61,7 +74,8 @@ const AuthPage: React.FC = () => {
       if (err instanceof Error && err.message === 'CONFIRM_EMAIL') {
         setSuccessMsg(t('auth.confirmEmail'))
         setLoading(false)
-        return
+        
+return
       }
       if (err && typeof err === 'object') {
         if ('message' in err && typeof (err as { message: unknown }).message === 'string') {
@@ -85,7 +99,8 @@ const AuthPage: React.FC = () => {
     }
   }
 
-  const handleGoogle = async () => {
+  
+const handleGoogle = async () => {
     setError('')
     try {
       await signInWithGoogle()
@@ -99,7 +114,8 @@ const AuthPage: React.FC = () => {
     }
   }
 
-  return (
+  
+return (
     <div
       className="min-h-screen flex items-center justify-center bg-[#f0f7f4] px-4"
       dir={dir}
@@ -296,5 +312,6 @@ const AuthPage: React.FC = () => {
     </div>
   )
 }
+
 
 export default AuthPage

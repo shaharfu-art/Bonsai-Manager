@@ -9,27 +9,42 @@ interface Props {
   onCoverPhotoChange?: (photoId: string) => void
 }
 
+
 const today = () => new Date().toISOString().split('T')[0]
 
 const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) => {
   const { t } = useTranslation()
-  const { photos, loading, error, uploadPhoto, deletePhoto, setCoverPhoto } = usePhotos(treeId)
+  
+const { photos, loading, error, uploadPhoto, deletePhoto, setCoverPhoto } = usePhotos(treeId)
 
-  const [showForm, setShowForm] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [dragOver, setDragOver] = useState(false)
-  const [fileSizeError, setFileSizeError] = useState(false)
-  const [photoDate, setPhotoDate] = useState(today())
-  const [caption, setCaption] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState('')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [lightboxPhotoId, setLightboxPhotoId] = useState<string | null>(null)
+  
+const [showForm, setShowForm] = useState(false)
+  
+const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  
+const [dragOver, setDragOver] = useState(false)
+  
+const [fileSizeError, setFileSizeError] = useState(false)
+  
+const [photoDate, setPhotoDate] = useState(today())
+  
+const [caption, setCaption] = useState('')
+  
+const [uploading, setUploading] = useState(false)
+  
+const [uploadError, setUploadError] = useState('')
+  
+const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  
+const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  
+const [lightboxPhotoId, setLightboxPhotoId] = useState<string | null>(null)
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const resetForm = () => {
+  
+const resetForm = () => {
     setSelectedFile(null)
     setPhotoDate(today())
     setCaption('')
@@ -37,33 +52,41 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
     setUploadError('')
   }
 
-  const handleFileSelect = (file: File) => {
+  
+const handleFileSelect = (file: File) => {
     if (!isImageSizeValid(file)) {
       setFileSizeError(true)
       setSelectedFile(null)
-      return
+      
+return
     }
     setFileSizeError(false)
     setSelectedFile(file)
   }
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  
+const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    const file = e.dataTransfer.files[0]
+    
+const file = e.dataTransfer.files[0]
     if (file) handleFileSelect(file)
   }, [])
 
-  const handleDragOver = (e: React.DragEvent) => {
+  
+const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(true)
   }
 
-  const handleDragLeave = () => setDragOver(false)
+  
+const handleDragLeave = () => setDragOver(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedFile) return
+    if (!selectedFile) 
+return
     setUploading(true)
     setUploadError('')
     try {
@@ -87,7 +110,8 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
     }
   }
 
-  const handleSetCover = async (photoId: string) => {
+  
+const handleSetCover = async (photoId: string) => {
     try {
       await setCoverPhoto(photoId)
       if (onCoverPhotoChange) onCoverPhotoChange(photoId)
@@ -96,7 +120,8 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
     }
   }
 
-  const handleDelete = async (photoId: string) => {
+  
+const handleDelete = async (photoId: string) => {
     try {
       await deletePhoto(photoId)
     } finally {
@@ -104,9 +129,11 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
     }
   }
 
-  const sorted = sortPhotosByDate(photos, sortDir)
+  
+const sorted = sortPhotosByDate(photos, sortDir)
 
-  return (
+  
+return (
     <div>
       {/* Heading + controls */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -143,7 +170,8 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
           >
             <input
               ref={fileInputRef}
-              type="file"
+              
+type="file"
               accept="image/*"
               className="hidden"
               onChange={e => {
@@ -302,8 +330,10 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
       {/* Lightbox - full screen photo viewer */}
       {lightboxPhotoId && (() => {
         const currentIndex = sorted.findIndex(p => p.id === lightboxPhotoId)
-        const currentPhoto = sorted[currentIndex]
-        if (!currentPhoto) return null
+        
+const currentPhoto = sorted[currentIndex]
+        if (!currentPhoto) 
+return null
         const hasPrev = currentIndex > 0
         const hasNext = currentIndex < sorted.length - 1
         return (
@@ -392,5 +422,6 @@ const PhotoTimelineSection: React.FC<Props> = ({ treeId, onCoverPhotoChange }) =
     </div>
   )
 }
+
 
 export default PhotoTimelineSection

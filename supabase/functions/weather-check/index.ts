@@ -14,7 +14,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
 }
 
-const THRESHOLDS = { heatwave: 37, extreme_heat: 40, frost: 3, strong_wind: 50, heavy_rain: 30, dry_east_wind_humidity: 30, haze_humidity: 25, haze_temp: 30 }
+const THRESHOLDS = { heatwave: 35, extreme_heat: 38, frost: 5, strong_wind: 30, heavy_rain: 30, dry_east_wind_humidity: 30, haze_humidity: 25, haze_temp: 35 }
 const TEST_THRESHOLDS = { heatwave: 20, extreme_heat: 25, frost: 15, strong_wind: 5, heavy_rain: 1, dry_east_wind_humidity: 80, haze_humidity: 80, haze_temp: 20 }
 
 interface WeatherAlert { type: string; day: string; value: number; unit: string }

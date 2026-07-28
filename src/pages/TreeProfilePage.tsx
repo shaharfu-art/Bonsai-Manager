@@ -18,9 +18,11 @@ import ShareCard from '../components/ShareCard'
 // ─── Three-dots menu ────────────────────────────────────────
 const MoreMenu: React.FC<{ onEdit?: () => void; onDelete: () => void; onRecurring?: () => void }> = ({ onDelete, onRecurring }) => {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  
+const [open, setOpen] = useState(false)
 
-  return (
+  
+return (
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
@@ -56,7 +58,8 @@ const MoreMenu: React.FC<{ onEdit?: () => void; onDelete: () => void; onRecurrin
 // ─── Delete confirmation dialog ─────────────────────────────
 const DeleteDialog: React.FC<{ treeName: string; onConfirm: () => void; onCancel: () => void; loading: boolean }> = ({ treeName, onConfirm, onCancel, loading }) => {
   const { t } = useTranslation()
-  return (
+  
+return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">🗑️ {t('common.confirm')}</h3>
@@ -95,20 +98,28 @@ interface IDCardProps {
   onShare: () => void
 }
 
+
 const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete, onRecurring, onShare }) => {
   const { t, i18n } = useTranslation()
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
   const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
+  
+const [saving, setSaving] = useState(false)
 
   // Edit state
   const [ageYears, setAgeYears] = useState(tree.age_years?.toString() ?? '')
-  const [style, setStyle] = useState(tree.style ?? '')
-  const [location, setLocation] = useState(tree.location ?? '')
-  const [potType, setPotType] = useState(tree.pot_type ?? '')
-  const [substrate, setSubstrate] = useState(tree.substrate ?? '')
+  
+const [style, setStyle] = useState(tree.style ?? '')
+  
+const [location, setLocation] = useState(tree.location ?? '')
+  
+const [potType, setPotType] = useState(tree.pot_type ?? '')
+  
+const [substrate, setSubstrate] = useState(tree.substrate ?? '')
 
-  const handleSave = async () => {
+  
+const handleSave = async () => {
     setSaving(true)
     await onSave({
       age_years: ageYears ? parseInt(ageYears, 10) : null,
@@ -121,7 +132,8 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
     setEditing(false)
   }
 
-  const handleCancel = () => {
+  
+const handleCancel = () => {
     setAgeYears(tree.age_years?.toString() ?? '')
     setStyle(tree.style ?? '')
     setLocation(tree.location ?? '')
@@ -130,7 +142,8 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
     setEditing(false)
   }
 
-  const styles = ['formal_upright','informal_upright','slanting','cascade','semi_cascade','literati','forest','rock_over_roots','other']
+  
+const styles = ['formal_upright','informal_upright','slanting','cascade','semi_cascade','literati','forest','rock_over_roots','other']
   const locations = ['indoors','outdoors','greenhouse']
 
   return (
@@ -223,25 +236,42 @@ const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEd
 // ─── Main component ─────────────────────────────────────────
 const TreeProfilePage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { getSpeciesById } = useSpecies()
-  const { photos, setCoverPhoto, uploadPhoto } = usePhotos(id ?? '')
+  
+const { id } = useParams<{ id: string }>()
+  
+const navigate = useNavigate()
+  
+const location = useLocation()
+  
+const { getSpeciesById } = useSpecies()
+  
+const { photos, setCoverPhoto, uploadPhoto } = usePhotos(id ?? '')
 
-  const [tree, setTree] = useState<Tree | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [activeTab, setActiveTab] = useState<'treatments' | 'photos'>('treatments')
-  const [showShareCard, setShowShareCard] = useState(false)
-  const [showCoverPicker, setShowCoverPicker] = useState(false)
-  const [showRecurringSettings, setShowRecurringSettings] = useState(false)
-  const coverUploadRef = useRef<HTMLInputElement>(null)
-  const [coverUploading, setCoverUploading] = useState(false)
+  
+const [tree, setTree] = useState<Tree | null>(null)
+  
+const [loading, setLoading] = useState(true)
+  
+const [error, setError] = useState('')
+  
+const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  
+const [deleting, setDeleting] = useState(false)
+  
+const [activeTab, setActiveTab] = useState<'treatments' | 'photos'>('treatments')
+  
+const [showShareCard, setShowShareCard] = useState(false)
+  
+const [showCoverPicker, setShowCoverPicker] = useState(false)
+  
+const [showRecurringSettings, setShowRecurringSettings] = useState(false)
+  
+const coverUploadRef = useRef<HTMLInputElement>(null)
+  
+const [coverUploading, setCoverUploading] = useState(false)
 
-  const openTreatmentType = (location.state as { openTreatment?: string } | null)?.openTreatment ?? null
+  
+const openTreatmentType = (location.state as { openTreatment?: string } | null)?.openTreatment ?? null
   const isRtl = i18n.language === 'he'
   const coverPhoto = photos.find(p => p.is_cover) ?? photos[0] ?? null
 
@@ -250,9 +280,11 @@ const TreeProfilePage: React.FC = () => {
     setShowCoverPicker(false)
   }
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !id) return
+    if (!file || !id) 
+return
     setCoverUploading(true)
     try {
       await uploadPhoto(file, { photo_date: new Date().toISOString().split('T')[0], caption: tree?.custom_name ?? '' })
@@ -261,7 +293,8 @@ const TreeProfilePage: React.FC = () => {
   }
 
   useEffect(() => {
-    if (!id) return
+    if (!id) 
+return
     // Check cache first for instant display
     const cacheKey = `tree:${id}`
     const cached = cacheGet<Tree>(cacheKey)
@@ -279,8 +312,10 @@ const TreeProfilePage: React.FC = () => {
     })
   }, [id])
 
-  const handleDelete = async () => {
-    if (!id) return
+  
+const handleDelete = async () => {
+    if (!id) 
+return
     setDeleting(true)
     try {
       const { error: deleteError } = await supabase.from('trees').delete().eq('id', id)
@@ -292,13 +327,16 @@ const TreeProfilePage: React.FC = () => {
     }
   }
 
-  const handleUpdateTree = async (updates: Partial<Tree>) => {
-    if (!id) return
+  
+const handleUpdateTree = async (updates: Partial<Tree>) => {
+    if (!id) 
+return
     const { data } = await supabase.from('trees').update(updates).eq('id', id).select().single()
     if (data) setTree(data as Tree)
   }
 
-  const speciesName = tree?.species_id ? (() => { const s = getSpeciesById(tree.species_id!); return s ? (isRtl ? s.name_he : s.name_en) : null })() : null
+  
+const speciesName = tree?.species_id ? (() => { const s = getSpeciesById(tree.species_id!); return s ? (isRtl ? s.name_he : s.name_en) : null })() : null
   const displaySpecies = speciesName || tree?.species_free_text || null
 
   if (loading) {
@@ -324,7 +362,8 @@ const TreeProfilePage: React.FC = () => {
     )
   }
 
-  return (
+  
+return (
     <Layout>
       <div className="max-w-2xl mx-auto space-y-4" dir={isRtl ? 'rtl' : 'ltr'}>
 
@@ -347,7 +386,8 @@ const TreeProfilePage: React.FC = () => {
             )}
             {photos.length === 0 && (
               <>
-                <input ref={coverUploadRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+                <input ref={coverUploadRef} 
+type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
                 <button onClick={() => coverUploadRef.current?.click()} disabled={coverUploading} className="bg-black/30 hover:bg-black/50 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors disabled:opacity-50">
                   📷 {coverUploading ? '...' : t('photo.addPhoto')}
                 </button>
@@ -387,7 +427,8 @@ const TreeProfilePage: React.FC = () => {
           <div className="flex border-b border-gray-100">
             {(['treatments', 'photos'] as const).map((tab) => {
               const labels = { treatments: t('tabs.treatments'), photos: t('tabs.photos') }
-              return (
+              
+return (
                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? 'text-[#2d6a4f] border-b-2 border-[#2d6a4f]' : 'text-gray-500 hover:text-gray-700'}`}>
                   {labels[tab]}
                 </button>
@@ -440,59 +481,84 @@ const TREATMENT_ICONS: Record<string, string> = {
   shading: '⛱️', sun_exposure: '☀️', winter_dormancy: '❄️', other: '📝',
 }
 
+
 const AlertsTabContent: React.FC<{ treeId: string }> = ({ treeId }) => {
   const { t } = useTranslation()
-  const { configs, loading, getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
-  const [lastTreatments, setLastTreatments] = useState<Record<string, string>>({})
-  const [editingType, setEditingType] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState(7)
-  const [editUnit, setEditUnit] = useState<'days' | 'months' | 'years'>('days')
-  const [editMode, setEditMode] = useState<'interval' | 'fixed'>('interval')
-  const [editFixedDate, setEditFixedDate] = useState('')
+  
+const { configs, loading, getConfig, setConfig, removeConfig } = useAlertConfigs(treeId)
+  
+const [lastTreatments, setLastTreatments] = useState<Record<string, string>>({})
+  
+const [editingType, setEditingType] = useState<string | null>(null)
+  
+const [editValue, setEditValue] = useState(7)
+  
+const [editUnit, setEditUnit] = useState<'days' | 'months' | 'years'>('days')
+  
+const [editMode, setEditMode] = useState<'interval' | 'fixed'>('interval')
+  
+const [editFixedDate, setEditFixedDate] = useState('')
 
   useEffect(() => {
     supabase.from('treatment_logs').select('treatment_type, treatment_date').eq('tree_id', treeId).order('treatment_date', { ascending: false })
       .then(({ data }) => { const map: Record<string, string> = {}; for (const row of data ?? []) { if (!map[row.treatment_type]) map[row.treatment_type] = row.treatment_date }; setLastTreatments(map) })
   }, [treeId])
 
-  const handleEdit = (type: string) => {
+  
+const handleEdit = (type: string) => {
     const cfg = getConfig(type)
     if (cfg?.snoozed_until) { setEditMode('fixed'); setEditFixedDate(cfg.snoozed_until); setEditValue(1); setEditUnit('days') }
     else { setEditMode('interval'); const days = cfg?.interval_days ?? 7; if (days >= 365 && days % 365 === 0) { setEditValue(days/365); setEditUnit('years') } else if (days >= 30 && days % 30 === 0) { setEditValue(days/30); setEditUnit('months') } else { setEditValue(days); setEditUnit('days') }; setEditFixedDate('') }
     setEditingType(type)
   }
 
-  const handleSave = async (type: string) => {
+  
+const handleSave = async (type: string) => {
     if (editMode === 'fixed') { await setConfig(type, 0, editFixedDate) }
     else { let totalDays = editValue; if (editUnit === 'months') totalDays = editValue * 30; if (editUnit === 'years') totalDays = editValue * 365; await setConfig(type, totalDays, null) }
     setEditingType(null)
   }
 
-  const handleRemove = async (type: string) => { await removeConfig(type); setEditingType(null) }
+  
+const handleRemove = async (type: string) => { await removeConfig(type); setEditingType(null) }
 
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
+  
+const today = new Date()
+  
+const todayStr = today.toISOString().split('T')[0]
   const getAlertStatus = (type: string): { status: 'due' | 'upcoming' | 'ok' | 'none'; dueDate: string } => {
-    const cfg = getConfig(type); if (!cfg) return { status: 'none', dueDate: '' }
+    const cfg = getConfig(type); if (!cfg) 
+return { status: 'none', dueDate: '' }
     // If treatment was done today, it's OK (fulfilled)
-    if (lastTreatments[type] === todayStr) return { status: 'ok', dueDate: '' }
-    if (cfg.snoozed_until) { const d = new Date(cfg.snoozed_until); const diff = Math.ceil((d.getTime()-today.getTime())/(1000*60*60*24)); if (diff<=0) return{status:'due',dueDate:cfg.snoozed_until}; if (diff<=30) return{status:'upcoming',dueDate:cfg.snoozed_until}; return{status:'ok',dueDate:cfg.snoozed_until} }
-    if (!cfg.interval_days||cfg.interval_days<=0) return{status:'none',dueDate:''}
-    const last=lastTreatments[type]; const lastDate=last?new Date(last):new Date(0); const next=new Date(lastDate.getTime()+cfg.interval_days*24*60*60*1000); const diff=Math.ceil((next.getTime()-today.getTime())/(1000*60*60*24)); const dueStr=next.toISOString().split('T')[0]
-    if(diff<=0) return{status:'due',dueDate:dueStr}; if(diff<=30) return{status:'upcoming',dueDate:dueStr}; return{status:'ok',dueDate:dueStr}
+    if (lastTreatments[type] === todayStr) 
+return { status: 'ok', dueDate: '' }
+    if (cfg.snoozed_until) { const d = new Date(cfg.snoozed_until); const diff = Math.ceil((d.getTime()-today.getTime())/(1000*60*60*24)); if (diff<=0) 
+return{status:'due',dueDate:cfg.snoozed_until}; if (diff<=30) 
+return{status:'upcoming',dueDate:cfg.snoozed_until}; return{status:'ok',dueDate:cfg.snoozed_until} }
+    if (!cfg.interval_days||cfg.interval_days<=0) 
+return{status:'none',dueDate:''}
+    
+const last=lastTreatments[type]; const lastDate=last?new Date(last):new Date(0); const next=new Date(lastDate.getTime()+cfg.interval_days*24*60*60*1000); const diff=Math.ceil((next.getTime()-today.getTime())/(1000*60*60*24)); const dueStr=next.toISOString().split('T')[0]
+    if(diff<=0) 
+return{status:'due',dueDate:dueStr}; if(diff<=30) 
+return{status:'upcoming',dueDate:dueStr}; return{status:'ok',dueDate:dueStr}
   }
 
-  if (loading) return <div className="animate-pulse space-y-2">{[0,1,2].map(i=><div key={i} className="h-10 bg-gray-100 rounded-lg"/>)}</div>
+  if (loading) 
+return <div className="animate-pulse space-y-2">{[0,1,2].map(i=><div key={i} className="h-10 bg-gray-100 rounded-lg"/>)}</div>
 
   const configuredTypes = configs.map(c => c.treatment_type)
-  const unconfiguredTypes = TREATMENT_TYPES.filter(t => !configuredTypes.includes(t))
+  
+const unconfiguredTypes = TREATMENT_TYPES.filter(t => !configuredTypes.includes(t))
 
-  return (
+  
+return (
     <div className="space-y-4">
       {configs.length === 0 && <p className="text-center text-gray-400 text-sm py-4">{t('alert.noAlerts')}</p>}
       {configs.map(cfg => {
         const { status, dueDate } = getAlertStatus(cfg.treatment_type)
-        return (
+        
+return (
           <div key={cfg.id} className="bg-gray-50 rounded-xl px-4 py-3">
             {editingType === cfg.treatment_type ? (
               <div className="space-y-2">
@@ -513,7 +579,9 @@ const AlertsTabContent: React.FC<{ treeId: string }> = ({ treeId }) => {
                 <span className="text-lg">{TREATMENT_ICONS[cfg.treatment_type]}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800">{t(`treatment.${cfg.treatment_type}`)}</p>
-                  <p className="text-xs text-gray-500">{cfg.snoozed_until?`${t('treatment.reminderOnDate')} ${cfg.snoozed_until}`:cfg.interval_days?(()=>{const d=cfg.interval_days!;if(d>=365&&d%365===0)return`${t('treatment.reminderEvery')} ${d/365} ${t('treatment.unit_years')}`;if(d>=30&&d%30===0)return`${t('treatment.reminderEvery')} ${d/30} ${t('treatment.unit_months')}`;return`${t('treatment.reminderEvery')} ${d} ${t('treatment.unit_days')}`})():t('alert.manualOnly')}</p>
+                  <p className="text-xs text-gray-500">{cfg.snoozed_until?`${t('treatment.reminderOnDate')} ${cfg.snoozed_until}`:cfg.interval_days?(()=>{const d=cfg.interval_days!;if(d>=365&&d%365===0)
+return`${t('treatment.reminderEvery')} ${d/365} ${t('treatment.unit_years')}`;if(d>=30&&d%30===0)
+return`${t('treatment.reminderEvery')} ${d/30} ${t('treatment.unit_months')}`;return`${t('treatment.reminderEvery')} ${d} ${t('treatment.unit_days')}`})():t('alert.manualOnly')}</p>
                 </div>
                 {status!=='none'&&<span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${status==='due'?'bg-red-100 text-red-700':status==='upcoming'?'bg-yellow-100 text-yellow-700':'bg-green-100 text-green-700'}`}>{status==='due'?t('alert.due'):status==='upcoming'?t('alert.upcoming'):t('alert.ok')}</span>}
                 <button onClick={()=>handleEdit(cfg.treatment_type)} className="text-gray-400 hover:text-[#2d6a4f] p-1">✏️</button>
@@ -551,16 +619,21 @@ const AlertsTabContent: React.FC<{ treeId: string }> = ({ treeId }) => {
 // ─── Tree Alerts Banner (same style as dashboard) ────────────
 const TreeAlertsBanner: React.FC<{ treeId: string }> = ({ treeId }) => {
   const { t } = useTranslation()
-  const { getConfig } = useAlertConfigs(treeId)
-  const { treatments } = useTreatments(treeId)
-  const navigate = useNavigate()
+  
+const { getConfig } = useAlertConfigs(treeId)
+  
+const { treatments } = useTreatments(treeId)
+  
+const navigate = useNavigate()
 
-  const todayDate = new Date()
-  const todayStr = todayDate.toISOString().split('T')[0]
+  
+const todayDate = new Date()
+  
+const todayStr = todayDate.toISOString().split('T')[0]
 
   const dueAlerts: { type: string; dueDate: string; status: 'due' | 'upcoming' }[] = []
 
-  for (const type of TREATMENT_TYPES) {
+  for (constType of TREATMENT_TYPES) {
     const cfg = getConfig(type)
     if (!cfg) continue
     const doneToday = treatments.find(tr => tr.treatment_type === type && tr.treatment_date === todayStr && tr.status === 'completed')
@@ -568,21 +641,26 @@ const TreeAlertsBanner: React.FC<{ treeId: string }> = ({ treeId }) => {
 
     if (cfg.snoozed_until) {
       const d = new Date(cfg.snoozed_until)
-      const diff = Math.ceil((d.getTime() - todayDate.getTime()) / (1000*60*60*24))
+      
+const diff = Math.ceil((d.getTime() - todayDate.getTime()) / (1000*60*60*24))
       if (diff <= 0) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'due' })
       else if (diff <= 3) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'upcoming' })
     } else if (cfg.interval_days && cfg.interval_days > 0) {
       const lastLog = treatments.filter(tr => tr.treatment_type === type && tr.status === 'completed').sort((a,b) => b.treatment_date.localeCompare(a.treatment_date))[0]
       const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
-      const next = new Date(lastDate.getTime() + cfg.interval_days * 24*60*60*1000)
-      const diff = Math.ceil((next.getTime() - todayDate.getTime()) / (1000*60*60*24))
-      const dueStr = next.toISOString().split('T')[0]
+      
+const next = new Date(lastDate.getTime() + cfg.interval_days * 24*60*60*1000)
+      
+const diff = Math.ceil((next.getTime() - todayDate.getTime()) / (1000*60*60*24))
+      
+const dueStr = next.toISOString().split('T')[0]
       if (diff <= 0) dueAlerts.push({ type, dueDate: dueStr, status: 'due' })
       else if (diff <= 3) dueAlerts.push({ type, dueDate: dueStr, status: 'upcoming' })
     }
   }
 
-  if (dueAlerts.length === 0) return null
+  if (dueAlerts.length === 0) 
+return null
 
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
@@ -626,5 +704,6 @@ const TreeAlertsBanner: React.FC<{ treeId: string }> = ({ treeId }) => {
     </div>
   )
 }
+
 
 export default TreeProfilePage

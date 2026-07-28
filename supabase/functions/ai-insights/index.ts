@@ -30,7 +30,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-    const { tree_id, language, question, image } = await req.json()
+    const { tree_id, language, question, image, weather } = await req.json()
     if (!tree_id) return new Response(JSON.stringify({ error: 'Missing tree_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     // Fetch tree
@@ -47,6 +47,29 @@ serve(async (req) => {
     // Fetch recent treatments
     const { data: treatments } = await supabase.from('treatment_logs').select('treatment_type, treatment_date, notes').eq('tree_id', tree_id).eq('status', 'completed').order('treatment_date', { ascending: false }).limit(10)
 
+    // Build weather context string
+    const weatherContext = weather ? (() => {
+      const c = weather.current
+      const wDesc = (code: number) => {
+        if (code === 0) return 'clear sky'
+        if (code <= 3) return 'partly cloudy'
+        if (code <= 48) return 'foggy'
+        if (code <= 57) return 'drizzle'
+        if (code <= 67) return 'rain'
+        if (code <= 77) return 'snow'
+        if (code <= 82) return 'heavy rain'
+        if (code <= 86) return 'heavy snow'
+        if (code >= 95) return 'thunderstorm'
+        return 'cloudy'
+      }
+      const forecastLines = (weather.forecast ?? []).map((d: any) =>
+        `  ${d.date}: ${d.tempMin}°–${d.tempMax}°C, ${wDesc(d.weatherCode)}${d.precipitation > 0 ? `, rain ${d.precipitation}mm` : ''}`
+      ).join('\n')
+      return `Current weather: ${c.temp}°C, ${wDesc(c.weatherCode)}, humidity ${c.humidity}%, wind ${c.windSpeed}km/h
+4-day forecast:
+${forecastLines}`
+    })() : 'Weather data unavailable'
+
     // Build prompt
     const month = new Date().getMonth() + 1
     const season = month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter'
@@ -61,12 +84,15 @@ Tree context:
 - Age: ${tree.age_years ?? 'Unknown'} years | Style: ${tree.style ?? 'Unknown'} | Location: ${tree.location ?? 'Unknown'}
 - Substrate: ${tree.substrate ?? 'Unknown'} | Season: ${season}
 
+Weather:
+${weatherContext}
+
 Recent treatments:
 ${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}`).join('\n') || 'None'}
 
 User's question: "${question}"
 
-Answer in ${lang}. Be concise, practical, and specific to this tree. Use emoji.`
+Answer in ${lang}. Be concise, practical, and specific to this tree. Factor in current weather. Use emoji.`
       : `You are an expert bonsai mentor. Based on this tree profile, provide personalized care recommendations.
 
 Tree: ${tree.custom_name}
@@ -74,16 +100,19 @@ ${speciesInfo || `Species: ${tree.species_free_text ?? 'Unknown'}`}
 Age: ${tree.age_years ?? 'Unknown'} years | Style: ${tree.style ?? 'Unknown'} | Location: ${tree.location ?? 'Unknown'}
 Pot: ${tree.pot_type ?? 'Unknown'} | Substrate: ${tree.substrate ?? 'Unknown'} | Season: ${season}
 
+Weather:
+${weatherContext}
+
 Recent treatments:
 ${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}${t.notes ? ` (${t.notes})` : ''}`).join('\n') || 'None'}
 
 Respond in ${lang}. Structure:
 1. **Health Assessment** - Brief assessment
-2. **This Week** - 2-3 actionable items
+2. **This Week** - 2-3 actionable items based on current + forecast weather
 3. **Seasonal Tips** - For ${season}
-4. **Warning** - Any concerns (or "none")
+4. **Warning** - Any concerns based on upcoming weather (or "none")
 
-Keep it concise (max 250 words), practical, with emoji.`
+Keep it concise (max 300 words), practical, with emoji.`
 
     // Call Gemini via SDK (multimodal if image provided)
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })

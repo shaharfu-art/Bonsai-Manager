@@ -7,6 +7,7 @@ interface LightboxProps {
   onNavigate: (index: number) => void
 }
 
+
 const Lightbox: React.FC<LightboxProps> = ({ images, currentIndex, onClose, onNavigate }) => {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
@@ -23,7 +24,8 @@ const Lightbox: React.FC<LightboxProps> = ({ images, currentIndex, onClose, onNa
     }
   }, [handleKeyDown])
 
-  if (images.length === 0) return null
+  if (images.length === 0) 
+return null
 
   const current = images[currentIndex]
 
@@ -89,5 +91,6 @@ const Lightbox: React.FC<LightboxProps> = ({ images, currentIndex, onClose, onNa
     </div>
   )
 }
+
 
 export default Lightbox

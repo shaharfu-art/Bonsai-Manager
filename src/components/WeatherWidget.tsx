@@ -14,28 +14,42 @@ interface WeatherData {
 
 // Weather codes from Open-Meteo → icon + description
 function getWeatherIcon(code: number, isDay: boolean): { icon: string; desc: string } {
-  if (code === 0) return { icon: isDay ? '☀️' : '🌙', desc: isDay ? 'clear' : 'clear night' }
-  if (code <= 3) return { icon: isDay ? '⛅' : '☁️', desc: 'partly cloudy' }
-  if (code <= 48) return { icon: '🌫️', desc: 'foggy' }
-  if (code <= 57) return { icon: '🌦️', desc: 'drizzle' }
-  if (code <= 67) return { icon: '🌧️', desc: 'rain' }
-  if (code <= 77) return { icon: '❄️', desc: 'snow' }
-  if (code <= 82) return { icon: '🌧️', desc: 'heavy rain' }
-  if (code <= 86) return { icon: '🌨️', desc: 'heavy snow' }
-  if (code >= 95) return { icon: '⛈️', desc: 'thunderstorm' }
-  return { icon: isDay ? '🌤️' : '🌙', desc: '' }
+  if (code === 0) 
+return { icon: isDay ? '☀️' : '🌙', desc: isDay ? 'clear' : 'clear night' }
+  if (code <= 3) 
+return { icon: isDay ? '⛅' : '☁️', desc: 'partly cloudy' }
+  if (code <= 48) 
+return { icon: '🌫️', desc: 'foggy' }
+  if (code <= 57) 
+return { icon: '🌦️', desc: 'drizzle' }
+  if (code <= 67) 
+return { icon: '🌧️', desc: 'rain' }
+  if (code <= 77) 
+return { icon: '❄️', desc: 'snow' }
+  if (code <= 82) 
+return { icon: '🌧️', desc: 'heavy rain' }
+  if (code <= 86) 
+return { icon: '🌨️', desc: 'heavy snow' }
+  if (code >= 95) 
+return { icon: '⛈️', desc: 'thunderstorm' }
+  
+return { icon: isDay ? '🌤️' : '🌙', desc: '' }
 }
+
 
 const CACHE_KEY = 'weather-cache-v2'
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
 
 const WeatherWidget: React.FC = () => {
   const { i18n } = useTranslation()
-  const { user } = useAuth()
-  const [weather, setWeather] = useState<WeatherData | null>(null)
+  
+const { user } = useAuth()
+  
+const [weather, setWeather] = useState<WeatherData | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) 
+return
 
     const fetchWeather = async () => {
       // Check cache
@@ -45,7 +59,8 @@ const WeatherWidget: React.FC = () => {
           const { data, timestamp } = JSON.parse(cached)
           if (Date.now() - timestamp < CACHE_TTL) {
             setWeather(data)
-            return
+            
+return
           }
         }
       } catch { /* ignore */ }
@@ -57,23 +72,30 @@ const WeatherWidget: React.FC = () => {
         .eq('id', user.id)
         .single()
 
-      if (!profile?.trees_lat || !profile?.trees_lng) return
+      if (!profile?.trees_lat || !profile?.trees_lng) 
+return
 
       // Fetch from Open-Meteo
       try {
         const res = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${profile.trees_lat}&longitude=${profile.trees_lng}&current=temperature_2m,is_day,weather_code,relative_humidity_2m,wind_speed_10m&timezone=auto`
         )
-        const data = await res.json()
-        const current = data.current
+        
+const data = await res.json()
+        
+const current = data.current
         const temp = Math.round(current?.temperature_2m ?? 0)
-        const isDay = current?.is_day === 1
+        
+const isDay = current?.is_day === 1
         const weatherCode = current?.weather_code ?? 0
         const humidity = Math.round(current?.relative_humidity_2m ?? 0)
-        const windSpeed = Math.round(current?.wind_speed_10m ?? 0)
-        const { icon } = getWeatherIcon(weatherCode, isDay)
+        
+const windSpeed = Math.round(current?.wind_speed_10m ?? 0)
+        
+const { icon } = getWeatherIcon(weatherCode, isDay)
 
-        const weatherData: WeatherData = {
+        
+const weatherData: WeatherData = {
           temp,
           icon,
           isDay,
@@ -94,7 +116,8 @@ const WeatherWidget: React.FC = () => {
     fetchWeather()
   }, [user])
 
-  if (!weather) return null
+  if (!weather) 
+return null
 
   // Check if current conditions are hazardous
   const isHazard = weather.temp > 37 || weather.temp < 3 || weather.windSpeed > 50 || weather.humidity < 25
@@ -153,5 +176,6 @@ const WeatherWidget: React.FC = () => {
     </div>
   )
 }
+
 
 export default WeatherWidget

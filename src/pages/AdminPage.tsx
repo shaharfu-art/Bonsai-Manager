@@ -11,41 +11,60 @@ import { supabase } from '../lib/supabase-client'
 
 const AdminPage: React.FC = () => {
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { isAdmin, loading: profileLoading } = useUserProfile()
-  const { stats, users, loading, error, updateUserRole, updateUserLimits } = useAdminData()
-  const { onlineCount, onlineUsers } = useOnlineUsers()
-  const { species } = useSpecies()
-  const [editingUser, setEditingUser] = useState<string | null>(null)
-  const [editMaxTrees, setEditMaxTrees] = useState(100)
-  const [editingSpecies, setEditingSpecies] = useState<string | null>(null)
-  const [editSpeciesHe, setEditSpeciesHe] = useState('')
-  const [editSpeciesEn, setEditSpeciesEn] = useState('')
-  const [editSpeciesLatin, setEditSpeciesLatin] = useState('')
-  const [speciesFilter, setSpeciesFilter] = useState('')
-  const [speciesList, setSpeciesList] = useState<typeof species>([])
+  
+const navigate = useNavigate()
+  
+const { isAdmin, loading: profileLoading } = useUserProfile()
+  
+const { stats, users, loading, error, updateUserRole, updateUserLimits } = useAdminData()
+  
+const { onlineCount, onlineUsers } = useOnlineUsers()
+  
+const { species } = useSpecies()
+  
+const [editingUser, setEditingUser] = useState<string | null>(null)
+  
+const [editMaxTrees, setEditMaxTrees] = useState(100)
+  
+const [editingSpecies, setEditingSpecies] = useState<string | null>(null)
+  
+const [editSpeciesHe, setEditSpeciesHe] = useState('')
+  
+const [editSpeciesEn, setEditSpeciesEn] = useState('')
+  
+const [editSpeciesLatin, setEditSpeciesLatin] = useState('')
+  
+const [speciesFilter, setSpeciesFilter] = useState('')
+  
+const [speciesList, setSpeciesList] = useState<typeof species>([])
 
   // Sync species from hook
   React.useEffect(() => {
     if (species.length > 0 && speciesList.length === 0) setSpeciesList(species)
   }, [species])
 
-  const filteredAdminSpecies = speciesList.filter(s => {
-    if (!speciesFilter) return true
+  
+const filteredAdminSpecies = speciesList.filter(s => {
+    if (!speciesFilter) 
+return true
     const q = speciesFilter.toLowerCase()
-    return s.name_he.includes(speciesFilter) || s.name_en.toLowerCase().includes(q) || (s.name_latin ?? '').toLowerCase().includes(q)
+    
+return s.name_he.includes(speciesFilter) || s.name_en.toLowerCase().includes(q) || (s.name_latin ?? '').toLowerCase().includes(q)
   })
 
-  const handleSpeciesEdit = (id: string) => {
+  
+const handleSpeciesEdit = (id: string) => {
     const s = speciesList.find(sp => sp.id === id)
-    if (!s) return
+    if (!s) 
+return
     setEditingSpecies(id)
     setEditSpeciesHe(s.name_he)
     setEditSpeciesEn(s.name_en)
     setEditSpeciesLatin(s.name_latin ?? '')
   }
 
-  const handleSpeciesSave = async (id: string) => {
+  
+const handleSpeciesSave = async (id: string) => {
     await supabase.from('species').update({
       name_he: editSpeciesHe,
       name_en: editSpeciesEn,
@@ -55,19 +74,27 @@ const AdminPage: React.FC = () => {
     setEditingSpecies(null)
   }
 
-  const handleSpeciesDelete = async (id: string) => {
+  
+const handleSpeciesDelete = async (id: string) => {
     await supabase.from('species').delete().eq('id', id)
     setSpeciesList(prev => prev.filter(s => s.id !== id))
   }
 
-  const [addingSpecies, setAddingSpecies] = useState(false)
-  const [newSpecHe, setNewSpecHe] = useState('')
-  const [newSpecEn, setNewSpecEn] = useState('')
-  const [newSpecLatin, setNewSpecLatin] = useState('')
-  const [newSpecType, setNewSpecType] = useState('temperate')
+  
+const [addingSpecies, setAddingSpecies] = useState(false)
+  
+const [newSpecHe, setNewSpecHe] = useState('')
+  
+const [newSpecEn, setNewSpecEn] = useState('')
+  
+const [newSpecLatin, setNewSpecLatin] = useState('')
+  
+const [newSpecType, setNewSpecType] = useState('temperate')
 
-  const handleSpeciesAdd = async () => {
-    if (!newSpecHe.trim() || !newSpecEn.trim()) return
+  
+const handleSpeciesAdd = async () => {
+    if (!newSpecHe.trim() || !newSpecEn.trim()) 
+return
     const { data, error: insertErr } = await supabase.from('species').insert({
       name_he: newSpecHe.trim(),
       name_en: newSpecEn.trim(),
@@ -112,21 +139,28 @@ const AdminPage: React.FC = () => {
     )
   }
 
-  const handleExportCSV = () => {
-    if (!users.length) return
+  
+const handleExportCSV = () => {
+    if (!users.length) 
+return
     const headers = ['ID', 'Role', 'Trees', 'Max Trees', 'Created At']
     const rows = users.map(u => [u.id, u.role, u.tree_count, u.max_trees, u.created_at])
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    
+const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+    
+const blob = new Blob([csv], { type: 'text/csv' })
+    
+const url = URL.createObjectURL(blob)
+    
+const a = document.createElement('a')
     a.href = url
     a.download = `bonsai-users-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  return (
+  
+return (
     <Layout>
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
@@ -254,7 +288,8 @@ const AdminPage: React.FC = () => {
               <tbody>
                 {users.map(user => {
                   const isOnline = onlineUsers.some(o => o.id === user.id)
-                  return (
+                  
+return (
                   <tr key={user.id} className="border-t border-gray-50 hover:bg-gray-50">
                     <td className="px-4 py-2 text-xs text-gray-700 font-medium">{user.display_name || user.full_name || '—'}</td>
                     <td className="px-4 py-2 text-xs text-gray-600 truncate max-w-[160px]">{user.email || '—'}</td>
@@ -406,5 +441,6 @@ const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ l
     <p className="text-xs text-gray-500 mt-1">{label}</p>
   </div>
 )
+
 
 export default AdminPage

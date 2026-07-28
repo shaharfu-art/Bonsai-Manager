@@ -9,35 +9,49 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+
 const WIZARD_DONE_KEY = 'onboarding-wizard-done'
 
 const OnboardingWizard: React.FC = () => {
   const { i18n } = useTranslation()
-  const { user } = useAuth()
-  const isRtl = i18n.language === 'he'
+  
+const { user } = useAuth()
+  
+const isRtl = i18n.language === 'he'
 
   // Start hidden, only show after DB check confirms no location
   const [visible, setVisible] = useState(false)
-  const [step, setStep] = useState(0) // 0=install, 1=notifications, 2=location
+  
+const [step, setStep] = useState(0) // 0=install, 1=notifications, 2=location
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isIOS, setIsIOS] = useState(false)
-  const [locating, setLocating] = useState(false)
-  const [locationDone, setLocationDone] = useState(false)
-  const [cityName, setCityName] = useState('')
-  const [manualCity, setManualCity] = useState('')
-  const [showManual, setShowManual] = useState(false)
-  const [checked, setChecked] = useState(false)
+  
+const [isIOS, setIsIOS] = useState(false)
+  
+const [locating, setLocating] = useState(false)
+  
+const [locationDone, setLocationDone] = useState(false)
+  
+const [cityName, setCityName] = useState('')
+  
+const [manualCity, setManualCity] = useState('')
+  
+const [showManual, setShowManual] = useState(false)
+  
+const [checked, setChecked] = useState(false)
 
   useEffect(() => {
     // Don't run until we have a user
-    if (!user) return
+    if (!user) 
+return
     // Don't run twice
-    if (checked) return
+    if (checked) 
+return
 
     // Simple check: if localStorage says done, skip
     if (localStorage.getItem(WIZARD_DONE_KEY)) {
       setChecked(true)
-      return
+      
+return
     }
 
     // Show wizard!
@@ -53,12 +67,15 @@ const OnboardingWizard: React.FC = () => {
 
     setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream)
 
-    const handler = (e: Event) => { e.preventDefault(); setDeferredPrompt(e as BeforeInstallPromptEvent) }
+    
+const handler = (e: Event) => { e.preventDefault(); setDeferredPrompt(e as BeforeInstallPromptEvent) }
     window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+    
+return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  const handleInstall = async () => {
+  
+const handleInstall = async () => {
     if (deferredPrompt) {
       await deferredPrompt.prompt()
       await deferredPrompt.userChoice
@@ -67,12 +84,14 @@ const OnboardingWizard: React.FC = () => {
     setStep(1)
   }
 
-  const handleNotifications = async () => {
+  
+const handleNotifications = async () => {
     try { await subscribeToPush() } catch { /* ignore */ }
     setStep(2)
   }
 
-  const handleGPS = () => {
+  
+const handleGPS = () => {
     if (!navigator.geolocation) { setShowManual(true); return }
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
@@ -81,8 +100,10 @@ const OnboardingWizard: React.FC = () => {
         // Reverse geocode with Nominatim (free, no key)
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${i18n.language}`)
-          const data = await res.json()
-          const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || ''
+          
+const data = await res.json()
+          
+const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || ''
           setCityName(city)
           // Save to DB
           if (user) {
@@ -113,12 +134,15 @@ const OnboardingWizard: React.FC = () => {
     )
   }
 
-  const handleManualSave = async () => {
-    if (!manualCity.trim()) return
+  
+const handleManualSave = async () => {
+    if (!manualCity.trim()) 
+return
     // Use Nominatim to geocode city name
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(manualCity)}&format=json&limit=1`)
-      const data = await res.json()
+      
+const data = await res.json()
       if (data.length > 0) {
         const { lat, lon } = data[0]
         if (user) {
@@ -135,17 +159,20 @@ const OnboardingWizard: React.FC = () => {
     setShowManual(false)
   }
 
-  const handleFinish = () => {
+  
+const handleFinish = () => {
     localStorage.setItem(WIZARD_DONE_KEY, 'true')
     setVisible(false)
   }
 
-  const handleSkip = () => {
+  
+const handleSkip = () => {
     if (step < 2) { setStep(step + 1) }
     else { handleFinish() }
   }
 
-  if (!visible) return null
+  if (!visible) 
+return null
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
@@ -257,5 +284,6 @@ const OnboardingWizard: React.FC = () => {
     </div>
   )
 }
+
 
 export default OnboardingWizard

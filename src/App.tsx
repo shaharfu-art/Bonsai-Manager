@@ -35,11 +35,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
         </div>
       )
     }
-    return this.props.children
+    
+return this.props.children
   }
 }
 
 // Auth callback page for OAuth (e.g. Google)
+
 const AuthCallbackPage: React.FC = () => {
   const [ready, setReady] = useState(false)
 
@@ -50,7 +52,8 @@ const AuthCallbackPage: React.FC = () => {
         setReady(true)
         // Small delay to ensure session is persisted
         setTimeout(() => { window.location.href = '/dashboard' }, 500)
-        return
+        
+return
       }
       // Listen for auth change
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -69,7 +72,8 @@ const AuthCallbackPage: React.FC = () => {
     checkSession()
   }, [])
 
-  return (
+  
+return (
     <div className="min-h-screen flex items-center justify-center bg-[#f0f7f4]">
       <div className="flex flex-col items-center gap-3 text-center px-6">
         <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
@@ -88,8 +92,10 @@ function DirectionSync() {
     document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr'
     document.documentElement.lang = lang
   }, [])
-  return null
+  
+return null
 }
+
 
 function App() {
   return (
@@ -153,5 +159,6 @@ function App() {
     </ErrorBoundary>
   )
 }
+
 
 export default App

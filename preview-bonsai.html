@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head><title>Bonsai SVG Preview</title></head>
+<body style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; min-height:100vh; background:#e5efe9; gap:30px; padding:20px;">
+
+<!-- Option A: Bold & simple (like emoji style) -->
+<div style="text-align:center;">
+<p style="font-size:12px; color:#666;">A: Bold emoji-style</p>
+<div style="width:180px; height:180px; background:linear-gradient(135deg,#2d6a4f,#52b788); border-radius:16px; display:flex; align-items:center; justify-content:center;">
+<svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Trunk -->
+  <path d="M50 90 C48 75, 43 68, 45 58 C47 48, 52 45, 48 35" stroke="white" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <!-- Branch left -->
+  <path d="M46 58 C38 54, 30 56, 25 52" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <!-- Branch right -->
+  <path d="M48 44 C56 40, 64 42, 70 38" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <!-- Foliage -->
+  <ellipse cx="25" cy="48" rx="13" ry="9" fill="white" opacity="0.85"/>
+  <ellipse cx="48" cy="28" rx="16" ry="11" fill="white" opacity="0.9"/>
+  <ellipse cx="68" cy="34" rx="11" ry="8" fill="white" opacity="0.8"/>
+  <!-- Pot -->
+  <path d="M38 90 L42 97 L58 97 L62 90 Z" fill="white" opacity="0.7"/>
+</svg>
+</div>
+</div>
+
+<!-- Option B: More detail, still bold -->
+<div style="text-align:center;">
+<p style="font-size:12px; color:#666;">B: Detailed silhouette</p>
+<div style="width:180px; height:180px; background:linear-gradient(135deg,#2d6a4f,#52b788); border-radius:16px; display:flex; align-items:center; justify-content:center;">
+<svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Trunk curved -->
+  <path d="M50 88 C49 78, 44 72, 45 62 C46 52, 50 48, 47 40 C45 35, 46 30, 48 26" stroke="white" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <!-- Branch left low -->
+  <path d="M46 62 C40 58, 32 60, 26 56" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <!-- Branch right mid -->
+  <path d="M47 45 C54 42, 62 43, 68 40" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <!-- Branch left top -->
+  <path d="M47 33 C42 30, 35 32, 30 28" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Foliage clouds -->
+  <ellipse cx="26" cy="52" rx="11" ry="8" fill="white" opacity="0.8"/>
+  <ellipse cx="30" cy="25" rx="10" ry="7" fill="white" opacity="0.75"/>
+  <ellipse cx="48" cy="20" rx="14" ry="9" fill="white" opacity="0.9"/>
+  <ellipse cx="67" cy="36" rx="11" ry="8" fill="white" opacity="0.8"/>
+  <!-- Pot -->
+  <rect x="40" y="88" width="20" height="3" rx="1.5" fill="white" opacity="0.8"/>
+  <path d="M41 91 L43 97 L57 97 L59 91 Z" fill="white" opacity="0.7"/>
+</svg>
+</div>
+</div>
+
+<!-- Option C: Single tree, very clean -->
+<div style="text-align:center;">
+<p style="font-size:12px; color:#666;">C: Clean & iconic</p>
+<div style="width:180px; height:180px; background:linear-gradient(135deg,#2d6a4f,#52b788); border-radius:16px; display:flex; align-items:center; justify-content:center;">
+<svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Single curved trunk -->
+  <path d="M52 90 C50 75, 46 65, 48 55 C50 45, 45 40, 47 30" stroke="white" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <!-- One big foliage mass -->
+  <ellipse cx="47" cy="25" rx="22" ry="16" fill="white" opacity="0.85"/>
+  <!-- Small branch -->
+  <path d="M49 50 C55 47, 62 48, 67 45" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <ellipse cx="67" cy="42" rx="9" ry="7" fill="white" opacity="0.75"/>
+  <!-- Pot base -->
+  <rect x="42" y="90" width="16" height="3" rx="1.5" fill="white" opacity="0.8"/>
+  <path d="M43 93 L45 98 L57 98 L59 93 Z" fill="white" opacity="0.7"/>
+</svg>
+</div>
+</div>
+
+</body>
+</html>

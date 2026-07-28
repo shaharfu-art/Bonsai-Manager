@@ -8,10 +8,13 @@ import { subscribeToPush, unsubscribeFromPush } from '../lib/push-notifications'
 
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const { user, signOut } = useAuth()
-  const navigate = useNavigate()
+  
+const { user, signOut } = useAuth()
+  
+const navigate = useNavigate()
 
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
 
   const handleLanguageChange = (lang: string) => {
     i18n.changeLanguage(lang)
@@ -20,7 +23,8 @@ const SettingsPage: React.FC = () => {
     document.documentElement.lang = lang
   }
 
-  const handleSignOut = async () => {
+  
+const handleSignOut = async () => {
     try {
       await signOut()
       navigate('/login', { replace: true })
@@ -29,7 +33,8 @@ const SettingsPage: React.FC = () => {
     }
   }
 
-  return (
+  
+return (
     <Layout>
       <div className="max-w-lg mx-auto space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
         <h1 className="text-2xl font-bold text-[#2d6a4f]">{t('settings.title')}</h1>
@@ -107,14 +112,17 @@ const SettingsPage: React.FC = () => {
 // Notification toggle sub-component
 const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const { t } = useTranslation()
-  const [enabled, setEnabled] = useState(false)
-  const [loading, setLoading] = useState(false)
+  
+const [enabled, setEnabled] = useState(false)
+  
+const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     setEnabled('Notification' in window && Notification.permission === 'granted')
   }, [])
 
-  const handleToggle = async () => {
+  
+const handleToggle = async () => {
     setLoading(true)
     try {
       if (!enabled) {
@@ -129,7 +137,8 @@ const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
     }
   }
 
-  return (
+  
+return (
     <>
       <label className={`flex items-center gap-3 cursor-pointer ${isRtl ? 'flex-row-reverse' : ''}`}>
         <div className="relative inline-flex items-center">
@@ -153,26 +162,34 @@ const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
 // Location setting sub-component
 const LocationSetting: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const { user } = useAuth()
-  const [city, setCity] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
+  
+const [city, setCity] = useState<string | null>(null)
+  
+const [loading, setLoading] = useState(true)
+  
+const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) 
+return
     supabase.from('user_profiles').select('trees_city').eq('id', user.id).single()
       .then(({ data }) => { setCity(data?.trees_city ?? null); setLoading(false) })
   }, [user])
 
-  const handleUpdateLocation = () => {
-    if (!navigator.geolocation) return
+  
+const handleUpdateLocation = () => {
+    if (!navigator.geolocation) 
+return
     setUpdating(true)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${isRtl ? 'he' : 'en'}`)
-          const data = await res.json()
-          const cityName = data.address?.city || data.address?.town || data.address?.village || ''
+          
+const data = await res.json()
+          
+const cityName = data.address?.city || data.address?.town || data.address?.village || ''
           if (user) {
             await supabase.from('user_profiles').update({ trees_lat: latitude, trees_lng: longitude, trees_city: cityName }).eq('id', user.id)
           }
@@ -185,7 +202,8 @@ const LocationSetting: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
     )
   }
 
-  if (loading) return <p className="text-xs text-gray-400">...</p>
+  if (loading) 
+return <p className="text-xs text-gray-400">...</p>
 
   return (
     <div className="flex items-center justify-between">
@@ -208,7 +226,8 @@ const LocationSetting: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
 const DarkModeToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const [dark, setDark] = useState(() => localStorage.getItem('darkMode') === 'true')
 
-  const handleToggle = () => {
+  
+const handleToggle = () => {
     const newValue = !dark
     setDark(newValue)
     localStorage.setItem('darkMode', String(newValue))
@@ -219,7 +238,8 @@ const DarkModeToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
     }
   }
 
-  return (
+  
+return (
     <label className={`flex items-center gap-3 cursor-pointer ${isRtl ? 'flex-row-reverse' : ''}`}>
       <div className="relative inline-flex items-center">
         <input
@@ -237,19 +257,25 @@ const DarkModeToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
 }
 
 // Weather test button (admin only)
+
 const WeatherTestButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const { user } = useAuth()
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [testing, setTesting] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
+  
+const [isAdmin, setIsAdmin] = useState(false)
+  
+const [testing, setTesting] = useState(false)
+  
+const [result, setResult] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) 
+return
     supabase.from('user_profiles').select('role').eq('id', user.id).single()
       .then(({ data }) => { setIsAdmin(data?.role === 'admin') })
   }, [user])
 
-  if (!isAdmin) return null
+  if (!isAdmin) 
+return null
 
   const handleTest = async () => {
     setTesting(true)
@@ -258,10 +284,13 @@ const WeatherTestButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
 
-      const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
-      const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
+      
+const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
+      
+const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
 
-      const res = await fetch(`${url}/functions/v1/weather-check`, {
+      
+const res = await fetch(`${url}/functions/v1/weather-check`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -271,7 +300,8 @@ const WeatherTestButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
         body: JSON.stringify({ test: true }),
       })
 
-      const data = await res.json()
+      
+const data = await res.json()
       setResult(JSON.stringify(data, null, 2))
     } catch (err: any) {
       setResult(`Error: ${err.message}`)
@@ -280,7 +310,8 @@ const WeatherTestButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
     }
   }
 
-  return (
+  
+return (
     <section className="bg-white rounded-2xl shadow p-5">
       <h2 className="text-base font-semibold text-gray-800 mb-3">
         {isRtl ? '🧪 בדיקת התראות מזג אוויר' : '🧪 Weather Alert Test'}
@@ -303,5 +334,6 @@ const WeatherTestButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
     </section>
   )
 }
+
 
 export default SettingsPage

@@ -44,9 +44,11 @@ interface TreeCardProps {
   onClick: () => void
 }
 
+
 const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, alertCount, onClick }) => {
   const { t, i18n } = useTranslation()
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
 
   return (
     <button
@@ -115,6 +117,7 @@ interface TreeRowProps {
   onClick: () => void
 }
 
+
 const TreeRow: React.FC<TreeRowProps> = ({ tree, speciesName, coverPhotoUrl, alertCount, onClick }) => (
   <button
     onClick={onClick}
@@ -151,34 +154,46 @@ const TreeRow: React.FC<TreeRowProps> = ({ tree, speciesName, coverPhotoUrl, ale
 // ─── Main component ─────────────────────────────────────────
 const DashboardPage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
-  const { trees, loading, error } = useTrees()
-  const { getSpeciesById } = useSpecies()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [coverPhotos, setCoverPhotos] = useState<Record<string, string>>({})
-  const [pendingTreatments, setPendingTreatments] = useState<Array<{
+  
+const navigate = useNavigate()
+  
+const { trees, loading, error } = useTrees()
+  
+const { getSpeciesById } = useSpecies()
+  
+const [searchQuery, setSearchQuery] = useState('')
+  
+const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  
+const [coverPhotos, setCoverPhotos] = useState<Record<string, string>>({})
+  
+const [pendingTreatments, setPendingTreatments] = useState<Array<{
     id: string
     tree_id: string
     tree_name: string
     treatment_type: string
     treatment_date: string
   }>>([])
-  const [pendingLoading, setPendingLoading] = useState(true)
-  const [alerts, setAlerts] = useState<Array<{
+  
+const [pendingLoading, setPendingLoading] = useState(true)
+  
+const [alerts, setAlerts] = useState<Array<{
     tree_id: string
     tree_name: string
     treatment_type: string
     status: 'due' | 'upcoming'
     due_date: string
   }>>([])
-  const [alertsLoading, setAlertsLoading] = useState(true)
+  
+const [alertsLoading, setAlertsLoading] = useState(true)
 
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
 
   // Fetch cover photos for all trees
   useEffect(() => {
-    if (trees.length === 0) return
+    if (trees.length === 0) 
+return
     const treeIds = trees.map(t => t.id)
     supabase
       .from('photos')
@@ -186,7 +201,8 @@ const DashboardPage: React.FC = () => {
       .in('tree_id', treeIds)
       .eq('is_cover', true)
       .then(async ({ data }) => {
-        if (!data || data.length === 0) return
+        if (!data || data.length === 0) 
+return
         const urls: Record<string, string> = {}
         await Promise.all(
           data.map(async (photo) => {
@@ -203,7 +219,8 @@ const DashboardPage: React.FC = () => {
   // Fetch pending treatments
   useEffect(() => {
     if (trees.length === 0) { setPendingLoading(false); return }
-    const treeIds = trees.map(t => t.id)
+    
+const treeIds = trees.map(t => t.id)
     supabase
       .from('treatment_logs')
       .select('id, tree_id, treatment_type, treatment_date')
@@ -214,9 +231,11 @@ const DashboardPage: React.FC = () => {
         if (fetchErr) {
           console.warn('Failed to fetch pending treatments:', fetchErr.message)
           setPendingLoading(false)
-          return
+          
+return
         }
-        const pending = (data ?? []).map(row => ({
+        
+const pending = (data ?? []).map(row => ({
           id: row.id,
           tree_id: row.tree_id,
           tree_name: trees.find(t => t.id === row.tree_id)?.custom_name ?? '',
@@ -242,7 +261,8 @@ const DashboardPage: React.FC = () => {
   // Fetch alert configs and treatment logs to compute alerts
   useEffect(() => {
     if (trees.length === 0) { setAlertsLoading(false); return }
-    const treeIds = trees.map(t => t.id)
+    
+const treeIds = trees.map(t => t.id)
 
     supabase.auth.getUser().then(({ data: userData }) => {
       const userId = userData.user?.id
@@ -255,21 +275,24 @@ const DashboardPage: React.FC = () => {
       const configs = configsRes.data ?? []
       const logs = logsRes.data ?? []
       const today = new Date()
-      const computed: typeof alerts = []
+      
+const computed: typeof alerts = []
 
       for (const config of configs) {
         if (config.is_manual_only) continue
 
         // Fixed date alert
         if (config.snoozed_until) {
-          // If treatment of this type was done today, skip
+          // If treatment of thisType was done today, skip
           const todayStr = today.toISOString().split('T')[0]
           const lastLogFixed = logs.find(l => l.tree_id === config.tree_id && l.treatment_type === config.treatment_type)
           if (lastLogFixed && lastLogFixed.treatment_date === todayStr) continue
 
           const dueDate = new Date(config.snoozed_until)
-          const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-          const treeName = trees.find(t => t.id === config.tree_id)?.custom_name ?? ''
+          
+const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+          
+const treeName = trees.find(t => t.id === config.tree_id)?.custom_name ?? ''
           if (diffDays <= 0) {
             computed.push({ tree_id: config.tree_id, tree_name: treeName, treatment_type: config.treatment_type, status: 'due', due_date: config.snoozed_until })
           } else if (diffDays <= 30) {
@@ -282,15 +305,18 @@ const DashboardPage: React.FC = () => {
 
         // Interval-based alert
         const lastLog = logs.find(l => l.tree_id === config.tree_id && l.treatment_type === config.treatment_type)
-        const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
+        
+const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
 
         // If treatment was done today, skip — no need to alert
         const todayStr = today.toISOString().split('T')[0]
         if (lastLog && lastLog.treatment_date === todayStr) continue
 
         const nextDue = new Date(lastDate.getTime() + config.interval_days * 24 * 60 * 60 * 1000)
-        const diffDays = Math.ceil((nextDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-        const treeName = trees.find(t => t.id === config.tree_id)?.custom_name ?? ''
+        
+const diffDays = Math.ceil((nextDue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        
+const treeName = trees.find(t => t.id === config.tree_id)?.custom_name ?? ''
         const dueDateStr = nextDue.toISOString().split('T')[0]
 
         if (diffDays <= 0) {
@@ -302,8 +328,10 @@ const DashboardPage: React.FC = () => {
 
       // Sort: due first, then upcoming by date
       computed.sort((a, b) => {
-        if (a.status === 'due' && b.status !== 'due') return -1
-        if (a.status !== 'due' && b.status === 'due') return 1
+        if (a.status === 'due' && b.status !== 'due') 
+return -1
+        if (a.status !== 'due' && b.status === 'due') 
+return 1
         return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
       })
 
@@ -313,13 +341,16 @@ const DashboardPage: React.FC = () => {
     })
   }, [trees])
 
-  const pendingAlerts = alerts.length
+  
+const pendingAlerts = alerts.length
 
   // Filter trees by search
   const filteredTrees = useMemo(() => {
-    if (!searchQuery.trim()) return trees
+    if (!searchQuery.trim()) 
+return trees
     const q = searchQuery.toLowerCase()
-    return trees.filter(
+    
+return trees.filter(
       (t) =>
         t.custom_name.toLowerCase().includes(q) ||
         (t.species_free_text ?? '').toLowerCase().includes(q) ||
@@ -328,12 +359,15 @@ const DashboardPage: React.FC = () => {
     )
   }, [trees, searchQuery, getSpeciesById])
 
-  const getSpeciesName = (tree: Tree): string => {
+  
+const getSpeciesName = (tree: Tree): string => {
     if (tree.species_id) {
       const s = getSpeciesById(tree.species_id)
-      if (s) return isRtl ? s.name_he : s.name_en
+      if (s) 
+return isRtl ? s.name_he : s.name_en
     }
-    return tree.species_free_text ?? ''
+    
+return tree.species_free_text ?? ''
   }
 
   // Count alerts per tree
@@ -342,7 +376,8 @@ const DashboardPage: React.FC = () => {
     for (const alert of alerts) {
       map[alert.tree_id] = (map[alert.tree_id] ?? 0) + 1
     }
-    return map
+    
+return map
   }, [alerts])
 
   // Click on an alert → navigate to tree with pre-filled treatment form
@@ -353,7 +388,8 @@ const DashboardPage: React.FC = () => {
   // Dismiss an alert → delete the alert_config to stop the recurring cycle
   const handleAlertDismiss = async (e: React.MouseEvent, alert: { tree_id: string; treatment_type: string }) => {
     e.stopPropagation()
-    const { error: deleteErr } = await supabase
+    
+const { error: deleteErr } = await supabase
       .from('alert_configs')
       .delete()
       .eq('tree_id', alert.tree_id)
@@ -364,7 +400,8 @@ const DashboardPage: React.FC = () => {
     }
   }
 
-  return (
+  
+return (
     <Layout>
       <div className="space-y-6">
         {/* Onboarding wizard */}
@@ -587,5 +624,6 @@ const DashboardPage: React.FC = () => {
     </Layout>
   )
 }
+
 
 export default DashboardPage

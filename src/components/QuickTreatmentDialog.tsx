@@ -19,6 +19,7 @@ const TREATMENT_ICONS: Record<string, string> = {
   other: '📝',
 }
 
+
 interface QuickTreatmentDialogProps {
   treeId: string
   treeName: string
@@ -26,6 +27,7 @@ interface QuickTreatmentDialogProps {
   onClose: () => void
   onSaved: () => void
 }
+
 
 const today = () => new Date().toISOString().split('T')[0]
 
@@ -37,14 +39,21 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
   onSaved,
 }) => {
   const { t } = useTranslation()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formDate, setFormDate] = useState(today())
-  const [formType, setFormType] = useState(treatmentType)
-  const [formNotes, setFormNotes] = useState('')
-  const [formPhotos, setFormPhotos] = useState<File[]>([])
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  
+const [formDate, setFormDate] = useState(today())
+  
+const [formType, setFormType] = useState(treatmentType)
+  
+const [formNotes, setFormNotes] = useState('')
+  
+const [formPhotos, setFormPhotos] = useState<File[]>([])
+  
+const [submitting, setSubmitting] = useState(false)
+  
+const [error, setError] = useState('')
 
   // Close on Escape
   useEffect(() => {
@@ -59,14 +68,16 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
     }
   }, [onClose])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setError('')
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) throw new Error('Not authenticated')
-      const userId = userData.user.id
+      
+const userId = userData.user.id
 
       // 1. Create the treatment log
       const { data: treatmentData, error: insertError } = await supabase
@@ -90,7 +101,8 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
       for (const file of formPhotos.slice(0, 2)) {
         if (!isImageSizeValid(file)) continue
         const uuid = crypto.randomUUID()
-        const storagePath = `${userId}/${treeId}/${uuid}.jpg`
+        
+const storagePath = `${userId}/${treeId}/${uuid}.jpg`
 
         const { error: uploadErr } = await supabase.storage
           .from('bonsai-photos')
@@ -121,7 +133,8 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
     }
   }
 
-  return (
+  
+return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -206,7 +219,8 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
             </label>
             <input
               ref={fileInputRef}
-              type="file"
+              
+type="file"
               accept="image/*"
               multiple
               className="hidden"
@@ -275,5 +289,6 @@ const QuickTreatmentDialog: React.FC<QuickTreatmentDialogProps> = ({
     </div>
   )
 }
+
 
 export default QuickTreatmentDialog

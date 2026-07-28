@@ -26,50 +26,76 @@ const today = new Date().toISOString().split('T')[0]
 
 const AddTreePage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { createTree, updateTree } = useTrees()
-  const { species, loading: speciesLoading } = useSpecies()
+  
+const navigate = useNavigate()
+  
+const location = useLocation()
+  
+const { createTree, updateTree } = useTrees()
+  
+const { species, loading: speciesLoading } = useSpecies()
 
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
 
   // Edit mode: if navigated with state.editTree
   const editTree = (location.state as { editTree?: Tree } | null)?.editTree ?? null
   const isEditMode = !!editTree
 
   const [customName, setCustomName] = useState(editTree?.custom_name ?? '')
-  const [speciesId, setSpeciesId] = useState(editTree?.species_id ?? '')
-  const [speciesFreeText, setSpeciesFreeText] = useState(editTree?.species_free_text ?? '')
-  const [speciesSearch, setSpeciesSearch] = useState('')
-  const [speciesDropdownOpen, setSpeciesDropdownOpen] = useState(false)
-  const [style, setStyle] = useState(editTree?.style ?? '')
-  const [ageYears, setAgeYears] = useState(editTree?.age_years != null ? String(editTree.age_years) : '')
-  const [origin, setOrigin] = useState(editTree?.origin ?? '')
-  const [potType, setPotType] = useState(editTree?.pot_type ?? '')
-  const [potSize, setPotSize] = useState(editTree?.pot_size ?? '')
-  const [location2, setLocation2] = useState(editTree?.location ?? '')
-  const [dateAdded, setDateAdded] = useState(editTree?.date_added ?? today)
-  const [notes, setNotes] = useState(editTree?.notes ?? '')
-  const [substrate, setSubstrate] = useState(editTree?.substrate ?? '')
-  const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  
+const [speciesId, setSpeciesId] = useState(editTree?.species_id ?? '')
+  
+const [speciesFreeText, setSpeciesFreeText] = useState(editTree?.species_free_text ?? '')
+  
+const [speciesSearch, setSpeciesSearch] = useState('')
+  
+const [speciesDropdownOpen, setSpeciesDropdownOpen] = useState(false)
+  
+const [style, setStyle] = useState(editTree?.style ?? '')
+  
+const [ageYears, setAgeYears] = useState(editTree?.age_years != null ? String(editTree.age_years) : '')
+  
+const [origin, setOrigin] = useState(editTree?.origin ?? '')
+  
+const [potType, setPotType] = useState(editTree?.pot_type ?? '')
+  
+const [potSize, setPotSize] = useState(editTree?.pot_size ?? '')
+  
+const [location2, setLocation2] = useState(editTree?.location ?? '')
+  
+const [dateAdded, setDateAdded] = useState(editTree?.date_added ?? today)
+  
+const [notes, setNotes] = useState(editTree?.notes ?? '')
+  
+const [substrate, setSubstrate] = useState(editTree?.substrate ?? '')
+  
+const [error, setError] = useState('')
+  
+const [submitting, setSubmitting] = useState(false)
 
   // New species form state
   const [newSpeciesHe, setNewSpeciesHe] = useState('')
-  const [newSpeciesEn, setNewSpeciesEn] = useState('')
-  const [newSpeciesLatin, setNewSpeciesLatin] = useState('')
-  const [newSpeciesType, setNewSpeciesType] = useState('tropical')
+  
+const [newSpeciesEn, setNewSpeciesEn] = useState('')
+  
+const [newSpeciesLatin, setNewSpeciesLatin] = useState('')
+  
+const [newSpeciesType, setNewSpeciesType] = useState('tropical')
 
-  const filteredSpecies = species.filter((s) => {
+  
+const filteredSpecies = species.filter((s) => {
     const q = speciesSearch.toLowerCase()
-    return (
+    
+return (
       s.name_en.toLowerCase().includes(q) ||
       s.name_he.includes(speciesSearch) ||
       (s.name_latin ?? '').toLowerCase().includes(q)
     )
   })
 
-  const isOther = speciesId === 'other'
+  
+const isOther = speciesId === 'other'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,7 +103,8 @@ const AddTreePage: React.FC = () => {
 
     if (!customName.trim()) {
       setError(t('tree.name') + ' ' + t('common.required'))
-      return
+      
+return
     }
 
     setSubmitting(true)
@@ -111,7 +138,8 @@ const AddTreePage: React.FC = () => {
     }
   }
 
-  return (
+  
+return (
     <Layout>
       <div className="max-w-2xl mx-auto" dir={isRtl ? 'rtl' : 'ltr'}>
         {/* Header */}
@@ -266,7 +294,7 @@ const AddTreePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Pot type + size */}
+          {/* potType + size */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -381,5 +409,6 @@ const AddTreePage: React.FC = () => {
     </Layout>
   )
 }
+
 
 export default AddTreePage

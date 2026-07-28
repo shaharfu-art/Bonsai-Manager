@@ -6,17 +6,27 @@ interface AiInsightsPanelProps {
   treeId: string
 }
 
+
 const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const { t, i18n } = useTranslation()
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [insights, setInsights] = useState<string | null>(null)
-  const [error, setError] = useState('')
-  const [question, setQuestion] = useState('')
-  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'ai'; text: string; imageUrl?: string }>>([])
-  const [attachedImage, setAttachedImage] = useState<{ base64: string; mimeType: string; preview: string } | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
+  
+const [open, setOpen] = useState(false)
+  
+const [loading, setLoading] = useState(false)
+  
+const [insights, setInsights] = useState<string | null>(null)
+  
+const [error, setError] = useState('')
+  
+const [question, setQuestion] = useState('')
+  
+const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'ai'; text: string; imageUrl?: string }>>([])
+  
+const [attachedImage, setAttachedImage] = useState<{ base64: string; mimeType: string; preview: string } | null>(null)
+  
+const scrollRef = useRef<HTMLDivElement>(null)
+  
+const imageInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -33,36 +43,43 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
   const getCachedInsights = (): string | null => {
     try {
       const raw = localStorage.getItem(CACHE_KEY)
-      if (!raw) return null
+      if (!raw) 
+return null
       const { text, timestamp } = JSON.parse(raw)
       if (Date.now() - timestamp > CACHE_EXPIRY_MS) {
         localStorage.removeItem(CACHE_KEY)
-        return null
+        
+return null
       }
-      return text
+      
+return text
     } catch {
       return null
     }
   }
 
-  const setCacheInsights = (text: string) => {
+  
+const setCacheInsights = (text: string) => {
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify({ text, timestamp: Date.now() }))
     } catch { /* ignore quota errors */ }
   }
 
-  const clearCache = () => {
+  
+const clearCache = () => {
     localStorage.removeItem(CACHE_KEY)
   }
 
-  const fetchInsights = async (userQuestion?: string, skipCache = false, imageData?: { base64: string; mimeType: string } | null) => {
+  
+const fetchInsights = async (userQuestion?: string, skipCache = false, imageData?: { base64: string; mimeType: string } | null) => {
     // For initial insights (no question), check cache first
     if (!userQuestion && !skipCache) {
       const cached = getCachedInsights()
       if (cached) {
         setInsights(cached)
         scrollToBottom()
-        return
+        
+return
       }
     }
 
@@ -73,15 +90,19 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
 
-      const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
-      const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
+      
+const url = (import.meta.env.VITE_SUPABASE_URL as string).trim()
+      
+const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string).trim()
 
-      const body: Record<string, unknown> = { tree_id: treeId, language: i18n.language, question: userQuestion }
+      
+const body: Record<string, unknown> = { tree_id: treeId, language: i18n.language, question: userQuestion }
       if (imageData) {
         body.image = { base64: imageData.base64, mimeType: imageData.mimeType }
       }
 
-      const response = await fetch(`${url}/functions/v1/ai-insights`, {
+      
+const response = await fetch(`${url}/functions/v1/ai-insights`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,14 +117,16 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
         throw new Error(errData.error || `Error ${response.status}`)
       }
 
-      const data = await response.json()
+      
+const data = await response.json()
       if (userQuestion) {
         setChatHistory(prev => {
           const last = prev[prev.length - 1]
           if (last?.role === 'user' && last.text === userQuestion) {
             return [...prev, { role: 'ai', text: data.insights }]
           }
-          return [...prev, { role: 'user', text: userQuestion }, { role: 'ai', text: data.insights }]
+          
+return [...prev, { role: 'user', text: userQuestion }, { role: 'ai', text: data.insights }]
         })
         scrollToBottom()
       } else {
@@ -118,10 +141,13 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     }
   }
 
-  const handleAsk = () => {
-    if (!question.trim() && !attachedImage) return
+  
+const handleAsk = () => {
+    if (!question.trim() && !attachedImage) 
+return
     const q = question.trim()
-    const img = attachedImage
+    
+const img = attachedImage
     setQuestion('')
     setAttachedImage(null)
     setChatHistory(prev => [...prev, { role: 'user', text: q || (i18n.language === 'he' ? '📷 תמונה' : '📷 Image'), imageUrl: img?.preview }])
@@ -129,15 +155,18 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     fetchInsights(q || (i18n.language === 'he' ? 'מה אתה רואה בתמונה? תן המלצות.' : 'What do you see in this image? Give recommendations.'), false, img)
   }
 
-  const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) 
+return
     const reader = new FileReader()
     reader.onload = () => {
       const result = reader.result as string
       // result format: "data:<mimeType>;base64,<data>"
       const [header, base64] = result.split(',')
-      const mimeType = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg'
+      
+const mimeType = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg'
       setAttachedImage({ base64, mimeType, preview: result })
     }
     reader.readAsDataURL(file)
@@ -145,7 +174,8 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     if (imageInputRef.current) imageInputRef.current.value = ''
   }
 
-  const handleOpen = () => {
+  
+const handleOpen = () => {
     setOpen(true)
     if (!insights && !loading && chatHistory.length === 0) fetchInsights()
   }
@@ -162,7 +192,8 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     )
   }
 
-  return (
+  
+return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-4" onClick={() => setOpen(false)}>
       <div
         className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col"
@@ -213,12 +244,14 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
                 }
                 if (line.match(/^\d+\.\s*\*\*/)) {
                   const clean = line.replace(/\*\*/g, '')
-                  return <h4 key={i} className="text-sm font-bold text-purple-800 mt-3 mb-1">{clean}</h4>
+                  
+return <h4 key={i} className="text-sm font-bold text-purple-800 mt-3 mb-1">{clean}</h4>
                 }
                 if (line.startsWith('- ') || line.startsWith('• ')) {
                   return <p key={i} className="text-xs text-gray-600 mr-3 mb-1">{line}</p>
                 }
-                if (line.trim() === '') return <br key={i} />
+                if (line.trim() === '') 
+return <br key={i} />
                 return <p key={i} className="text-xs text-gray-700 mb-1">{line}</p>
               })}
             </div>
@@ -270,7 +303,8 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
           <div className="flex gap-2">
             <input
               ref={imageInputRef}
-              type="file"
+              
+type="file"
               accept="image/*"
               className="hidden"
               onChange={handleImageAttach}
@@ -306,5 +340,6 @@ const AiInsightsPanel: React.FC<AiInsightsPanelProps> = ({ treeId }) => {
     </div>
   )
 }
+
 
 export default AiInsightsPanel

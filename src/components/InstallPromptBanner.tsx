@@ -7,26 +7,34 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+
 const DISMISSED_KEY = 'install-prompt-dismissed'
 const NOTIF_DISMISSED_KEY = 'notif-prompt-dismissed'
 
 const InstallPromptBanner: React.FC = () => {
   const { i18n } = useTranslation()
-  const isRtl = i18n.language === 'he'
+  
+const isRtl = i18n.language === 'he'
 
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [showInstall, setShowInstall] = useState(false)
-  const [showNotif, setShowNotif] = useState(false)
-  const [isIOS, setIsIOS] = useState(false)
-  const [showIOSGuide, setShowIOSGuide] = useState(false)
+  
+const [showInstall, setShowInstall] = useState(false)
+  
+const [showNotif, setShowNotif] = useState(false)
+  
+const [isIOS, setIsIOS] = useState(false)
+  
+const [showIOSGuide, setShowIOSGuide] = useState(false)
 
   useEffect(() => {
     // Check if already dismissed
     const installDismissed = localStorage.getItem(DISMISSED_KEY)
-    const notifDismissed = localStorage.getItem(NOTIF_DISMISSED_KEY)
+    
+const notifDismissed = localStorage.getItem(NOTIF_DISMISSED_KEY)
 
     // Check if already installed (standalone mode)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as any).standalone === true
 
     // iOS detection
@@ -44,23 +52,28 @@ const InstallPromptBanner: React.FC = () => {
     }
 
     // Listen for beforeinstallprompt (Chrome/Edge/Android)
-    const handler = (e: Event) => {
+    
+const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
     }
     window.addEventListener('beforeinstallprompt', handler)
 
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+    
+return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  const handleInstall = async () => {
+  
+const handleInstall = async () => {
     if (isIOS) {
       setShowIOSGuide(true)
-      return
+      
+return
     }
     if (deferredPrompt) {
       await deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
+      
+const { outcome } = await deferredPrompt.userChoice
       if (outcome === 'accepted') {
         setShowInstall(false)
         localStorage.setItem(DISMISSED_KEY, 'true')
@@ -69,12 +82,14 @@ const InstallPromptBanner: React.FC = () => {
     }
   }
 
-  const handleDismissInstall = () => {
+  
+const handleDismissInstall = () => {
     setShowInstall(false)
     localStorage.setItem(DISMISSED_KEY, 'true')
   }
 
-  const handleEnableNotifications = async () => {
+  
+const handleEnableNotifications = async () => {
     try {
       const success = await subscribeToPush()
       if (success) {
@@ -88,12 +103,14 @@ const InstallPromptBanner: React.FC = () => {
     }
   }
 
-  const handleDismissNotif = () => {
+  
+const handleDismissNotif = () => {
     setShowNotif(false)
     localStorage.setItem(NOTIF_DISMISSED_KEY, 'true')
   }
 
-  if (!showInstall && !showNotif) return null
+  if (!showInstall && !showNotif) 
+return null
 
   return (
     <div className="space-y-3" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -188,5 +205,6 @@ const InstallPromptBanner: React.FC = () => {
     </div>
   )
 }
+
 
 export default InstallPromptBanner

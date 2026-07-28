@@ -25,3 +25,51 @@ export function applyNewCoverPhoto(photos: Photo[], newCoverId: string): Photo[]
 export function isImageSizeValid(file: File): boolean {
   return file.size <= 10 * 1024 * 1024 // 10MB
 }
+
+/**
+ * Compress an image file to max 1200px width, 80% JPEG quality.
+ * Returns a Blob ready for upload.
+ */
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+
+      let width = img.width
+      let height = img.height
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width)
+        width = maxWidth
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { reject(new Error('Canvas not supported')); return }
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error('Compression failed'))
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Failed to load image'))
+    }
+
+    img.src = url
+  })
+}

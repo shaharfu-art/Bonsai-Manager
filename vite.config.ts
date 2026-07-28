@@ -9,10 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Bonsai Collection Manager',
-        short_name: 'Bonsai',
-        theme_color: '#2d6a4f',
-        background_color: '#ffffff',
+        name: 'YUTAKA Bonsai',
+        short_name: 'YUTAKA',
+        theme_color: '#2d3d2b',
+        background_color: '#000000',
         display: 'standalone',
         start_url: '/',
         icons: [

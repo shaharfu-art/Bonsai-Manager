@@ -10,15 +10,21 @@ interface ShareCardProps {
   onClose: () => void
 }
 
+
 type Step = 'select' | 'preview'
 
 const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClose }) => {
   const { t, i18n } = useTranslation()
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [step, setStep] = useState<Step>('select')
-  const [selectedIds, setSelectedIds] = useState<string[]>(photos.length > 0 ? [photos[0].id] : [])
-  const [sharing, setSharing] = useState(false)
-  const isRtl = i18n.language === 'he'
+  
+const cardRef = useRef<HTMLDivElement>(null)
+  
+const [step, setStep] = useState<Step>('select')
+  
+const [selectedIds, setSelectedIds] = useState<string[]>(photos.length > 0 ? [photos[0].id] : [])
+  
+const [sharing, setSharing] = useState(false)
+  
+const isRtl = i18n.language === 'he'
 
   const togglePhoto = (id: string) => {
     setSelectedIds(prev =>
@@ -28,10 +34,13 @@ const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClos
     )
   }
 
-  const selectedPhotos = photos.filter(p => selectedIds.includes(p.id))
+  
+const selectedPhotos = photos.filter(p => selectedIds.includes(p.id))
 
-  const handleShare = async () => {
-    if (!cardRef.current) return
+  
+const handleShare = async () => {
+    if (!cardRef.current) 
+return
     setSharing(true)
     try {
       const canvas = await html2canvas(cardRef.current, {
@@ -44,7 +53,8 @@ const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClos
       canvas.toBlob(async (blob) => {
         if (!blob) { setSharing(false); return }
 
-        const file = new File([blob], `${tree.custom_name}-bonsai.png`, { type: 'image/png' })
+        
+const file = new File([blob], `${tree.custom_name}-bonsai.png`, { type: 'image/png' })
 
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
           await navigator.share({
@@ -56,7 +66,8 @@ const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClos
           })
         } else {
           const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
+          
+const a = document.createElement('a')
           a.href = url
           a.download = `${tree.custom_name}-bonsai.png`
           a.click()
@@ -98,7 +109,8 @@ const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClos
                 <div className="grid grid-cols-3 gap-2">
                   {photos.map(photo => {
                     const isSelected = selectedIds.includes(photo.id)
-                    return (
+                    
+return (
                       <button
                         key={photo.id}
                         onClick={() => togglePhoto(photo.id)}
@@ -207,5 +219,6 @@ const ShareCard: React.FC<ShareCardProps> = ({ tree, speciesName, photos, onClos
     </div>
   )
 }
+
 
 export default ShareCard
