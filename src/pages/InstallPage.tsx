@@ -7,7 +7,7 @@ const INSTALL_DONE_KEY = 'install-completed'
 const InstallPage: React.FC = () => {
   const { i18n } = useTranslation()
   const isRtl = i18n.language === 'he'
-  const [done, setDone] = useState(() => !!localStorage.getItem(INSTALL_DONE_KEY))
+  const [done, setDone] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
 
   useEffect(() => {
