@@ -109,17 +109,15 @@ const [saving, setSaving] = useState(false)
 
   // Edit state
   const [ageYears, setAgeYears] = useState(tree.age_years?.toString() ?? '')
-  
-const [style, setStyle] = useState(tree.style ?? '')
-  
-const [location, setLocation] = useState(tree.location ?? '')
-  
-const [potType, setPotType] = useState(tree.pot_type ?? '')
-  
-const [substrate, setSubstrate] = useState(tree.substrate ?? '')
+  const [style, setStyle] = useState(tree.style ?? '')
+  const [location, setLocation] = useState(tree.location ?? '')
+  const [potType, setPotType] = useState(tree.pot_type ?? '')
+  const [substrate, setSubstrate] = useState(tree.substrate ?? '')
+  const [sunExposure, setSunExposure] = useState(tree.sun_exposure ?? '')
+  const [sunHours, setSunHours] = useState(tree.sun_hours?.toString() ?? '')
+  const [facing, setFacing] = useState(tree.facing ?? '')
 
-  
-const handleSave = async () => {
+  const handleSave = async () => {
     setSaving(true)
     await onSave({
       age_years: ageYears ? parseInt(ageYears, 10) : null,
@@ -127,18 +125,23 @@ const handleSave = async () => {
       location: location || null,
       pot_type: potType || null,
       substrate: substrate || null,
+      sun_exposure: sunExposure || null,
+      sun_hours: sunHours ? parseInt(sunHours, 10) : null,
+      facing: facing || null,
     } as Partial<Tree>)
     setSaving(false)
     setEditing(false)
   }
 
-  
-const handleCancel = () => {
+  const handleCancel = () => {
     setAgeYears(tree.age_years?.toString() ?? '')
     setStyle(tree.style ?? '')
     setLocation(tree.location ?? '')
     setPotType(tree.pot_type ?? '')
     setSubstrate(tree.substrate ?? '')
+    setSunExposure(tree.sun_exposure ?? '')
+    setSunHours(tree.sun_hours?.toString() ?? '')
+    setFacing(tree.facing ?? '')
     setEditing(false)
   }
 
@@ -224,6 +227,9 @@ const styles = ['formal_upright','informal_upright','slanting','cascade','semi_c
           {tree.pot_type && <p className="text-sm text-gray-700 font-medium">🪴 {tree.pot_type}</p>}
           {tree.substrate && <p className="text-sm text-gray-700 font-medium">🧱 {tree.substrate}</p>}
           {tree.date_added && <p className="text-sm text-gray-700 font-medium">📅 {tree.date_added}</p>}
+          {tree.sun_exposure && <p className="text-sm text-gray-700 font-medium">☀️ {t(`sunExposure.${tree.sun_exposure}`)}</p>}
+          {tree.sun_hours && <p className="text-sm text-gray-700 font-medium">🕐 {tree.sun_hours} {isRtl ? 'שעות/יום' : 'hrs/day'}</p>}
+          {tree.facing && <p className="text-sm text-gray-700 font-medium">🧭 {t(`facing.${tree.facing}`)}</p>}
           {!displaySpecies && !tree.age_years && !tree.style && !tree.location && (
             <p className="text-xs text-gray-400 col-span-2">{t('common.edit')} ✏️</p>
           )}
