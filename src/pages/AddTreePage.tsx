@@ -69,6 +69,9 @@ const [dateAdded, setDateAdded] = useState(editTree?.date_added ?? today)
 const [notes, setNotes] = useState(editTree?.notes ?? '')
   
 const [substrate, setSubstrate] = useState(editTree?.substrate ?? '')
+  const [sunExposure, setSunExposure] = useState(editTree?.sun_exposure ?? '')
+  const [sunHours, setSunHours] = useState(editTree?.sun_hours?.toString() ?? '')
+  const [facing, setFacing] = useState(editTree?.facing ?? '')
   
 const [error, setError] = useState('')
   
@@ -122,6 +125,9 @@ return
         date_added: dateAdded || null,
         notes: notes.trim() || null,
         substrate: substrate.trim() || null,
+        sun_exposure: sunExposure || null,
+        sun_hours: sunHours ? parseInt(sunHours, 10) : null,
+        facing: facing || null,
       }
 
       if (isEditMode && editTree) {
@@ -366,6 +372,55 @@ return (
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
               placeholder={t('tree.substrate')}
             />
+          </div>
+
+          {/* Sun Exposure + Sun Hours + Facing */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {isRtl ? 'חשיפה לשמש' : 'Sun Exposure'}
+              </label>
+              <select
+                value={sunExposure}
+                onChange={(e) => setSunExposure(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788] bg-white"
+              >
+                <option value="">—</option>
+                <option value="full_sun">{isRtl ? 'שמש מלאה' : 'Full Sun'}</option>
+                <option value="partial_shade">{isRtl ? 'צל חלקי' : 'Partial Shade'}</option>
+                <option value="full_shade">{isRtl ? 'צל מלא' : 'Full Shade'}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {isRtl ? 'שעות שמש/יום' : 'Sun Hours/Day'}
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={24}
+                value={sunHours}
+                onChange={(e) => setSunHours(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788]"
+                placeholder="0-24"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {isRtl ? 'חזית' : 'Facing'}
+              </label>
+              <select
+                value={facing}
+                onChange={(e) => setFacing(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#52b788] bg-white"
+              >
+                <option value="">—</option>
+                <option value="north">{isRtl ? 'צפון' : 'North'}</option>
+                <option value="south">{isRtl ? 'דרום' : 'South'}</option>
+                <option value="east">{isRtl ? 'מזרח' : 'East'}</option>
+                <option value="west">{isRtl ? 'מערב' : 'West'}</option>
+              </select>
+            </div>
           </div>
 
           {/* Notes */}
