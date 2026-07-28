@@ -97,10 +97,11 @@ interface IDCardProps {
   onDelete: () => void
   onRecurring: () => void
   onShare: () => void
+  socialSection?: React.ReactNode
 }
 
 
-const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete, onRecurring, onShare }) => {
+const SmartIDCard: React.FC<IDCardProps> = ({ tree, displaySpecies, onSave, onEdit, onDelete, onRecurring, onShare, socialSection }) => {
   const { t, i18n } = useTranslation()
   
 const isRtl = i18n.language === 'he'
@@ -236,6 +237,9 @@ const styles = ['formal_upright','informal_upright','slanting','cascade','semi_c
           )}
         </div>
       )}
+
+      {/* Social section - bottom of card */}
+      {socialSection}
     </div>
   )
 }
@@ -400,10 +404,7 @@ type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
         </div>
 
         {/* Smart ID Card */}
-        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} onRecurring={() => setShowRecurringSettings(true)} onShare={() => setShowShareCard(true)} />
-
-        {/* Social section (likes + comments) inside card */}
-        <TreeSocialSection treeId={id!} likesCount={tree.likes_count ?? 0} isRtl={isRtl} userId={user?.id ?? null} treeOwnerId={tree.user_id} />
+        <SmartIDCard tree={tree} displaySpecies={displaySpecies} onSave={handleUpdateTree} onEdit={() => navigate('/trees/new', { state: { editTree: tree } })} onDelete={() => setShowDeleteDialog(true)} onRecurring={() => setShowRecurringSettings(true)} onShare={() => setShowShareCard(true)} socialSection={<TreeSocialSection treeId={id!} likesCount={tree.likes_count ?? 0} isRtl={isRtl} userId={user?.id ?? null} treeOwnerId={tree.user_id} />} />
 
         {/* Cover photo picker */}
         {showCoverPicker && (
@@ -748,16 +749,16 @@ const TreeSocialSection: React.FC<{ treeId: string; likesCount: number; isRtl: b
 
   return (
     <>
-      <div className="bg-white rounded-xl shadow px-4 py-2 -mt-2 flex items-center gap-4">
+      <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-4">
         <button
           onClick={handleToggleLike}
-          className={`flex items-center gap-1 text-sm font-medium transition-colors ${likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}`}
+          className={`flex items-center gap-1 text-xs font-medium transition-colors ${likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}`}
         >
           {likedByMe ? '❤️' : '🤍'} {likes > 0 && likes}
         </button>
         <button
           onClick={() => setShowComments(true)}
-          className="flex items-center gap-1 text-sm font-medium text-gray-400 hover:text-[#2d6a4f] transition-colors"
+          className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-[#2d6a4f] transition-colors"
         >
           💬 {commentsCount > 0 && commentsCount}
         </button>
