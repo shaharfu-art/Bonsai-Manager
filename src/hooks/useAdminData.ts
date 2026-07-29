@@ -18,11 +18,16 @@ export interface AdminUser {
   email: string
   full_name: string | null
   display_name: string | null
+  avatar_url: string | null
   created_at: string
   last_sign_in_at: string | null
+  last_user_agent: string | null
+  plan: string
   role: string
   tree_count: number
   max_trees: number
+  trees_city: string | null
+  friends_count: number
 }
 
 export function useAdminData() {
@@ -114,6 +119,17 @@ export function useAdminData() {
         treeCountByUser[tree.user_id] = (treeCountByUser[tree.user_id] ?? 0) + 1
       }
 
+      // Friend count per user
+      const friendCountByUser: Record<string, number> = {}
+      const { data: friendRequests } = await supabase
+        .from('friend_requests')
+        .select('from_user_id, to_user_id')
+        .eq('status', 'accepted')
+      for (const fr of friendRequests ?? []) {
+        friendCountByUser[fr.from_user_id] = (friendCountByUser[fr.from_user_id] ?? 0) + 1
+        friendCountByUser[fr.to_user_id] = (friendCountByUser[fr.to_user_id] ?? 0) + 1
+      }
+
       // Build user list from user_profiles (secure, with RLS)
       const { data: viewUsers } = await supabase
         .from('user_profiles')
@@ -124,11 +140,16 @@ export function useAdminData() {
         email: (u.email as string) ?? '',
         full_name: (u.full_name as string) ?? null,
         display_name: (u.display_name as string) ?? null,
+        avatar_url: (u.avatar_url as string) ?? null,
         created_at: (u.created_at as string) ?? '',
-        last_sign_in_at: null,
+        last_sign_in_at: (u.last_sign_in_at as string) ?? null,
+        last_user_agent: (u.last_user_agent as string) ?? null,
+        plan: (u.plan as string) ?? 'free',
         role: (u.role as string) ?? 'user',
         tree_count: treeCountByUser[(u.id as string)] ?? 0,
         max_trees: (u.max_trees as number) ?? 100,
+        trees_city: (u.trees_city as string) ?? null,
+        friends_count: friendCountByUser[(u.id as string)] ?? 0,
       }))
 
       setStats({

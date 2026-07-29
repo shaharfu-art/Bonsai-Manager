@@ -1,100 +1,95 @@
-import React,{useState,useEffect} from 'react'
-import {supabase} from '../lib/supabase-client'
-import {useAuth} from '../contexts/AuthContext'
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase-client'
+import { useAuth } from '../contexts/AuthContext'
 
-interfaceAnnouncement{
-id:string
-title:string
-body:string
-type:'info'|'warning'|'success'
-target:'all'|'free'|'premium'|'specific'
-target_users:string[]
-created_at:string
+interface Announcement {
+  id: string
+  title: string
+  body: string
+  type: 'info' | 'warning' | 'success'
+  target: 'all' | 'free' | 'premium' | 'specific'
+  target_users: string[]
+  created_at: string
 }
 
-const DISMISSED_KEY='dismissed-announcements'
+const DISMISSED_KEY = 'dismissed-announcements'
 
-const AnnouncementBanner:React.FC=()=>{
-const{user}=useAuth()
+const AnnouncementBanner: React.FC = () => {
+  const { user } = useAuth()
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null)
 
-const[announcement,setAnnouncement]=useState<Announcement|null>(null)
+  useEffect(() => {
+    if (!user) return
 
-useEffect(()=>{
-if(!user)
-return
+    const fetchAnnouncement = async () => {
+      const { data } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(5)
 
-const fetchAnnouncement=async()=>{
-const{data}=awaitsupabase
-.from('announcements')
-.select('*')
-.eq('active',true)
-.order('created_at',{ascending:false})
-.limit(5)
+      if (!data || data.length === 0) return
 
-if(!data||data.length===0)
-return
+      // Filter by target
+      const dismissed = (() => {
+        try { return JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]') }
+        catch { return [] }
+      })()
 
-//Filterbytarget
-const dismissed=(()=>{
-try{returnJSON.parse(localStorage.getItem(DISMISSED_KEY)||'[]')}
-catch{return[]}
-})()
+      // TODO: get user role from profile for 'free'/'premium' targeting
+      const applicable = data.find((a: Announcement) => {
+        if (dismissed.includes(a.id)) return false
+        if (a.target === 'all') return true
+        if (a.target === 'specific') return a.target_users?.includes(user.id)
+        // For free/premium, show to all for now (until subscription is implemented)
+        return true
+      })
 
-//TODO:getuserrolefromprofilefor'free'/'premium'targeting
-const applicable=data.find((a:Announcement)=>{
-if(dismissed.includes(a.id))returnfalse
-if(a.target==='all')returntrue
-if(a.target==='specific')returna.target_users?.includes(user.id)
-//Forfree/premium,showtoallfornow(untilsubscriptionisimplemented)
-returntrue
-})
+      if (applicable) setAnnouncement(applicable as Announcement)
+    }
 
-if(applicable)setAnnouncement(applicableasAnnouncement)
+    fetchAnnouncement()
+  }, [user])
+
+  const handleDismiss = () => {
+    if (!announcement) return
+    try {
+      const dismissed = JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]')
+      dismissed.push(announcement.id)
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed))
+    } catch { /* ignore */ }
+    setAnnouncement(null)
+  }
+
+  if (!announcement) return null
+
+  const colors = {
+    info: 'bg-blue-50 border-blue-200 text-blue-800',
+    warning: 'bg-amber-50 border-amber-200 text-amber-800',
+    success: 'bg-green-50 border-green-200 text-green-800',
+  }
+
+  const icons = { info: 'ℹ️', warning: '⚠️', success: '✅' }
+
+  return (
+    <div className={`${colors[announcement.type]} border rounded-xl p-4 relative`}>
+      <button
+        onClick={handleDismiss}
+        className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+        aria-label="dismiss"
+      >
+        ×
+      </button>
+      <div className="flex items-start gap-2 pr-2">
+        <span className="text-lg flex-shrink-0">{icons[announcement.type]}</span>
+        <div>
+          <p className="text-sm font-semibold">{announcement.title}</p>
+          <p className="text-xs mt-0.5 opacity-80">{announcement.body}</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
-fetchAnnouncement()
-},[user])
-
-const handleDismiss=()=>{
-if(!announcement)
-return
-try{
-const dismissed=JSON.parse(localStorage.getItem(DISMISSED_KEY)||'[]')
-dismissed.push(announcement.id)
-localStorage.setItem(DISMISSED_KEY,JSON.stringify(dismissed))
-}catch{/*ignore*/}
-setAnnouncement(null)
-}
-
-if(!announcement)returnnull
-
-const colors={
-info:'bg-blue-50border-blue-200text-blue-800',
-warning:'bg-amber-50border-amber-200text-amber-800',
-success:'bg-green-50border-green-200text-green-800',
-}
-
-const icons={info:'ℹ️',warning:'⚠️',success:'✅'}
-
-
-return(
-<divclassName={`${colors[announcement.type]}borderrounded-xlp-4relative`}>
-<button
-onClick={handleDismiss}
-className="absolutetop-2left-2text-gray-400hover:text-gray-600text-lgleading-none"
-aria-label="dismiss"
->
-×
-</button>
-<divclassName="flexitems-startgap-2pr-2">
-<spanclassName="text-lgflex-shrink-0">{icons[announcement.type]}</span>
-<div>
-<pclassName="text-smfont-semibold">{announcement.title}</p>
-<pclassName="text-xsmt-0.5opacity-80">{announcement.body}</p>
-</div>
-</div>
-</div>
-)
-}
-
-exportdefaultAnnouncementBanner
+export default AnnouncementBanner

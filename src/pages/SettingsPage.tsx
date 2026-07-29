@@ -5,6 +5,8 @@ import Layout from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase-client'
 import { subscribeToPush, unsubscribeFromPush } from '../lib/push-notifications'
+import { usePlan, PLAN_LIMITS, PLAN_PRICING } from '../hooks/usePlan'
+import { getCheckoutUrl } from '../lib/payment'
 
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -90,6 +92,12 @@ return (
           <NotificationToggle isRtl={isRtl} />
         </section>
 
+        {/* Install App (only shows if not in standalone/PWA mode) */}
+        <InstallAppButton isRtl={isRtl} />
+
+        {/* Subscription / Plan */}
+        <SubscriptionSection isRtl={isRtl} />
+
         {/* Dark Mode */}
         <section className="bg-white rounded-2xl shadow p-5">
           <h2 className="text-base font-semibold text-gray-800 mb-3">{isRtl ? 'מצב תצוגה' : 'Display Mode'}</h2>
@@ -106,6 +114,139 @@ return (
         <WeatherTestButton isRtl={isRtl} />
       </div>
     </Layout>
+  )
+}
+
+// Subscription / Plan section
+const SubscriptionSection: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
+  const { user } = useAuth()
+  const { plan, maxTrees, planExpiresAt, loading } = usePlan()
+  const navigate = useNavigate()
+
+  if (loading) {
+    return (
+      <section className="bg-white rounded-2xl shadow p-5 animate-pulse">
+        <div className="h-5 bg-gray-200 rounded w-32 mb-3" />
+        <div className="h-20 bg-gray-100 rounded-xl" />
+      </section>
+    )
+  }
+
+  const planLabel = plan === 'pro' ? 'Pro' : plan === 'premium' ? 'Premium' : 'Free'
+  const planColor = plan === 'pro' ? 'text-gray-800 bg-gray-100' : plan === 'premium' ? 'text-[#2d6a4f] bg-green-50' : 'text-gray-600 bg-gray-100'
+  const planIcon = plan === 'pro' ? '🚀' : plan === 'premium' ? '⭐' : '🌱'
+
+  const handleUpgrade = (targetPlan: 'premium' | 'pro', billing: 'monthly' | 'yearly') => {
+    if (!user?.email || !user?.id) return
+    const url = getCheckoutUrl({
+      plan: `${targetPlan}_${billing}` as any,
+      userEmail: user.email,
+      userId: user.id,
+    })
+    if (url) {
+      window.open(url, '_blank')
+    } else {
+      alert(isRtl ? 'מערכת התשלום תחובר בקרוב!' : 'Payment system coming soon!')
+    }
+  }
+
+  return (
+    <section className="bg-white rounded-2xl shadow p-5">
+      <h2 className="text-base font-semibold text-gray-800 mb-3">
+        {isRtl ? '💳 המנוי שלי' : '💳 My Plan'}
+      </h2>
+
+      {/* Current plan badge */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className={`inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-lg ${planColor}`}>
+          {planIcon} {planLabel}
+        </span>
+        {planExpiresAt && (
+          <span className="text-xs text-gray-400">
+            {isRtl ? 'עד' : 'until'} {new Date(planExpiresAt).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+
+      {/* Plan details */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">{isRtl ? 'מגבלת עצים' : 'Tree limit'}</span>
+          <span className="font-medium text-gray-800">{maxTrees === 9999 ? '∞' : maxTrees}</span>
+        </div>
+      </div>
+
+      {/* Upgrade / Manage buttons */}
+      {plan === 'free' && (
+        <div className="space-y-2">
+          <button
+            onClick={() => handleUpgrade('premium', 'monthly')}
+            className="w-full bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
+          >
+            {isRtl ? `⭐ שדרג ל-Premium — ₪${PLAN_PRICING.premium.monthly}/חודש` : `⭐ Upgrade to Premium — ₪${PLAN_PRICING.premium.monthly}/mo`}
+          </button>
+          <button
+            onClick={() => navigate('/pricing')}
+            className="w-full text-[#2d6a4f] text-xs hover:underline py-1"
+          >
+            {isRtl ? 'ראה את כל התוכניות →' : 'See all plans →'}
+          </button>
+        </div>
+      )}
+
+      {plan === 'premium' && (
+        <div className="space-y-2">
+          <button
+            onClick={() => handleUpgrade('pro', 'monthly')}
+            className="w-full border border-gray-800 text-gray-800 font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm"
+          >
+            {isRtl ? `🚀 שדרג ל-Pro — ₪${PLAN_PRICING.pro.monthly}/חודש` : `🚀 Upgrade to Pro — ₪${PLAN_PRICING.pro.monthly}/mo`}
+          </button>
+          <p className="text-[11px] text-gray-400 text-center">
+            {isRtl ? 'לביטול — שלח הודעה בWhatsApp' : 'To cancel — send a WhatsApp message'}
+          </p>
+        </div>
+      )}
+
+      {plan === 'pro' && (
+        <p className="text-[11px] text-gray-400 text-center">
+          {isRtl ? '🚀 אתה בתוכנית המתקדמת ביותר! לביטול — WhatsApp' : '🚀 You\'re on the top plan! To cancel — WhatsApp'}
+        </p>
+      )}
+    </section>
+  )
+}
+
+// Install App button (shows only when not running as PWA)
+const InstallAppButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
+  const [isStandalone, setIsStandalone] = useState(true) // default true to hide initially
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+      || (window.navigator as any).standalone === true
+    setIsStandalone(standalone)
+  }, [])
+
+  if (isStandalone) return null
+
+  return (
+    <section className="bg-white rounded-2xl shadow p-5">
+      <h2 className="text-base font-semibold text-gray-800 mb-2">
+        {isRtl ? '📲 התקנת האפליקציה' : '📲 Install App'}
+      </h2>
+      <p className="text-xs text-gray-500 mb-3">
+        {isRtl
+          ? 'האפליקציה לא מותקנת על המכשיר. התקן למסך הבית לגישה מהירה, התראות, ומצב אופליין.'
+          : 'App is not installed. Install to home screen for quick access, notifications, and offline mode.'}
+      </p>
+      <button
+        onClick={() => navigate('/install')}
+        className="w-full bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
+      >
+        {isRtl ? '📲 התקן עכשיו' : '📲 Install Now'}
+      </button>
+    </section>
   )
 }
 

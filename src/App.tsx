@@ -9,6 +9,14 @@ import TreeProfilePage from './pages/TreeProfilePage'
 import AddTreePage from './pages/AddTreePage'
 import SettingsPage from './pages/SettingsPage'
 import AdminPage from './pages/AdminPage'
+import CommunityPage from './pages/CommunityPage'
+import NotificationsPage from './pages/NotificationsPage'
+import UserProfilePage from './pages/UserProfilePage'
+import PricingPage from './pages/PricingPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import InvitePage from './pages/InvitePage'
+import InstallPage from './pages/InstallPage'
 
 // Global Error Boundary to catch runtime crashes
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -149,6 +157,35 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute>
+                <CommunityPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/:id"
+            element={
+              <ProtectedRoute>
+                <UserProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/invite/:userId" element={<InvitePage />} />
+          <Route path="/install" element={<InstallPage />} />
 
           {/* Default redirects */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

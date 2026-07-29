@@ -1,121 +1,115 @@
-import React,{useState,useEffect,useRef} from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
-interfaceProps{
-onDone:()=>void
+interface Props {
+  onDone: () => void
 }
 
-const InstallGate:React.FC<Props>=({onDone})=>{
-const[deferredPrompt,setDeferredPrompt]=useState<any>(null)
+const InstallGate: React.FC<Props> = ({ onDone }) => {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [isIOS, setIsIOS] = useState(false)
+  const [installing, setInstalling] = useState(false)
+  const promptRef = useRef<any>(null)
 
-const[isIOS,setIsIOS]=useState(false)
+  useEffect(() => {
+    // Check if already installed as PWA
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || (window.navigator as any).standalone === true
+    if (isStandalone) {
+      onDone()
+      return
+    }
 
-const[installing,setInstalling]=useState(false)
-const promptRef=useRef<any>(null)
+    // Check if already dismissed this session
+    if (sessionStorage.getItem('install-gate-dismissed')) {
+      onDone()
+      return
+    }
 
-useEffect(()=>{
-//CheckifalreadyinstalledasPWA
-const isStandalone=window.matchMedia('(display-mode:standalone)').matches
-||(window.navigatorasany).standalone===true
-if(isStandalone){
-onDone()
+    // Detect iOS
+    const ua = navigator.userAgent
+    const isiOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream
+    setIsIOS(isiOS)
 
-return
+    // Listen for beforeinstallprompt (Android/Chrome/Edge)
+    const handler = (e: Event) => {
+      e.preventDefault()
+      promptRef.current = e
+      setDeferredPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [onDone])
+
+  const handleInstall = async () => {
+    if (promptRef.current) {
+      setInstalling(true)
+      promptRef.current.prompt()
+      const result = await promptRef.current.userChoice
+      if (result.outcome === 'accepted') {
+        sessionStorage.setItem('install-gate-dismissed', '1')
+        onDone()
+      }
+      setInstalling(false)
+    }
+  }
+
+  const handleSkip = () => {
+    sessionStorage.setItem('install-gate-dismissed', '1')
+    onDone()
+  }
+
+  return (
+    <div className="fixed inset-0 z-[9998] bg-[#1a3d2b] flex flex-col items-center justify-center px-6 text-center">
+      {/* Logo */}
+      <img
+        src="/splash.png"
+        alt="YUTAKA"
+        className="w-40 h-40 object-contain mb-6 rounded-2xl"
+      />
+
+      <h1 className="text-white text-xl font-bold mb-2">YUTAKA Bonsai</h1>
+      <p className="text-white/70 text-sm mb-8 max-w-xs">
+        התקן את האפליקציה למסך הבית לגישה מהירה וחוויה מלאה
+      </p>
+
+      {isIOS ? (
+        /* iOS instructions */
+        <div className="bg-white/10 backdrop-blur rounded-xl p-5 max-w-xs w-full mb-6">
+          <p className="text-white text-sm mb-3 font-medium">להתקנה ב-iPhone:</p>
+          <div className="space-y-2 text-white/80 text-xs text-right">
+            <p>1. לחץ על כפתור השיתוף <span className="inline-block px-1.5 py-0.5 bg-white/20 rounded">⬆️</span></p>
+            <p>2. גלול ובחר <strong>"Add to Home Screen"</strong></p>
+            <p>3. לחץ <strong>"Add"</strong></p>
+          </div>
+        </div>
+      ) : deferredPrompt ? (
+        /* Android/Chrome install button */
+        <button
+          onClick={handleInstall}
+          disabled={installing}
+          className="bg-white text-[#2d6a4f] font-bold text-base px-8 py-3.5 rounded-xl shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-60 mb-6"
+        >
+          {installing ? '...' : '📲 התקן עכשיו'}
+        </button>
+      ) : (
+        /* Fallback - no prompt available yet */
+        <div className="bg-white/10 backdrop-blur rounded-xl p-5 max-w-xs w-full mb-6">
+          <p className="text-white/80 text-sm">
+            פתח בדפדפן Chrome ולחץ על תפריט ⋮ → "Add to Home screen"
+          </p>
+        </div>
+      )}
+
+      {/* Skip button */}
+      <button
+        onClick={handleSkip}
+        className="text-white/40 text-xs hover:text-white/70 transition-colors"
+      >
+        דלג והמשך לאפליקציה →
+      </button>
+    </div>
+  )
 }
 
-//Checkifalreadydismissedthissession
-if(sessionStorage.getItem('install-gate-dismissed')){
-onDone()
-
-return
-}
-
-//DetectiOS
-const ua=navigator.userAgent
-const isiOS=/iPad|iPhone|iPod/.test(ua)&&!(windowasany).MSStream
-setIsIOS(isiOS)
-
-//Listenforbeforeinstallprompt(Android/Chrome/Edge)
-const handler=(e:Event)=>{
-e.preventDefault()
-promptRef.current=e
-setDeferredPrompt(e)
-}
-window.addEventListener('beforeinstallprompt',handler)
-
-
-return()=>window.removeEventListener('beforeinstallprompt',handler)
-},[onDone])
-
-const handleInstall=async()=>{
-if(promptRef.current){
-setInstalling(true)
-promptRef.current.prompt()
-const result=awaitpromptRef.current.userChoice
-if(result.outcome==='accepted'){
-sessionStorage.setItem('install-gate-dismissed','1')
-onDone()
-}
-setInstalling(false)
-}
-}
-
-const handleSkip=()=>{
-sessionStorage.setItem('install-gate-dismissed','1')
-onDone()
-}
-
-
-return(
-<divclassName="fixedinset-0z-[9998]bg-[#1a3d2b]flexflex-colitems-centerjustify-centerpx-6text-center">
-{/*Logo*/}
-<img
-src="/splash.png"
-alt="YUTAKA"
-className="w-40h-40object-containmb-6rounded-2xl"
-/>
-
-<h1className="text-whitetext-xlfont-boldmb-2">YUTAKABonsai</h1>
-<pclassName="text-white/70text-smmb-8max-w-xs">
-התקןאתהאפליקציהלמסךהביתלגישהמהירהוחוויהמלאה
-</p>
-
-{isIOS?(
-/*iOSinstructions*/
-<divclassName="bg-white/10backdrop-blurrounded-xlp-5max-w-xsw-fullmb-6">
-<pclassName="text-whitetext-smmb-3font-medium">להתקנהב-iPhone:</p>
-<divclassName="space-y-2text-white/80text-xstext-right">
-<p>1.לחץעלכפתורהשיתוף<spanclassName="inline-blockpx-1.5py-0.5bg-white/20rounded">⬆️</span></p>
-<p>2.גלולובחר<strong>"AddtoHomeScreen"</strong></p>
-<p>3.לחץ<strong>"Add"</strong></p>
-</div>
-</div>
-):deferredPrompt?(
-/*Android/Chromeinstallbutton*/
-<button
-onClick={handleInstall}
-disabled={installing}
-className="bg-whitetext-[#2d6a4f]font-boldtext-basepx-8py-3.5rounded-xlshadow-lghover:bg-gray-100transition-colorsdisabled:opacity-60mb-6"
->
-{installing?'...':'📲התקןעכשיו'}
-</button>
-):(
-/*Fallback-nopromptavailableyet*/
-<divclassName="bg-white/10backdrop-blurrounded-xlp-5max-w-xsw-fullmb-6">
-<pclassName="text-white/80text-sm">
-פתחבדפדפןChromeולחץעלתפריט⋮→"AddtoHomescreen"
-</p>
-</div>
-)}
-
-{/*Skipbutton*/}
-<button
-onClick={handleSkip}
-className="text-white/40text-xshover:text-white/70transition-colors"
->
-דלגוהמשךלאפליקציה→
-</button>
-</div>
-)
-}
-
-exportdefaultInstallGate
+export default InstallGate
