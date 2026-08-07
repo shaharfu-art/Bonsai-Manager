@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.yutakabonsai.twa",
+        "sha256_cert_fingerprints": ["03:8B:48:18:67:6D:59:2D:BD:DC:28:D5:2D:BC:01:A8:66:49:C9:6E:88:F6:18:DE:AE:B2:CE:9E:6C:F5:57:E3"]
+      }
+    }]

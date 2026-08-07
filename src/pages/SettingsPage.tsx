@@ -5,8 +5,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase-client'
 import { subscribeToPush, unsubscribeFromPush } from '../lib/push-notifications'
-import { usePlan, PLAN_LIMITS, PLAN_PRICING } from '../hooks/usePlan'
-import { getCheckoutUrl } from '../lib/payment'
+import { usePlan, PLAN_LIMITS } from '../hooks/usePlan'
 
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -121,7 +120,7 @@ return (
 const SubscriptionSection: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const { user } = useAuth()
   const { plan, maxTrees, planExpiresAt, loading } = usePlan()
-  const navigate = useNavigate()
+  const isTWA = 'getDigitalGoodsService' in window
 
   if (loading) {
     return (
@@ -135,20 +134,6 @@ const SubscriptionSection: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const planLabel = plan === 'pro' ? 'Pro' : plan === 'premium' ? 'Premium' : 'Free'
   const planColor = plan === 'pro' ? 'text-gray-800 bg-gray-100' : plan === 'premium' ? 'text-[#2d6a4f] bg-green-50' : 'text-gray-600 bg-gray-100'
   const planIcon = plan === 'pro' ? '🚀' : plan === 'premium' ? '⭐' : '🌱'
-
-  const handleUpgrade = (targetPlan: 'premium' | 'pro', billing: 'monthly' | 'yearly') => {
-    if (!user?.email || !user?.id) return
-    const url = getCheckoutUrl({
-      plan: `${targetPlan}_${billing}` as any,
-      userEmail: user.email,
-      userId: user.id,
-    })
-    if (url) {
-      window.open(url, '_blank')
-    } else {
-      alert(isRtl ? 'מערכת התשלום תחובר בקרוב!' : 'Payment system coming soon!')
-    }
-  }
 
   return (
     <section className="bg-white rounded-2xl shadow p-5">
@@ -176,41 +161,25 @@ const SubscriptionSection: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
         </div>
       </div>
 
-      {/* Upgrade / Manage buttons */}
+      {/* Upgrade info */}
       {plan === 'free' && (
-        <div className="space-y-2">
-          <button
-            onClick={() => handleUpgrade('premium', 'monthly')}
-            className="w-full bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
-          >
-            {isRtl ? `⭐ שדרג ל-Premium — ₪${PLAN_PRICING.premium.monthly}/חודש` : `⭐ Upgrade to Premium — ₪${PLAN_PRICING.premium.monthly}/mo`}
-          </button>
-          <button
-            onClick={() => navigate('/pricing')}
-            className="w-full text-[#2d6a4f] text-xs hover:underline py-1"
-          >
-            {isRtl ? 'ראה את כל התוכניות →' : 'See all plans →'}
-          </button>
-        </div>
+        <p className="text-xs text-gray-500 text-center">
+          {isTWA
+            ? (isRtl ? '⭐ שדרג לPremium כדי להוסיף עוד עצים ולקבל AI ללא הגבלה' : '⭐ Upgrade to Premium for more trees and unlimited AI')
+            : (isRtl ? '⭐ הורד את האפליקציה מהחנות כדי לשדרג' : '⭐ Download the app from the store to upgrade')
+          }
+        </p>
       )}
 
       {plan === 'premium' && (
-        <div className="space-y-2">
-          <button
-            onClick={() => handleUpgrade('pro', 'monthly')}
-            className="w-full border border-gray-800 text-gray-800 font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm"
-          >
-            {isRtl ? `🚀 שדרג ל-Pro — ₪${PLAN_PRICING.pro.monthly}/חודש` : `🚀 Upgrade to Pro — ₪${PLAN_PRICING.pro.monthly}/mo`}
-          </button>
-          <p className="text-[11px] text-gray-400 text-center">
-            {isRtl ? 'לביטול — שלח הודעה בWhatsApp' : 'To cancel — send a WhatsApp message'}
-          </p>
-        </div>
+        <p className="text-xs text-gray-500 text-center">
+          {isRtl ? '⭐ Premium פעיל' : '⭐ Premium active'}
+        </p>
       )}
 
       {plan === 'pro' && (
         <p className="text-[11px] text-gray-400 text-center">
-          {isRtl ? '🚀 אתה בתוכנית המתקדמת ביותר! לביטול — WhatsApp' : '🚀 You\'re on the top plan! To cancel — WhatsApp'}
+          {isRtl ? '🚀 אתה בתוכנית המתקדמת ביותר!' : '🚀 You\'re on the top plan!'}
         </p>
       )}
     </section>
@@ -253,25 +222,36 @@ const InstallAppButton: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
 // Notification toggle sub-component
 const NotificationToggle: React.FC<{ isRtl: boolean }> = ({ isRtl }) => {
   const { t } = useTranslation()
+  const { user } = useAuth()
   
 const [enabled, setEnabled] = useState(false)
   
-const [loading, setLoading] = useState(false)
+const [loading, setLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   useEffect(() => {
-    setEnabled('Notification' in window && Notification.permission === 'granted')
-  }, [])
+    if (!user) { setLoading(false); return }
+    // Check DB for actual subscription (not just browser permission)
+    supabase.from('push_subscriptions').select('id').eq('user_id', user.id).limit(1)
+      .then(({ data }) => {
+        setEnabled(!!data && data.length > 0)
+        setLoading(false)
+      })
+  }, [user])
 
   
 const handleToggle = async () => {
     setLoading(true)
+    setDebugInfo(null)
     try {
       if (!enabled) {
         const success = await subscribeToPush()
         setEnabled(success)
+        setDebugInfo(success ? '✅ נרשם בהצלחה' : '❌ ההרשמה נכשלה — בדוק console')
       } else {
         await unsubscribeFromPush()
         setEnabled(false)
+        setDebugInfo('ביטול הרשמה')
       }
     } finally {
       setLoading(false)
@@ -296,6 +276,7 @@ return (
         <span className="text-sm text-gray-600">{t('settings.enableNotifications')}</span>
       </label>
       {loading && <p className="text-xs text-gray-400 mt-2">{t('common.loading')}</p>}
+      {debugInfo && <p className="text-xs text-gray-500 mt-2">{debugInfo}</p>}
     </>
   )
 }

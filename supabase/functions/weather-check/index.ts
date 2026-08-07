@@ -88,6 +88,17 @@ serve(async (req) => {
     // Parse body
     let testMode = false
     try { const body = await req.json(); testMode = body?.test === true } catch {}
+
+    // Quiet hours: don't send between 22:00-05:30 Israel time (unless test mode)
+    if (!testMode) {
+      const israelTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }))
+      const hour = israelTime.getHours()
+      const minutes = israelTime.getMinutes()
+      const timeValue = hour + minutes / 60 // e.g. 5.5 = 05:30
+      if (timeValue >= 22 || timeValue < 5.5) {
+        return new Response(JSON.stringify({ message: 'Quiet hours (22:00-05:30 Israel time)', sent: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+    }
     const thresholds = testMode ? TEST_THRESHOLDS : THRESHOLDS
 
     // Get users with location
@@ -153,14 +164,7 @@ serve(async (req) => {
       // Get push subscriptions
       const { data: subs, error: subsErr } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth').eq('user_id', user.id)
       if (!subs || subs.length === 0) {
-        // Debug: return info about why no push was sent
-        return new Response(JSON.stringify({ 
-          message: 'No push subscriptions found', 
-          sent: 0, 
-          usersChecked: users.length, 
-          testMode,
-          debug: { userId: user.id, subsErr: subsErr?.message, subsCount: subs?.length ?? 0, alertsFound: alerts.length }
-        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        continue
       }
 
       // Generate recommendation with Gemini

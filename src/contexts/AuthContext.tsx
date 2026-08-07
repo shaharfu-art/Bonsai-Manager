@@ -30,6 +30,10 @@ const [loading, setLoading] = useState(true)
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+      // Track last seen
+      if (session?.user) {
+        supabase.from('user_profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', session.user.id).then(() => {})
+      }
     })
 
     // Listen for auth state changes
@@ -38,6 +42,10 @@ const [loading, setLoading] = useState(true)
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+        // Track last seen on sign in
+        if (_event === 'SIGNED_IN' && session?.user) {
+          supabase.from('user_profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', session.user.id).then(() => {})
+        }
       }
     )
 

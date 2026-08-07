@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
 import OnboardingWizard from '../components/OnboardingWizard'
+import InstallPromptBanner from '../components/InstallPromptBanner'
 import { useTrees } from '../hooks/useTrees'
 import { useSpecies } from '../hooks/useSpecies'
 import { supabase } from '../lib/supabase-client'
 import type { Tree } from '../hooks/useTrees'
-import { subscribeToPush } from '../lib/push-notifications'
 
 const TREATMENT_ICONS: Record<string, string> = {
   watering: '💧',
@@ -41,11 +41,12 @@ interface TreeCardProps {
   speciesName: string
   coverPhotoUrl?: string | null
   alertCount?: number
+  commentsCount?: number
   onClick: () => void
 }
 
 
-const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, alertCount, onClick }) => {
+const TreeCard: React.FC<TreeCardProps> = ({ tree, speciesName, coverPhotoUrl, alertCount, commentsCount, onClick }) => {
   const { t, i18n } = useTranslation()
   
 const isRtl = i18n.language === 'he'
@@ -103,6 +104,21 @@ const isRtl = i18n.language === 'he'
             </p>
           )}
         </div>
+        {/* Likes & Comments indicators */}
+        {(tree.likes_count > 0 || (commentsCount ?? 0) > 0) && (
+          <div className="flex items-center gap-3 pt-1.5 border-t border-gray-50 mt-1">
+            {tree.likes_count > 0 && (
+              <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                ❤️ {tree.likes_count}
+              </span>
+            )}
+            {(commentsCount ?? 0) > 0 && (
+              <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                💬 {commentsCount}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </button>
   )
@@ -187,6 +203,8 @@ const [alerts, setAlerts] = useState<Array<{
   
 const [alertsLoading, setAlertsLoading] = useState(true)
 
+  const [commentsCountMap, setCommentsCountMap] = useState<Record<string, number>>({})
+
   
 const isRtl = i18n.language === 'he'
 
@@ -221,6 +239,21 @@ return
     if (trees.length === 0) { setPendingLoading(false); return }
     
 const treeIds = trees.map(t => t.id)
+
+    // Also fetch comments count per tree
+    supabase
+      .from('tree_comments')
+      .select('tree_id')
+      .in('tree_id', treeIds)
+      .then(({ data }) => {
+        if (!data) return
+        const counts: Record<string, number> = {}
+        data.forEach(row => {
+          counts[row.tree_id] = (counts[row.tree_id] ?? 0) + 1
+        })
+        setCommentsCountMap(counts)
+      })
+
     supabase
       .from('treatment_logs')
       .select('id, tree_id, treatment_type, treatment_date')
@@ -250,9 +283,7 @@ const pending = (data ?? []).map(row => ({
 
   // Subscribe to push notifications (once, if permission granted)
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      subscribeToPush()
-    }
+    // Removed auto-subscribe — handled by InstallPromptBanner and Settings toggle
   }, [])
 
   // Calculate stats
@@ -407,6 +438,9 @@ return (
         {/* Onboarding wizard */}
         <OnboardingWizard />
 
+        {/* Install/Notifications/Location prompts */}
+        <InstallPromptBanner />
+
         {/* Stats bar */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl shadow p-4 text-center">
@@ -446,6 +480,20 @@ return (
                   <span className="text-xs text-amber-700 font-medium flex-shrink-0">
                     {pt.treatment_date}
                   </span>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      await supabase.from('treatment_logs').delete().eq('id', pt.id)
+                      setPendingTreatments(prev => prev.filter(p => p.id !== pt.id))
+                    }}
+                    className="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors p-0.5"
+                    title={t('common.delete')}
+                    aria-label={t('common.delete')}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </li>
               ))}
               {/* Alerts */}
@@ -587,6 +635,7 @@ return (
                 speciesName={getSpeciesName(tree)}
                 coverPhotoUrl={coverPhotos[tree.id]}
                 alertCount={alertCountMap[tree.id]}
+                commentsCount={commentsCountMap[tree.id]}
                 onClick={() => navigate(`/trees/${tree.id}`)}
               />
             ))}
