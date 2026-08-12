@@ -18,10 +18,10 @@ export const PLAN_LIMITS: Record<PlanType, { maxTrees: number; aiDailyLimit: num
   pro: { maxTrees: 9999, aiDailyLimit: Infinity },
 }
 
-// Plan pricing (for display only)
+// Plan pricing (for display only — USD)
 export const PLAN_PRICING = {
-  premium: { monthly: 9.90, yearly: 99 },
-  pro: { monthly: 16.90, yearly: 169 },
+  premium: { monthly: 3.99, yearly: 39.99 },
+  pro: { monthly: 6.99, yearly: 69.99 },
 }
 
 const AI_COUNTER_KEY = 'ai-daily-count'

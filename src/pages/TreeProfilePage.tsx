@@ -15,6 +15,7 @@ import TreatmentLogSection from '../components/TreatmentLogSection'
 import PhotoTimelineSection from '../components/PhotoTimelineSection'
 import AiInsightsPanel from '../components/AiInsightsPanel'
 import ShareCard from '../components/ShareCard'
+import LightMeterTab from '../components/LightMeterTab'
 import { LikersList } from '../components/LikersPopup'
 
 // ─── Three-dots menu ────────────────────────────────────────
@@ -35,7 +36,7 @@ return (
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-9 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-36">
+          <div className="absolute top-9 right-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-36">
             {onRecurring && (
               <button
                 onClick={() => { setOpen(false); onRecurring() }}
@@ -266,7 +267,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   
 const [deleting, setDeleting] = useState(false)
   
-const [activeTab, setActiveTab] = useState<'treatments' | 'photos'>('treatments')
+const [activeTab, setActiveTab] = useState<'treatments' | 'photos' | 'light'>('treatments')
   
 const [showShareCard, setShowShareCard] = useState(false)
   
@@ -389,18 +390,8 @@ return (
 
           {/* Top-right actions */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-            {photos.length > 0 && (
-              <button onClick={() => setShowCoverPicker(true)} className="bg-black/30 hover:bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors">📷</button>
-            )}
-            {photos.length === 0 && (
-              <>
-                <input ref={coverUploadRef} 
-type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
-                <button onClick={() => coverUploadRef.current?.click()} disabled={coverUploading} className="bg-black/30 hover:bg-black/50 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors disabled:opacity-50">
-                  📷 {coverUploading ? '...' : t('photo.addPhoto')}
-                </button>
-              </>
-            )}
+            <input ref={coverUploadRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+            <button onClick={() => setShowCoverPicker(true)} className="bg-black/30 hover:bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors">📷</button>
           </div>
         </div>
 
@@ -409,20 +400,33 @@ type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
 
         {/* Cover photo picker */}
         {showCoverPicker && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowCoverPicker(false)}>
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">{t('photo.chooseCover')}</h3>
                 <button onClick={() => setShowCoverPicker(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {photos.map(photo => (
-                  <button key={photo.id} onClick={() => handleSetCoverFromPicker(photo.id)} className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors relative ${photo.is_cover ? 'border-yellow-400' : 'border-transparent hover:border-[#52b788]'}`}>
-                    {photo.public_url ? <img src={photo.public_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-2xl">🖼️</div>}
-                    {photo.is_cover && <span className="absolute top-1 right-1 text-sm">⭐</span>}
-                  </button>
-                ))}
-              </div>
+              {/* Add new photo button */}
+              <button
+                onClick={() => { setShowCoverPicker(false); coverUploadRef.current?.click() }}
+                disabled={coverUploading}
+                className="w-full mb-4 bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium py-2.5 rounded-xl transition-colors text-sm disabled:opacity-50"
+              >
+                📷 {coverUploading ? '...' : (isRtl ? 'צלם / העלה תמונה חדשה' : 'Capture / Upload new photo')}
+              </button>
+              {photos.length > 0 && (
+                <>
+                  <p className="text-xs text-gray-500 mb-2">{isRtl ? 'או בחר מהקיימות:' : 'Or choose from existing:'}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {photos.map(photo => (
+                      <button key={photo.id} onClick={() => handleSetCoverFromPicker(photo.id)} className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors relative ${photo.is_cover ? 'border-yellow-400' : 'border-transparent hover:border-[#52b788]'}`}>
+                        {photo.public_url ? <img src={photo.public_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-2xl">🖼️</div>}
+                        {photo.is_cover && <span className="absolute top-1 right-1 text-sm">⭐</span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -433,8 +437,8 @@ type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow overflow-hidden">
           <div className="flex border-b border-gray-100">
-            {(['treatments', 'photos'] as const).map((tab) => {
-              const labels = { treatments: t('tabs.treatments'), photos: t('tabs.photos') }
+            {(['treatments', 'photos', 'light'] as const).map((tab) => {
+              const labels = { treatments: t('tabs.treatments'), photos: t('tabs.photos'), light: '☀️' }
               
 return (
                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? 'text-[#2d6a4f] border-b-2 border-[#2d6a4f]' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -446,6 +450,7 @@ return (
           <div className="p-5">
             {activeTab === 'treatments' && <TreatmentLogSection treeId={id!} initialTreatmentType={openTreatmentType} />}
             {activeTab === 'photos' && <PhotoTimelineSection treeId={id!} onCoverPhotoChange={() => {}} />}
+            {activeTab === 'light' && <LightMeterTab treeId={id!} />}
           </div>
         </div>
       </div>
@@ -627,79 +632,58 @@ return`${t('treatment.reminderEvery')} ${d/30} ${t('treatment.unit_months')}`;re
 // ─── Tree Alerts Banner (same style as dashboard) ────────────
 const TreeAlertsBanner: React.FC<{ treeId: string }> = ({ treeId }) => {
   const { t } = useTranslation()
-  
-const { getConfig } = useAlertConfigs(treeId)
-  
-const { treatments } = useTreatments(treeId)
-  
-const navigate = useNavigate()
+  const { treatments, completeTreatment } = useTreatments(treeId)
+  const navigate = useNavigate()
 
-  
-const todayDate = new Date()
-  
-const todayStr = todayDate.toISOString().split('T')[0]
+  const todayDate = new Date()
+  const pendingTreatments = treatments.filter(tr => tr.status === 'pending')
 
-  const dueAlerts: { type: string; dueDate: string; status: 'due' | 'upcoming' }[] = []
+  if (pendingTreatments.length === 0) return null
 
-  for (const type of TREATMENT_TYPES) {
-    const cfg = getConfig(type)
-    if (!cfg) continue
-    const doneToday = treatments.find(tr => tr.treatment_type === type && tr.treatment_date === todayStr && tr.status === 'completed')
-    if (doneToday) continue
+  // Classify pending treatments as 'due' (date <= today) or 'upcoming' (within 3 days)
+  const classified = pendingTreatments.map(tr => {
+    const treatDate = new Date(tr.treatment_date)
+    const diff = Math.ceil((treatDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24))
+    const status: 'due' | 'upcoming' = diff <= 0 ? 'due' : 'upcoming'
+    return { ...tr, alertStatus: status }
+  }).filter(tr => {
+    const treatDate = new Date(tr.treatment_date)
+    const diff = Math.ceil((treatDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24))
+    return diff <= 3 // Show only due or within 3 days
+  })
 
-    if (cfg.snoozed_until) {
-      const d = new Date(cfg.snoozed_until)
-      
-const diff = Math.ceil((d.getTime() - todayDate.getTime()) / (1000*60*60*24))
-      if (diff <= 0) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'due' })
-      else if (diff <= 3) dueAlerts.push({ type, dueDate: cfg.snoozed_until, status: 'upcoming' })
-    } else if (cfg.interval_days && cfg.interval_days > 0) {
-      const lastLog = treatments.filter(tr => tr.treatment_type === type && tr.status === 'completed').sort((a,b) => b.treatment_date.localeCompare(a.treatment_date))[0]
-      const lastDate = lastLog ? new Date(lastLog.treatment_date) : new Date(0)
-      
-const next = new Date(lastDate.getTime() + cfg.interval_days * 24*60*60*1000)
-      
-const diff = Math.ceil((next.getTime() - todayDate.getTime()) / (1000*60*60*24))
-      
-const dueStr = next.toISOString().split('T')[0]
-      if (diff <= 0) dueAlerts.push({ type, dueDate: dueStr, status: 'due' })
-      else if (diff <= 3) dueAlerts.push({ type, dueDate: dueStr, status: 'upcoming' })
-    }
-  }
-
-  if (dueAlerts.length === 0) 
-return null
+  if (classified.length === 0) return null
 
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
       <h2 className="text-sm font-semibold text-amber-800 mb-3">
-        🔔 {t('treatment.reminder')} ({dueAlerts.length})
+        🔔 {t('treatment.pending')} ({classified.length})
       </h2>
       <ul className="space-y-2">
-        {dueAlerts.map(alert => (
+        {classified.map(treatment => (
           <li
-            key={alert.type}
+            key={treatment.id}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 shadow-sm cursor-pointer hover:bg-green-50 transition-colors ${
-              alert.status === 'due'
+              treatment.alertStatus === 'due'
                 ? 'bg-red-50 border border-red-200'
                 : 'bg-white border border-amber-100'
             }`}
-            onClick={() => navigate(`/trees/${treeId}`, { state: { openTreatment: alert.type } })}
+            onClick={() => navigate(`/trees/${treeId}`, { state: { openTreatment: treatment.treatment_type } })}
           >
-            <span className="text-lg">{TREATMENT_ICONS[alert.type] ?? '📝'}</span>
+            <span className="text-lg">{TREATMENT_ICONS[treatment.treatment_type] ?? '📝'}</span>
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
-              alert.status === 'due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+              treatment.alertStatus === 'due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
             }`}>
-              {alert.status === 'due' ? t('alert.due') : t('alert.upcoming')}
+              {treatment.alertStatus === 'due' ? t('alert.due') : t('alert.upcoming')}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800">{t(`treatment.${alert.type}`)}</p>
-              <p className="text-xs text-gray-500">{alert.dueDate}</p>
+              <p className="text-sm font-medium text-gray-800">{t(`treatment.${treatment.treatment_type}`)}</p>
+              <p className="text-xs text-gray-500">{treatment.treatment_date}</p>
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/trees/${treeId}`, { state: { openTreatment: alert.type } }) }}
+              onClick={(e) => { e.stopPropagation(); completeTreatment(treatment.id) }}
               className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors flex-shrink-0 ${
-                alert.status === 'due'
+                treatment.alertStatus === 'due'
                   ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-amber-600 hover:bg-amber-700 text-white'
               }`}

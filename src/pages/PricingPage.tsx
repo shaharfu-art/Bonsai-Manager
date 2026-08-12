@@ -28,7 +28,7 @@ const PricingPage: React.FC = () => {
           {/* Free */}
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 flex flex-col">
             <h3 className="text-lg font-bold text-gray-800 mb-1">Free</h3>
-            <p className="text-3xl font-bold text-gray-900 mb-1">₪0</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">$0</p>
             <p className="text-xs text-gray-500 mb-5">{isRtl ? 'לתמיד' : 'forever'}</p>
             <ul className="space-y-2 flex-1">
               <PlanFeature text={isRtl ? '3 עצים' : '3 trees'} />
@@ -51,8 +51,8 @@ const PricingPage: React.FC = () => {
               {isRtl ? 'מומלץ' : 'POPULAR'}
             </span>
             <h3 className="text-lg font-bold text-[#2d6a4f] mb-1">Premium</h3>
-            <p className="text-3xl font-bold text-gray-900 mb-1">₪{PLAN_PRICING.premium.monthly}<span className="text-sm font-normal text-gray-500">/{isRtl ? 'חודש' : 'mo'}</span></p>
-            <p className="text-xs text-gray-500 mb-5">{isRtl ? `או ₪${PLAN_PRICING.premium.yearly}/שנה` : `or ₪${PLAN_PRICING.premium.yearly}/year`}</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">${PLAN_PRICING.premium.monthly}<span className="text-sm font-normal text-gray-500">/{isRtl ? 'חודש' : 'mo'}</span></p>
+            <p className="text-xs text-gray-500 mb-5">{isRtl ? `או $${PLAN_PRICING.premium.yearly}/שנה` : `or $${PLAN_PRICING.premium.yearly}/year`}</p>
             <ul className="space-y-2 flex-1">
               <PlanFeature text={isRtl ? '15 עצים' : '15 trees'} highlight />
               <PlanFeature text={isRtl ? 'AI ללא הגבלה' : 'Unlimited AI'} highlight />
@@ -72,8 +72,8 @@ const PricingPage: React.FC = () => {
           {/* Pro */}
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 flex flex-col">
             <h3 className="text-lg font-bold text-gray-800 mb-1">Pro</h3>
-            <p className="text-3xl font-bold text-gray-900 mb-1">₪{PLAN_PRICING.pro.monthly}<span className="text-sm font-normal text-gray-500">/{isRtl ? 'חודש' : 'mo'}</span></p>
-            <p className="text-xs text-gray-500 mb-5">{isRtl ? `או ₪${PLAN_PRICING.pro.yearly}/שנה` : `or ₪${PLAN_PRICING.pro.yearly}/year`}</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">${PLAN_PRICING.pro.monthly}<span className="text-sm font-normal text-gray-500">/{isRtl ? 'חודש' : 'mo'}</span></p>
+            <p className="text-xs text-gray-500 mb-5">{isRtl ? `או $${PLAN_PRICING.pro.yearly}/שנה` : `or $${PLAN_PRICING.pro.yearly}/year`}</p>
             <ul className="space-y-2 flex-1">
               <PlanFeature text={isRtl ? 'עצים ללא הגבלה' : 'Unlimited trees'} highlight />
               <PlanFeature text={isRtl ? 'AI ללא הגבלה' : 'Unlimited AI'} highlight />
