@@ -39,6 +39,7 @@ const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   
 const [lightboxPhotoId, setLightboxPhotoId] = useState<string | null>(null)
+  const touchStartXRef = useRef<number>(0)
 
   
 const fileInputRef = useRef<HTMLInputElement>(null)
@@ -336,12 +337,15 @@ type="file"
         const hasNext = currentIndex < sorted.length - 1
 
         let touchStartX = 0
-        const handleTouchStart = (e: React.TouchEvent) => { touchStartX = e.touches[0].clientX }
+        const handleTouchStart = (e: React.TouchEvent) => { touchStartXRef.current = e.touches[0].clientX; touchStartX = e.touches[0].clientX }
         const handleTouchEnd = (e: React.TouchEvent) => {
-          const diff = touchStartX - e.changedTouches[0].clientX
-          if (Math.abs(diff) > 50) {
+          const diff = touchStartXRef.current - e.changedTouches[0].clientX
+          if (Math.abs(diff) > 40) {
+            e.stopPropagation()
             if (diff > 0 && hasNext) setLightboxPhotoId(sorted[currentIndex + 1].id)
             if (diff < 0 && hasPrev) setLightboxPhotoId(sorted[currentIndex - 1].id)
+          } else if (Math.abs(diff) < 10) {
+            setLightboxPhotoId(null)
           }
         }
 
@@ -365,11 +369,11 @@ type="file"
             {hasPrev && (
               <button
                 onClick={(e) => { e.stopPropagation(); setLightboxPhotoId(sorted[currentIndex - 1].id) }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full p-3 z-10 transition-colors"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white bg-white/20 hover:bg-white/40 rounded-full p-3 z-10 transition-colors backdrop-blur-sm"
                 aria-label="Previous"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
             )}
@@ -378,11 +382,11 @@ type="file"
             {hasNext && (
               <button
                 onClick={(e) => { e.stopPropagation(); setLightboxPhotoId(sorted[currentIndex + 1].id) }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full p-3 z-10 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white bg-white/20 hover:bg-white/40 rounded-full p-3 z-10 transition-colors backdrop-blur-sm"
                 aria-label="Next"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             )}
