@@ -101,6 +101,7 @@ const UsernameDialog: React.FC<UsernameDialogProps> = ({ onComplete }) => {
             <span className="absolute top-2.5 left-3 text-gray-400 text-sm">@</span>
             <input
               type="text"
+              inputMode="text"
               value={username}
               onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
               placeholder="your_name"
@@ -111,7 +112,10 @@ const UsernameDialog: React.FC<UsernameDialogProps> = ({ onComplete }) => {
                 'border-gray-300 focus:ring-[#52b788]'
               }`}
               dir="ltr"
-              autoFocus
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
             />
             {/* Status indicator */}
             <div className="absolute top-2.5 right-3">
