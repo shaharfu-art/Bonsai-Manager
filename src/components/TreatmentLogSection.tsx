@@ -89,7 +89,7 @@ const [lightboxIndex, setLightboxIndex] = useState(0)
   // Per-treatment-type reminder UI state
   const [reminderEnabled, setReminderEnabled] = useState(false)
   
-const [reminderValue, setReminderValue] = useState(7)
+const [reminderValue, setReminderValue] = useState<string>('7')
   
 const [reminderUnit, setReminderUnit] = useState<'days' | 'months' | 'years'>('days')
   
@@ -186,15 +186,15 @@ return
     if (existing?.snoozed_until) {
       setReminderMode('fixed')
       setReminderFixedDate(existing.snoozed_until)
-      setReminderValue(1)
+      setReminderValue('1')
       setReminderUnit('days')
     } else {
       setReminderMode('interval')
       
 const days = existing?.interval_days ?? 7
-      if (days >= 365 && days % 365 === 0) { setReminderValue(days / 365); setReminderUnit('years') }
-      else if (days >= 30 && days % 30 === 0) { setReminderValue(days / 30); setReminderUnit('months') }
-      else { setReminderValue(days); setReminderUnit('days') }
+      if (days >= 365 && days % 365 === 0) { setReminderValue(String(days / 365)); setReminderUnit('years') }
+      else if (days >= 30 && days % 30 === 0) { setReminderValue(String(days / 30)); setReminderUnit('months') }
+      else { setReminderValue(String(days)); setReminderUnit('days') }
       setReminderFixedDate('')
     }
   }
@@ -245,9 +245,10 @@ const allPhotoIds = [...existingPhotoIds, ...newPhotoIds].slice(0, 2)
         if (reminderMode === 'fixed') {
           await setConfig(editType, 0, reminderFixedDate)
         } else {
-          let totalDays = reminderValue
-          if (reminderUnit === 'months') totalDays = reminderValue * 30
-          if (reminderUnit === 'years') totalDays = reminderValue * 365
+          const n = parseInt(reminderValue, 10) || 1
+          let totalDays = n
+          if (reminderUnit === 'months') totalDays = n * 30
+          if (reminderUnit === 'years') totalDays = n * 365
           await setConfig(editType, totalDays, null)
         }
       } else {
@@ -271,7 +272,7 @@ const handleReminderOpen = (treatmentId: string, treatmentType: string) => {
       // Fixed date mode
       setReminderMode('fixed')
       setReminderFixedDate(existing.snoozed_until)
-      setReminderValue(1)
+      setReminderValue('1')
       setReminderUnit('days')
     } else {
       setReminderMode('interval')
@@ -279,13 +280,13 @@ const handleReminderOpen = (treatmentId: string, treatmentType: string) => {
 const days = existing?.interval_days ?? 7
       // Convert days to best unit
       if (days >= 365 && days % 365 === 0) {
-        setReminderValue(days / 365)
+        setReminderValue(String(days / 365))
         setReminderUnit('years')
       } else if (days >= 30 && days % 30 === 0) {
-        setReminderValue(days / 30)
+        setReminderValue(String(days / 30))
         setReminderUnit('months')
       } else {
-        setReminderValue(days)
+        setReminderValue(String(days))
         setReminderUnit('days')
       }
       setReminderFixedDate('')
@@ -314,9 +315,10 @@ let nextDateStr: string
             `${t('treatment.reminderOnDate')} ${reminderFixedDate}`
           )
         } else {
-          let totalDays = reminderValue
-          if (reminderUnit === 'months') totalDays = reminderValue * 30
-          if (reminderUnit === 'years') totalDays = reminderValue * 365
+          const n = parseInt(reminderValue, 10) || 1
+          let totalDays = n
+          if (reminderUnit === 'months') totalDays = n * 30
+          if (reminderUnit === 'years') totalDays = n * 365
           await setConfig(treatmentType, totalDays, null)
           
 const nextDate = new Date()
@@ -325,7 +327,7 @@ const nextDate = new Date()
           const unitLabel = t(`treatment.unit_${reminderUnit}`)
           sendLocalNotification(
             t('treatment.reminder'),
-            `${t('treatment.reminderEvery')} ${reminderValue} ${unitLabel}`
+            `${t('treatment.reminderEvery')} ${n} ${unitLabel}`
           )
         }
         // Create a pending treatment for the next occurrence
@@ -515,10 +517,12 @@ type="file"
                 {reminderMode === 'interval' ? (
                   <div className="flex items-center gap-2">
                     <input
-                      type="number"
-                      min={1}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="7"
                       value={reminderValue}
-                      onChange={e => setReminderValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      onChange={e => setReminderValue(e.target.value.replace(/[^0-9]/g, ''))}
                       className="w-14 border border-gray-300 rounded px-2 py-1 text-xs"
                     />
                     <select
@@ -779,10 +783,12 @@ type="checkbox"
                         {reminderMode === 'interval' ? (
                           <div className="flex items-center gap-2">
                             <input
-                              type="number"
-                              min={1}
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              placeholder="7"
                               value={reminderValue}
-                              onChange={e => setReminderValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                              onChange={e => setReminderValue(e.target.value.replace(/[^0-9]/g, ''))}
                               className="w-14 border border-gray-300 rounded px-2 py-1 text-xs"
                             />
                             <select
@@ -1011,10 +1017,12 @@ type="checkbox"
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm text-gray-600">{t('treatment.reminderEvery')}</span>
                               <input
-                                type="number"
-                                min={1}
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                placeholder="7"
                                 value={reminderValue}
-                                onChange={e => setReminderValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                                onChange={e => setReminderValue(e.target.value.replace(/[^0-9]/g, ''))}
                                 className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6a4f]"
                               />
                               <select
