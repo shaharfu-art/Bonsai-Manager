@@ -515,7 +515,7 @@ const [lastTreatments, setLastTreatments] = useState<Record<string, string>>({})
   
 const [editingType, setEditingType] = useState<string | null>(null)
   
-const [editValue, setEditValue] = useState<string>('7')
+const [editValue, setEditValue] = useState<string>('')
   
 const [editUnit, setEditUnit] = useState<'days' | 'months' | 'years'>('days')
   
@@ -531,8 +531,8 @@ const [editFixedDate, setEditFixedDate] = useState('')
   
 const handleEdit = (type: string) => {
     const cfg = getConfig(type)
-    if (cfg?.snoozed_until) { setEditMode('fixed'); setEditFixedDate(cfg.snoozed_until); setEditValue('1'); setEditUnit('days') }
-    else { setEditMode('interval'); const days = cfg?.interval_days ?? 7; if (days >= 365 && days % 365 === 0) { setEditValue(String(days/365)); setEditUnit('years') } else if (days >= 30 && days % 30 === 0) { setEditValue(String(days/30)); setEditUnit('months') } else { setEditValue(String(days)); setEditUnit('days') }; setEditFixedDate('') }
+    if (cfg?.snoozed_until) { setEditMode('fixed'); setEditFixedDate(cfg.snoozed_until); setEditValue(''); setEditUnit('days') }
+    else { setEditMode('interval'); const days = cfg?.interval_days ?? 0; if (days >= 365 && days % 365 === 0) { setEditValue(String(days/365)); setEditUnit('years') } else if (days >= 30 && days % 30 === 0) { setEditValue(String(days/30)); setEditUnit('months') } else if (days > 0) { setEditValue(String(days)); setEditUnit('days') } else { setEditValue(''); setEditUnit('days') }; setEditFixedDate('') }
     setEditingType(type)
   }
 
@@ -591,7 +591,7 @@ return (
                   <button onClick={()=>setEditMode('interval')} className={`text-xs px-2 py-1 rounded border ${editMode==='interval'?'bg-[#2d6a4f] text-white border-[#2d6a4f]':'border-gray-300'}`}>{t('treatment.modeInterval')}</button>
                   <button onClick={()=>setEditMode('fixed')} className={`text-xs px-2 py-1 rounded border ${editMode==='fixed'?'bg-[#2d6a4f] text-white border-[#2d6a4f]':'border-gray-300'}`}>{t('treatment.modeFixedDate')}</button>
                 </div>
-                {editMode==='interval'?(<div className="flex gap-2"><input key="interval-1" type="number" inputMode="numeric" min={1} value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-14 border rounded px-2 py-1 text-xs"/><select value={editUnit} onChange={e=>setEditUnit(e.target.value as any)} className="border rounded px-2 py-1 text-xs bg-white"><option value="days">{t('treatment.unit_days')}</option><option value="months">{t('treatment.unit_months')}</option><option value="years">{t('treatment.unit_years')}</option></select></div>):(<input type="date" value={editFixedDate} onChange={e=>setEditFixedDate(e.target.value)} className="border rounded px-2 py-1 text-xs"/>)}
+                {editMode==='interval'?(<div className="flex gap-2"><input key="interval-1" type="number" inputMode="numeric" min={1} value={editValue} placeholder="7" onChange={e=>setEditValue(e.target.value)} className="w-14 border rounded px-2 py-1 text-xs"/><select value={editUnit} onChange={e=>setEditUnit(e.target.value as any)} className="border rounded px-2 py-1 text-xs bg-white"><option value="days">{t('treatment.unit_days')}</option><option value="months">{t('treatment.unit_months')}</option><option value="years">{t('treatment.unit_years')}</option></select></div>):(<input type="date" value={editFixedDate} onChange={e=>setEditFixedDate(e.target.value)} className="border rounded px-2 py-1 text-xs"/>)}
                 <div className="flex gap-2">
                   <button onClick={()=>handleSave(cfg.treatment_type)} className="text-xs bg-[#2d6a4f] text-white px-3 py-1 rounded">{t('common.save')}</button>
                   <button onClick={()=>handleRemove(cfg.treatment_type)} className="text-xs text-red-600 border border-red-200 px-3 py-1 rounded">{t('common.delete')}</button>
@@ -629,7 +629,7 @@ return`${t('treatment.reminderEvery')} ${d/30} ${t('treatment.unit_months')}`;re
             <button onClick={()=>setEditMode('interval')} className={`text-xs px-2 py-1 rounded border ${editMode==='interval'?'bg-[#2d6a4f] text-white border-[#2d6a4f]':'border-gray-300'}`}>{t('treatment.modeInterval')}</button>
             <button onClick={()=>setEditMode('fixed')} className={`text-xs px-2 py-1 rounded border ${editMode==='fixed'?'bg-[#2d6a4f] text-white border-[#2d6a4f]':'border-gray-300'}`}>{t('treatment.modeFixedDate')}</button>
           </div>
-          {editMode==='interval'?(<div className="flex gap-2"><input key="interval-2" type="number" inputMode="numeric" min={1} value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-14 border rounded px-2 py-1 text-xs"/><select value={editUnit} onChange={e=>setEditUnit(e.target.value as any)} className="border rounded px-2 py-1 text-xs bg-white"><option value="days">{t('treatment.unit_days')}</option><option value="months">{t('treatment.unit_months')}</option><option value="years">{t('treatment.unit_years')}</option></select></div>):(<input type="date" value={editFixedDate} onChange={e=>setEditFixedDate(e.target.value)} className="border rounded px-2 py-1 text-xs"/>)}
+          {editMode==='interval'?(<div className="flex gap-2"><input key="interval-2" type="number" inputMode="numeric" min={1} value={editValue} placeholder="7" onChange={e=>setEditValue(e.target.value)} className="w-14 border rounded px-2 py-1 text-xs"/><select value={editUnit} onChange={e=>setEditUnit(e.target.value as any)} className="border rounded px-2 py-1 text-xs bg-white"><option value="days">{t('treatment.unit_days')}</option><option value="months">{t('treatment.unit_months')}</option><option value="years">{t('treatment.unit_years')}</option></select></div>):(<input type="date" value={editFixedDate} onChange={e=>setEditFixedDate(e.target.value)} className="border rounded px-2 py-1 text-xs"/>)}
           <div className="flex gap-2">
             <button onClick={()=>handleSave(editingType)} className="text-xs bg-[#2d6a4f] text-white px-3 py-1.5 rounded-lg">{t('common.save')}</button>
             <button onClick={()=>setEditingType(null)} className="text-xs text-gray-500 border px-3 py-1.5 rounded-lg">{t('common.cancel')}</button>
