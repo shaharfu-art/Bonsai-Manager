@@ -276,6 +276,7 @@ const [showCoverPicker, setShowCoverPicker] = useState(false)
 const [showRecurringSettings, setShowRecurringSettings] = useState(false)
   
 const coverUploadRef = useRef<HTMLInputElement>(null)
+  const coverCameraRef = useRef<HTMLInputElement>(null)
   
 const [coverUploading, setCoverUploading] = useState(false)
 
@@ -391,6 +392,7 @@ return (
           {/* Top-right actions */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
             <input ref={coverUploadRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+            <input ref={coverCameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCoverUpload} />
             <button onClick={() => setShowCoverPicker(true)} className="bg-black/30 hover:bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors">📷</button>
           </div>
         </div>
@@ -406,14 +408,23 @@ return (
                 <h3 className="text-lg font-semibold text-gray-900">{t('photo.chooseCover')}</h3>
                 <button onClick={() => setShowCoverPicker(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
               </div>
-              {/* Add new photo button */}
-              <button
-                onClick={() => { setShowCoverPicker(false); coverUploadRef.current?.click() }}
-                disabled={coverUploading}
-                className="w-full mb-4 bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium py-2.5 rounded-xl transition-colors text-sm disabled:opacity-50"
-              >
-                📷 {coverUploading ? '...' : (isRtl ? 'צלם / העלה תמונה חדשה' : 'Capture / Upload new photo')}
-              </button>
+              {/* Camera / Gallery buttons */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => { setShowCoverPicker(false); coverCameraRef.current?.click() }}
+                  disabled={coverUploading}
+                  className="flex-1 bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium py-2.5 rounded-xl transition-colors text-sm disabled:opacity-50"
+                >
+                  📷 {isRtl ? 'צלם' : 'Camera'}
+                </button>
+                <button
+                  onClick={() => { setShowCoverPicker(false); coverUploadRef.current?.click() }}
+                  disabled={coverUploading}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-xl transition-colors text-sm disabled:opacity-50"
+                >
+                  🖼️ {isRtl ? 'גלריה' : 'Gallery'}
+                </button>
+              </div>
               {photos.length > 0 && (
                 <>
                   <p className="text-xs text-gray-500 mb-2">{isRtl ? 'או בחר מהקיימות:' : 'Or choose from existing:'}</p>
