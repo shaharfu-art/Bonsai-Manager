@@ -330,16 +330,27 @@ type="file"
       {/* Lightbox - full screen photo viewer */}
       {lightboxPhotoId && (() => {
         const currentIndex = sorted.findIndex(p => p.id === lightboxPhotoId)
-        
-const currentPhoto = sorted[currentIndex]
-        if (!currentPhoto) 
-return null
+        const currentPhoto = sorted[currentIndex]
+        if (!currentPhoto) return null
         const hasPrev = currentIndex > 0
         const hasNext = currentIndex < sorted.length - 1
+
+        let touchStartX = 0
+        const handleTouchStart = (e: React.TouchEvent) => { touchStartX = e.touches[0].clientX }
+        const handleTouchEnd = (e: React.TouchEvent) => {
+          const diff = touchStartX - e.changedTouches[0].clientX
+          if (Math.abs(diff) > 50) {
+            if (diff > 0 && hasNext) setLightboxPhotoId(sorted[currentIndex + 1].id)
+            if (diff < 0 && hasPrev) setLightboxPhotoId(sorted[currentIndex - 1].id)
+          }
+        }
+
         return (
           <div
             className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center"
             onClick={() => setLightboxPhotoId(null)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
             {/* Close button */}
             <button
