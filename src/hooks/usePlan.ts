@@ -12,8 +12,10 @@ export interface PlanInfo {
 }
 
 // Plan limits
+// 🔓 TEMPORARILY UNLOCKED: free tier has no limits until further notice
+// To re-enable: restore free to { maxTrees: 3, aiDailyLimit: 2 }
 export const PLAN_LIMITS: Record<PlanType, { maxTrees: number; aiDailyLimit: number }> = {
-  free: { maxTrees: 3, aiDailyLimit: 2 },
+  free: { maxTrees: 9999, aiDailyLimit: Infinity },
   premium: { maxTrees: 15, aiDailyLimit: Infinity },
   pro: { maxTrees: 9999, aiDailyLimit: Infinity },
 }
@@ -51,7 +53,9 @@ export function usePlan(): PlanInfo {
           } else {
             const userPlan = (data.plan as PlanType) || 'free'
             setPlan(userPlan)
-            setMaxTrees(data.max_trees || PLAN_LIMITS[userPlan].maxTrees)
+            // Always use PLAN_LIMITS as source of truth (overrides DB value)
+            // so that plan-level changes here take effect without a DB migration
+            setMaxTrees(PLAN_LIMITS[userPlan].maxTrees)
             setPlanExpiresAt(data.plan_expires_at)
           }
         }
