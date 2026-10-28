@@ -101,6 +101,23 @@ const body: Record<string, unknown> = { tree_id: treeId, language: i18n.language
         body.image = { base64: imageData.base64, mimeType: imageData.mimeType }
       }
 
+      // Try to attach weather data
+      try {
+        const { data: profile } = await supabase.from('user_profiles').select('trees_lat, trees_lng, trees_city').eq('id', session.user.id).single()
+        if (profile?.trees_lat && profile?.trees_lng) {
+          const weatherRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${profile.trees_lat}&longitude=${profile.trees_lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&forecast_days=4&timezone=auto`
+          )
+          const weatherJson = await weatherRes.json()
+          const c = weatherJson.current
+          const d = weatherJson.daily
+          body.weather = {
+            current: { temp: Math.round(c.temperature_2m ?? 0), humidity: Math.round(c.relative_humidity_2m ?? 0), windSpeed: Math.round(c.wind_speed_10m ?? 0), weatherCode: c.weather_code ?? 0, isDay: c.is_day === 1, city: profile.trees_city || '' },
+            forecast: (d.time ?? []).map((date: string, i: number) => ({ date, tempMax: Math.round(d.temperature_2m_max[i] ?? 0), tempMin: Math.round(d.temperature_2m_min[i] ?? 0), precipitation: Math.round((d.precipitation_sum[i] ?? 0) * 10) / 10, weatherCode: d.weather_code[i] ?? 0 }))
+          }
+        }
+      } catch { /* weather is optional */ }
+
       
 const response = await fetch(`${url}/functions/v1/ai-insights`, {
         method: 'POST',

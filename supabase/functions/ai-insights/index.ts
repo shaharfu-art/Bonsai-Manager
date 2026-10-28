@@ -47,6 +47,12 @@ serve(async (req) => {
     // Fetch recent treatments
     const { data: treatments } = await supabase.from('treatment_logs').select('treatment_type, treatment_date, notes').eq('tree_id', tree_id).eq('status', 'completed').order('treatment_date', { ascending: false }).limit(10)
 
+    // Fetch light assessments history
+    const { data: lightData } = await supabase.from('light_assessments').select('avg_lux, category, assessed_at').eq('tree_id', tree_id).eq('user_id', user.id).order('assessed_at', { ascending: false }).limit(5)
+    const lightContext = lightData && lightData.length > 0
+      ? `Light measurements:\n${lightData.map((l: any) => `  ${l.assessed_at}: ${l.avg_lux} lux (${l.category})`).join('\n')}`
+      : 'No light measurements available'
+
     // Build weather context string
     const weatherContext = weather ? (() => {
       const c = weather.current
@@ -90,6 +96,8 @@ ${weatherContext}
 Recent treatments:
 ${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}`).join('\n') || 'None'}
 
+${lightContext}
+
 User's question: "${question}"
 
 Answer in the same language the user wrote their question in. Be concise, practical, and specific to this tree. Factor in current weather. Use emoji.`
@@ -105,6 +113,8 @@ ${weatherContext}
 
 Recent treatments:
 ${treatments?.map((t: any) => `- ${t.treatment_date}: ${t.treatment_type}${t.notes ? ` (${t.notes})` : ''}`).join('\n') || 'None'}
+
+${lightContext}
 
 Respond in ${fallbackLang}. Structure:
 1. **Health Assessment** - Brief assessment

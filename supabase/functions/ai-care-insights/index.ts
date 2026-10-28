@@ -83,6 +83,18 @@ serve(async (req) => {
 
       const treeIds = trees.map(t => t.id)
 
+      // Get last photo date per tree
+      const { data: photoData } = await supabase
+        .from('photos')
+        .select('tree_id, created_at')
+        .in('tree_id', treeIds)
+        .order('created_at', { ascending: false })
+
+      const lastPhotoMap: Record<string, string> = {}
+      for (const p of photoData ?? []) {
+        if (!lastPhotoMap[p.tree_id]) lastPhotoMap[p.tree_id] = p.created_at
+      }
+
       // Get treatment history (last 12 months) for care types only
       const twelveMonthsAgo = new Date()
       twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
@@ -114,6 +126,7 @@ serve(async (req) => {
           lastRootPruning: lastByType['root_pruning'] || 'never',
           lastRepotting: lastByType['repotting'] || 'never',
           lastWiring: lastByType['wiring'] || 'never',
+          lastPhoto: lastPhotoMap[tree.id] ? lastPhotoMap[tree.id].split('T')[0] : 'never',
         }
       })
 
@@ -132,8 +145,9 @@ Based on the tree species, current season, and care history:
 - In spring (Mar-May) it's growth season — pruning and fertilizing are important.
 - In summer (Jun-Aug) — fertilizing continues but heavy pruning should wait.
 - In autumn (Sep-Nov) — prepare for winter, possible repotting for some species.
+- Also check lastPhoto — if a tree hasn't been photographed in 90+ days, suggest documenting progress.
 
-If there is an important insight, write a SHORT push notification in Hebrew (max 140 chars) with actionable advice. Mention the specific tree name and what to do.
+If there is an important insight, write a SHORT push notification in Hebrew (max 140 chars) with actionable advice. Mention the specific tree name and what to do. You can combine care advice with a photo reminder if relevant.
 If nothing urgent — respond with exactly: NONE`
 
       let insight: string | null = null

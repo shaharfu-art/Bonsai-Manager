@@ -354,10 +354,12 @@ return null
             {hasPrev && (
               <button
                 onClick={(e) => { e.stopPropagation(); setLightboxPhotoId(sorted[currentIndex - 1].id) }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-4xl font-light z-10 p-2"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full p-3 z-10 transition-colors"
                 aria-label="Previous"
               >
-                ‹
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
             )}
 
@@ -365,10 +367,12 @@ return null
             {hasNext && (
               <button
                 onClick={(e) => { e.stopPropagation(); setLightboxPhotoId(sorted[currentIndex + 1].id) }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-4xl font-light z-10 p-2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full p-3 z-10 transition-colors"
                 aria-label="Next"
               >
-                ›
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             )}
 
