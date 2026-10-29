@@ -280,7 +280,7 @@ const a = document.createElement('a')
   
 return (
     <Layout>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#2d6a4f]">🔧 {t('admin.title')}</h1>
           <button
@@ -405,13 +405,13 @@ return (
                   <SortHeader label={t('auth.email')} col="email" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortHeader label={t('admin.role')} col="role" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortHeader label="Plan" col="plan" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">Level</th>
+                  <th className="text-left px-2.5 py-2 text-xs text-gray-500">Level</th>
                   <SortHeader label={t('admin.trees')} col="trees" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortHeader label="Friends" col="friends" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortHeader label="City" col="city" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortHeader label={t('admin.joined')} col="joined" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortHeader label={t('admin.lastSeen')} col="lastSeen" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.status')}</th>
+                  <th className="text-left px-2.5 py-2 text-xs text-gray-500">{t('admin.status')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.actions')}</th>
                 </tr>
               </thead>
@@ -433,35 +433,35 @@ return (
                         {user.display_name || user.full_name || '—'}
                       </div>
                     </td>
-                    <td className="px-4 py-2 text-xs text-gray-600 truncate max-w-[160px]">{user.email || '—'}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-2.5 py-2 text-xs text-gray-600 truncate max-w-[130px]">{user.email || '—'}</td>
+                    <td className="px-2.5 py-2">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
                         {user.role}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-2.5 py-2">
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${user.plan === 'pro' ? 'bg-gray-800 text-white' : user.plan === 'premium' ? 'bg-green-100 text-green-700' : 'bg-gray-50 text-gray-400'}`}>
                         {user.plan}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-xs">
+                    <td className="px-2.5 py-2 text-xs">
                       {(() => {
                         const lvl = calculateLevel({ trees: user.tree_count, treatments: 0, friends: user.friends_count, posts: 0 })
                         return <span title={lvl.nameEn}>{lvl.icon} {lvl.name}</span>
                       })()}
                     </td>
-                    <td className="px-4 py-2 text-xs text-gray-700">{user.tree_count}/{user.max_trees}</td>
-                    <td className="px-4 py-2 text-xs text-gray-700">{user.friends_count}</td>
-                    <td className="px-4 py-2 text-xs text-gray-500">{user.trees_city || '—'}</td>
-                    <td className="px-4 py-2 text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
-                    <td className="px-4 py-2 text-xs text-gray-500" title={user.last_seen_at ? new Date(user.last_seen_at).toLocaleString() : ''}>{formatRelativeTime(user.last_seen_at, isRtl)}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-2.5 py-2 text-xs text-gray-700">{user.tree_count}/{user.max_trees}</td>
+                    <td className="px-2.5 py-2 text-xs text-gray-700">{user.friends_count}</td>
+                    <td className="px-2.5 py-2 text-xs text-gray-500">{user.trees_city || '—'}</td>
+                    <td className="px-2.5 py-2 text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td className="px-2.5 py-2 text-xs text-gray-500" title={user.last_seen_at ? new Date(user.last_seen_at).toLocaleString() : ''}>{formatRelativeTime(user.last_seen_at, isRtl)}</td>
+                    <td className="px-2.5 py-2">
                       <div className="flex items-center gap-1.5">
                         <span className={`inline-block w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} title={isOnline ? 'Online' : 'Offline'} />
                         {osInfo && <span className="text-[10px] text-gray-400" title={user.last_user_agent || ''}>{osInfo}</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-2.5 py-2">
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleViewTrees(user.id)}
@@ -714,7 +714,7 @@ const SortHeader: React.FC<{
 }> = ({ label, col, sortKey, sortDir, onSort }) => {
   const active = sortKey === col
   return (
-    <th className="text-left px-4 py-2 text-xs text-gray-500 select-none">
+    <th className="text-left px-2.5 py-2 text-xs text-gray-500 select-none whitespace-nowrap">
       <button
         onClick={() => onSort(col)}
         className={`flex items-center gap-1 hover:text-gray-800 transition-colors ${active ? 'text-[#2d6a4f] font-semibold' : ''}`}
