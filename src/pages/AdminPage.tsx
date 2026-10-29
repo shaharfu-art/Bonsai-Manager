@@ -21,8 +21,25 @@ function parseUserAgent(ua: string | null): string | null {
   return null
 }
 
+// Format a timestamp as relative time ("5m ago" / "לפני 5 דקות")
+function formatRelativeTime(iso: string | null, isRtl: boolean): string {
+  if (!iso) return '—'
+  const then = new Date(iso).getTime()
+  if (isNaN(then)) return '—'
+  const diffMs = Date.now() - then
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return isRtl ? 'עכשיו' : 'now'
+  if (mins < 60) return isRtl ? `לפני ${mins} דק׳` : `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return isRtl ? `לפני ${hours} שע׳` : `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return isRtl ? `לפני ${days} ימים` : `${days}d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
 const AdminPage: React.FC = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isRtl = i18n.language === 'he'
   
 const navigate = useNavigate()
   
@@ -364,6 +381,7 @@ return (
                   <th className="text-left px-4 py-2 text-xs text-gray-500">Friends</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">City</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.joined')}</th>
+                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.lastSeen')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.status')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.actions')}</th>
                 </tr>
@@ -407,6 +425,7 @@ return (
                     <td className="px-4 py-2 text-xs text-gray-700">{user.friends_count}</td>
                     <td className="px-4 py-2 text-xs text-gray-500">{user.trees_city || '—'}</td>
                     <td className="px-4 py-2 text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-2 text-xs text-gray-500" title={user.last_seen_at ? new Date(user.last_seen_at).toLocaleString() : ''}>{formatRelativeTime(user.last_seen_at, isRtl)}</td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-1.5">
                         <span className={`inline-block w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} title={isOnline ? 'Online' : 'Offline'} />

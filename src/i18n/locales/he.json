@@ -206,6 +206,7 @@
     "treatmentTimeline": "טיפולים לאורך זמן (30 יום)",
     "onlineNow": "מחוברים עכשיו",
     "name": "שם",
-    "status": "סטטוס"
+    "status": "סטטוס",
+    "lastSeen": "חיבור אחרון"
   }
 }

@@ -206,6 +206,7 @@
     "treatmentTimeline": "Treatments Over Time (30 days)",
     "onlineNow": "Online Now",
     "name": "Name",
-    "status": "Status"
+    "status": "Status",
+    "lastSeen": "Last Seen"
   }
 }

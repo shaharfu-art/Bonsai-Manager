@@ -21,6 +21,7 @@ export interface AdminUser {
   avatar_url: string | null
   created_at: string
   last_sign_in_at: string | null
+  last_seen_at: string | null
   last_user_agent: string | null
   plan: string
   role: string
@@ -143,6 +144,7 @@ export function useAdminData() {
         avatar_url: (u.avatar_url as string) ?? null,
         created_at: (u.created_at as string) ?? '',
         last_sign_in_at: (u.last_sign_in_at as string) ?? null,
+        last_seen_at: (u.last_seen_at as string) ?? null,
         last_user_agent: (u.last_user_agent as string) ?? null,
         plan: (u.plan as string) ?? 'free',
         role: (u.role as string) ?? 'user',
