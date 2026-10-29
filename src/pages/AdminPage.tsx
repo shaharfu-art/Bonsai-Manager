@@ -66,6 +66,8 @@ const [editSpeciesLatin, setEditSpeciesLatin] = useState('')
 const [speciesFilter, setSpeciesFilter] = useState('')
   const [speciesList, setSpeciesList] = useState<typeof species>([])
   const [userSearch, setUserSearch] = useState('')
+  const [sortKey, setSortKey] = useState<'name' | 'email' | 'role' | 'plan' | 'trees' | 'friends' | 'city' | 'joined' | 'lastSeen'>('joined')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [viewPhotosUser, setViewPhotosUser] = useState<string | null>(null)
   const [userPhotos, setUserPhotos] = useState<Array<{ id: string; url: string }>>([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
@@ -89,6 +91,33 @@ const filteredAdminSpecies = speciesList.filter(s => {
     if (!userSearch) return true
     const q = userSearch.toLowerCase()
     return (u.display_name ?? '').toLowerCase().includes(q) || (u.full_name ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q)
+  })
+
+  const toggleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
+  }
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1
+    const getVal = (u: typeof a): string | number => {
+      switch (sortKey) {
+        case 'name': return (u.display_name ?? u.full_name ?? '').toLowerCase()
+        case 'email': return (u.email ?? '').toLowerCase()
+        case 'role': return u.role ?? ''
+        case 'plan': return u.plan ?? ''
+        case 'trees': return u.tree_count ?? 0
+        case 'friends': return u.friends_count ?? 0
+        case 'city': return (u.trees_city ?? '').toLowerCase()
+        case 'joined': return new Date(u.created_at || 0).getTime()
+        case 'lastSeen': return u.last_seen_at ? new Date(u.last_seen_at).getTime() : 0
+        default: return 0
+      }
+    }
+    const va = getVal(a), vb = getVal(b)
+    if (va < vb) return -1 * dir
+    if (va > vb) return 1 * dir
+    return 0
   })
 
   const handleViewPhotos = async (userId: string) => {
@@ -368,26 +397,26 @@ return (
               className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs w-56 focus:outline-none focus:ring-1 focus:ring-[#52b788]"
             />
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-auto max-h-[65vh]">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.name')}</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('auth.email')}</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.role')}</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">Plan</th>
+                  <SortHeader label={t('admin.name')} col="name" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label={t('auth.email')} col="email" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label={t('admin.role')} col="role" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label="Plan" col="plan" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <th className="text-left px-4 py-2 text-xs text-gray-500">Level</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.trees')}</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">Friends</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">City</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.joined')}</th>
-                  <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.lastSeen')}</th>
+                  <SortHeader label={t('admin.trees')} col="trees" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label="Friends" col="friends" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label="City" col="city" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label={t('admin.joined')} col="joined" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                  <SortHeader label={t('admin.lastSeen')} col="lastSeen" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.status')}</th>
                   <th className="text-left px-4 py-2 text-xs text-gray-500">{t('admin.actions')}</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map(user => {
+                {sortedUsers.map(user => {
                   const isOnline = onlineUsers.some(o => o.id === user.id)
                   const osInfo = parseUserAgent(user.last_user_agent)
                   return (
@@ -673,6 +702,31 @@ const StatCard: React.FC<{ label: string; value: number; color: string }> = ({ l
     <p className="text-xs text-gray-500 mt-1">{label}</p>
   </div>
 )
+
+// Sortable table header
+type SortCol = 'name' | 'email' | 'role' | 'plan' | 'trees' | 'friends' | 'city' | 'joined' | 'lastSeen'
+const SortHeader: React.FC<{
+  label: string
+  col: SortCol
+  sortKey: SortCol
+  sortDir: 'asc' | 'desc'
+  onSort: (col: SortCol) => void
+}> = ({ label, col, sortKey, sortDir, onSort }) => {
+  const active = sortKey === col
+  return (
+    <th className="text-left px-4 py-2 text-xs text-gray-500 select-none">
+      <button
+        onClick={() => onSort(col)}
+        className={`flex items-center gap-1 hover:text-gray-800 transition-colors ${active ? 'text-[#2d6a4f] font-semibold' : ''}`}
+      >
+        {label}
+        <span className="text-[9px] leading-none">
+          {active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+        </span>
+      </button>
+    </th>
+  )
+}
 
 
 export default AdminPage
