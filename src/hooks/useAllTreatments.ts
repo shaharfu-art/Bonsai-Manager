@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase-client'
 import { useAuth } from '../contexts/AuthContext'
+import { buildProjections, type CalendarTreatment, type AlertConfigRow } from '../lib/calendar-projections'
 
-export interface CalendarTreatment {
-  id: string
-  tree_id: string
-  tree_name: string
-  treatment_date: string
-  treatment_type: string
-  notes: string | null
-  status: 'pending' | 'completed'
-}
+export type { CalendarTreatment } from '../lib/calendar-projections'
 
 interface UseAllTreatmentsResult {
   treatments: CalendarTreatment[]
@@ -20,8 +13,8 @@ interface UseAllTreatmentsResult {
 }
 
 /**
- * Fetches ALL treatment logs for the current user across every tree.
- * Used by the calendar view. Read-only.
+ * Fetches ALL treatment logs for the current user across every tree, plus the
+ * expected future occurrences from recurrence configs. Used by the calendar view. Read-only.
  */
 export function useAllTreatments(): UseAllTreatmentsResult {
   const { user } = useAuth()
@@ -56,16 +49,24 @@ export function useAllTreatments(): UseAllTreatmentsResult {
         return
       }
 
-      // Fetch all treatment logs across those trees
-      const { data: logs, error: logsErr } = await supabase
-        .from('treatment_logs')
-        .select('id, tree_id, treatment_date, treatment_type, notes, status')
-        .in('tree_id', treeIds)
-        .order('treatment_date', { ascending: true })
+      // Logs and recurrence configs in parallel
+      const [logsRes, configsRes] = await Promise.all([
+        supabase
+          .from('treatment_logs')
+          .select('id, tree_id, treatment_date, treatment_type, notes, status')
+          .in('tree_id', treeIds)
+          .order('treatment_date', { ascending: true }),
+        supabase
+          .from('alert_configs')
+          .select('id, tree_id, treatment_type, interval_days, snoozed_until, is_manual_only')
+          .in('tree_id', treeIds),
+      ])
 
-      if (logsErr) throw logsErr
+      if (logsRes.error) throw logsRes.error
+      // Configs are a bonus layer: if they fail, still show the real logs
+      const configs = (configsRes.error ? [] : (configsRes.data ?? [])) as AlertConfigRow[]
 
-      const mapped: CalendarTreatment[] = (logs ?? []).map((row: Record<string, unknown>) => ({
+      const mapped: CalendarTreatment[] = (logsRes.data ?? []).map((row: Record<string, unknown>) => ({
         id: row.id as string,
         tree_id: row.tree_id as string,
         tree_name: treeNameMap.get(row.tree_id as string) ?? '',
@@ -75,7 +76,7 @@ export function useAllTreatments(): UseAllTreatmentsResult {
         status: ((row.status as string) ?? 'completed') as 'pending' | 'completed',
       }))
 
-      setTreatments(mapped)
+      setTreatments([...mapped, ...buildProjections(configs, mapped, treeNameMap)])
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to fetch treatments')
     } finally {

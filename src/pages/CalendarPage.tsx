@@ -12,6 +12,17 @@ const TREATMENT_ICONS: Record<string, string> = {
 
 type ViewMode = 'week' | 'month' | 'year'
 
+// Visual style per status: scheduled (amber), expected from recurrence (dashed), done (green)
+const chipClass = (status: CalendarTreatment['status']) =>
+  status === 'pending' ? 'bg-amber-50 text-amber-800'
+  : status === 'projected' ? 'bg-white text-amber-700 border border-dashed border-amber-300'
+  : 'bg-green-50 text-[#2d6a4f]'
+
+const rowClass = (status: CalendarTreatment['status']) =>
+  status === 'pending' ? 'bg-amber-50 hover:bg-amber-100'
+  : status === 'projected' ? 'bg-white border border-dashed border-amber-300 hover:bg-amber-50'
+  : 'bg-green-50 hover:bg-green-100'
+
 // ─── Date helpers (local, no external deps) ───
 const toKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const startOfWeek = (d: Date) => { const x = new Date(d); x.setDate(x.getDate() - x.getDay()); x.setHours(0, 0, 0, 0); return x }
@@ -114,6 +125,7 @@ const CalendarPage: React.FC = () => {
         {/* Legend */}
         <div className="flex items-center gap-4 mt-5 text-xs text-gray-500 justify-center">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> {isRtl ? 'מתוכנן' : 'Scheduled'}</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border border-dashed border-amber-400 bg-white" /> {isRtl ? 'צפוי (מחזורי)' : 'Expected (recurring)'}</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#2d6a4f]" /> {isRtl ? 'בוצע' : 'Completed'}</span>
         </div>
       </div>
@@ -160,7 +172,7 @@ const MonthView: React.FC<{
                   <button
                     key={it.id}
                     onClick={() => onItemClick(it.tree_id)}
-                    className={`w-full text-[9px] leading-tight px-1 py-0.5 rounded truncate text-right flex items-center gap-0.5 ${it.status === 'pending' ? 'bg-amber-50 text-amber-800' : 'bg-green-50 text-[#2d6a4f]'}`}
+                    className={`w-full text-[9px] leading-tight px-1 py-0.5 rounded truncate text-right flex items-center gap-0.5 ${chipClass(it.status)}`}
                     title={`${TREATMENT_ICONS[it.treatment_type] ?? ''} ${it.tree_name}`}
                   >
                     <span>{TREATMENT_ICONS[it.treatment_type] ?? '📝'}</span>
@@ -212,12 +224,13 @@ const WeekView: React.FC<{
                   <button
                     key={it.id}
                     onClick={() => onItemClick(it.tree_id)}
-                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm ${it.status === 'pending' ? 'bg-amber-50 hover:bg-amber-100' : 'bg-green-50 hover:bg-green-100'}`}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm ${rowClass(it.status)}`}
                   >
                     <span className="text-base">{TREATMENT_ICONS[it.treatment_type] ?? '📝'}</span>
                     <span className="font-medium text-gray-800">{it.tree_name}</span>
                     <span className="text-gray-500 text-xs">· {t(`treatment.${it.treatment_type}`)}</span>
                     {it.status === 'pending' && <span className="ml-auto text-[10px] text-amber-700">🔔</span>}
+                    {it.status === 'projected' && <span className="ml-auto text-[10px] text-amber-700">🔁</span>}
                   </button>
                 ))}
               </div>
