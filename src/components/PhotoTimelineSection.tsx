@@ -336,8 +336,7 @@ type="file"
         const hasPrev = currentIndex > 0
         const hasNext = currentIndex < sorted.length - 1
 
-        let touchStartX = 0
-        const handleTouchStart = (e: React.TouchEvent) => { touchStartXRef.current = e.touches[0].clientX; touchStartX = e.touches[0].clientX }
+        const handleTouchStart = (e: React.TouchEvent) => { touchStartXRef.current = e.touches[0].clientX }
         const handleTouchEnd = (e: React.TouchEvent) => {
           const diff = touchStartXRef.current - e.changedTouches[0].clientX
           if (Math.abs(diff) > 40) {

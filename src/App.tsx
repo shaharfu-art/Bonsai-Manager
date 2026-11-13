@@ -18,6 +18,7 @@ import TermsPage from './pages/TermsPage'
 import InvitePage from './pages/InvitePage'
 import InstallPage from './pages/InstallPage'
 import CalendarPage from './pages/CalendarPage'
+import UpdatePrompt from './components/UpdatePrompt'
 
 // Global Error Boundary to catch runtime crashes
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -112,6 +113,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <DirectionSync />
+        <UpdatePrompt />
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<AuthPage />} />

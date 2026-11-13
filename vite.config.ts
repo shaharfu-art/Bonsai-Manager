@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       manifest: {
         name: 'YUTAKA Bonsai',
         short_name: 'YUTAKA',
@@ -30,7 +30,7 @@ export default defineConfig({
       },
       workbox: {
         importScripts: ['/sw-push.js'],
-        skipWaiting: true,
+        // No skipWaiting: a new version waits until the user taps "Update" in the app
         clientsClaim: true,
       },
     }),
