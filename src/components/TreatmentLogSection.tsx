@@ -32,6 +32,10 @@ interface Props {
 
 const today = () => new Date().toISOString().split('T')[0]
 
+// YYYY-MM-DD from local date parts (avoids UTC day shifts)
+const toLocalDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
 const TreatmentLogSection: React.FC<Props> = ({ treeId, initialTreatmentType }) => {
   const { t } = useTranslation()
   
@@ -117,6 +121,17 @@ const resetForm = () => {
     setFormPhotos([])
     setFormRepeatDays(null)
     setSubmitError('')
+    resetReminderState()
+  }
+
+  // The reminder fields are shared with the per-treatment panels, so clear them
+  // whenever the add form is opened/closed to avoid leaking previous values
+  function resetReminderState() {
+    setReminderEnabled(false)
+    setReminderMode('interval')
+    setReminderValue('7')
+    setReminderUnit('days')
+    setReminderFixedDate('')
   }
 
   
@@ -148,6 +163,36 @@ const result = await addTreatment({
       // Update treatment with first photo_id for legacy compatibility
       if (photoIds.length > 0) {
         await supabase.from('treatment_logs').update({ photo_id: photoIds[0] }).eq('id', result.id)
+      }
+
+      // Save the future activity (reminder) if enabled, and schedule the next occurrence
+      if (reminderEnabled) {
+        requestNotificationPermission().catch(() => {})
+
+        let nextDateStr: string
+        if (reminderMode === 'fixed') {
+          nextDateStr = reminderFixedDate
+          await setConfig(formType, 0, reminderFixedDate)
+        } else {
+          const n = parseInt(reminderValue, 10) || 1
+          let totalDays = n
+          if (reminderUnit === 'months') totalDays = n * 30
+          if (reminderUnit === 'years') totalDays = n * 365
+          await setConfig(formType, totalDays, null)
+          // Next occurrence counts from the treatment date, same as the dashboard does
+          const next = new Date(`${formDate}T00:00:00`)
+          next.setDate(next.getDate() + totalDays)
+          nextDateStr = toLocalDateStr(next)
+        }
+
+        const existingPending = treatments.find(x => x.treatment_type === formType && x.status === 'pending')
+        if (!existingPending) {
+          await addTreatment({
+            treatment_date: nextDateStr,
+            treatment_type: formType,
+            status: 'pending',
+          })
+        }
       }
 
       resetForm()
@@ -369,7 +414,7 @@ return (
           {t('tabs.treatments')}
         </h2>
         <button
-          onClick={() => { setShowForm(v => !v); if (showForm) resetForm() }}
+          onClick={() => { if (!showForm) resetReminderState(); setShowForm(v => !v); if (showForm) resetForm() }}
           className="text-sm bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
         >
           {showForm ? t('common.cancel') : t('treatment.addTreatment')}
@@ -561,7 +606,7 @@ type="file"
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || (reminderEnabled && reminderMode === 'fixed' && !reminderFixedDate)}
               className="text-sm bg-[#2d6a4f] hover:bg-[#245a42] text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
             >
               {submitting ? t('common.loading') : t('common.save')}
