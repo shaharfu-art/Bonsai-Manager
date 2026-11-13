@@ -522,6 +522,7 @@ const [editUnit, setEditUnit] = useState<'days' | 'months' | 'years'>('days')
 const [editMode, setEditMode] = useState<'interval' | 'fixed'>('interval')
   
 const [editFixedDate, setEditFixedDate] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     supabase.from('treatment_logs').select('treatment_type, treatment_date').eq('tree_id', treeId).order('treatment_date', { ascending: false })
@@ -533,18 +534,33 @@ const handleEdit = (type: string) => {
     const cfg = getConfig(type)
     if (cfg?.snoozed_until) { setEditMode('fixed'); setEditFixedDate(cfg.snoozed_until); setEditValue(''); setEditUnit('days') }
     else { setEditMode('interval'); const days = cfg?.interval_days ?? 0; if (days >= 365 && days % 365 === 0) { setEditValue(String(days/365)); setEditUnit('years') } else if (days >= 30 && days % 30 === 0) { setEditValue(String(days/30)); setEditUnit('months') } else if (days > 0) { setEditValue(String(days)); setEditUnit('days') } else { setEditValue(''); setEditUnit('days') }; setEditFixedDate('') }
+    setSaveError('')
     setEditingType(type)
   }
 
   
 const handleSave = async (type: string) => {
-    if (editMode === 'fixed') { await setConfig(type, 0, editFixedDate) }
-    else { const n = parseInt(editValue, 10) || 1; let totalDays = n; if (editUnit === 'months') totalDays = n * 30; if (editUnit === 'years') totalDays = n * 365; await setConfig(type, totalDays, null) }
-    setEditingType(null)
+    setSaveError('')
+    try {
+      if (editMode === 'fixed') { await setConfig(type, 0, editFixedDate) }
+      else { const n = parseInt(editValue, 10) || 1; let totalDays = n; if (editUnit === 'months') totalDays = n * 30; if (editUnit === 'years') totalDays = n * 365; await setConfig(type, totalDays, null) }
+      setEditingType(null)
+    } catch (err: unknown) {
+      // Keep the panel open so the user can retry
+      setSaveError(err instanceof Error && err.message ? err.message : t('common.error'))
+    }
   }
 
   
-const handleRemove = async (type: string) => { await removeConfig(type); setEditingType(null) }
+const handleRemove = async (type: string) => {
+    setSaveError('')
+    try {
+      await removeConfig(type)
+      setEditingType(null)
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error && err.message ? err.message : t('common.error'))
+    }
+  }
 
   
 const today = new Date()
@@ -592,6 +608,7 @@ return (
                   <button onClick={()=>setEditMode('fixed')} className={`text-xs px-2 py-1 rounded border ${editMode==='fixed'?'bg-[#2d6a4f] text-white border-[#2d6a4f]':'border-gray-300'}`}>{t('treatment.modeFixedDate')}</button>
                 </div>
                 {editMode==='interval'?(<div className="flex gap-2"><input key="interval-1" type="text" inputMode="numeric" pattern="[0-9]*" value={editValue} placeholder="7" onChange={e=>setEditValue(e.target.value.replace(/[^0-9]/g,''))} className="w-14 border rounded px-2 py-1 text-xs"/><select value={editUnit} onChange={e=>setEditUnit(e.target.value as any)} className="border rounded px-2 py-1 text-xs bg-white"><option value="days">{t('treatment.unit_days')}</option><option value="months">{t('treatment.unit_months')}</option><option value="years">{t('treatment.unit_years')}</option></select></div>):(<input type="date" value={editFixedDate} onChange={e=>setEditFixedDate(e.target.value)} className="border rounded px-2 py-1 text-xs"/>)}
+                {saveError && <p className="text-xs text-red-600">{saveError}</p>}
                 <div className="flex gap-2">
                   <button onClick={()=>handleSave(cfg.treatment_type)} className="text-xs bg-[#2d6a4f] text-white px-3 py-1 rounded">{t('common.save')}</button>
                   <button onClick={()=>handleRemove(cfg.treatment_type)} className="text-xs text-red-600 border border-red-200 px-3 py-1 rounded">{t('common.delete')}</button>
@@ -630,6 +647,7 @@ return`${t('treatment.reminderEvery')} ${d/30} ${t('treatment.unit_months')}`;re
             <button onClick={()=>setEditMode('fixed')} className={`text-xs px-2 py-1 rounded border ${editMode==='fixed'?'bg-[#2d6a4f] text-white border-[#2d6a4f]':'border-gray-300'}`}>{t('treatment.modeFixedDate')}</button>
           </div>
           {editMode==='interval'?(<div className="flex gap-2"><input key="interval-2" type="text" inputMode="numeric" pattern="[0-9]*" value={editValue} placeholder="7" onChange={e=>setEditValue(e.target.value.replace(/[^0-9]/g,''))} className="w-14 border rounded px-2 py-1 text-xs"/><select value={editUnit} onChange={e=>setEditUnit(e.target.value as any)} className="border rounded px-2 py-1 text-xs bg-white"><option value="days">{t('treatment.unit_days')}</option><option value="months">{t('treatment.unit_months')}</option><option value="years">{t('treatment.unit_years')}</option></select></div>):(<input type="date" value={editFixedDate} onChange={e=>setEditFixedDate(e.target.value)} className="border rounded px-2 py-1 text-xs"/>)}
+          {saveError && <p className="text-xs text-red-600">{saveError}</p>}
           <div className="flex gap-2">
             <button onClick={()=>handleSave(editingType)} className="text-xs bg-[#2d6a4f] text-white px-3 py-1.5 rounded-lg">{t('common.save')}</button>
             <button onClick={()=>setEditingType(null)} className="text-xs text-gray-500 border px-3 py-1.5 rounded-lg">{t('common.cancel')}</button>

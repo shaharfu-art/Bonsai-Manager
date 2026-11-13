@@ -31,9 +31,10 @@ export function useAlertConfigs(treeId: string) {
     return configs.find(c => c.treatment_type === treatmentType) ?? null
   }, [configs])
 
+  // Both mutations throw on failure so callers can tell the user the save did not happen
   const setConfig = useCallback(async (treatmentType: string, intervalDays: number, fixedDate?: string | null) => {
     const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return
+    if (!userData.user) throw new Error('Not authenticated')
 
     const updatePayload = fixedDate
       ? { interval_days: null, snoozed_until: fixedDate, is_manual_only: false }
@@ -41,15 +42,16 @@ export function useAlertConfigs(treeId: string) {
 
     const existing = configs.find(c => c.treatment_type === treatmentType)
     if (existing) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('alert_configs')
         .update(updatePayload)
         .eq('id', existing.id)
         .select()
         .single()
+      if (error) throw new Error(error.message)
       if (data) setConfigs(prev => prev.map(c => c.id === existing.id ? data as AlertConfig : c))
     } else {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('alert_configs')
         .insert({
           tree_id: treeId,
@@ -59,6 +61,7 @@ export function useAlertConfigs(treeId: string) {
         })
         .select()
         .single()
+      if (error) throw new Error(error.message)
       if (data) setConfigs(prev => [...prev, data as AlertConfig])
     }
   }, [configs, treeId])
@@ -66,7 +69,8 @@ export function useAlertConfigs(treeId: string) {
   const removeConfig = useCallback(async (treatmentType: string) => {
     const existing = configs.find(c => c.treatment_type === treatmentType)
     if (!existing) return
-    await supabase.from('alert_configs').delete().eq('id', existing.id)
+    const { error } = await supabase.from('alert_configs').delete().eq('id', existing.id)
+    if (error) throw new Error(error.message)
     setConfigs(prev => prev.filter(c => c.treatment_type !== treatmentType))
   }, [configs])
 

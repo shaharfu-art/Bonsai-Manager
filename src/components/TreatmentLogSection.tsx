@@ -104,6 +104,7 @@ const [reminderFixedDate, setReminderFixedDate] = useState('')
 const [reminderSaving, setReminderSaving] = useState(false)
   
 const [reminderToast, setReminderToast] = useState<string | null>(null)
+  const [reminderToastIsError, setReminderToastIsError] = useState(false)
 
   // Auto-open form when navigated from an alert click
   useEffect(() => {
@@ -140,6 +141,28 @@ const handleSubmit = async (e: React.FormEvent) => {
     setSubmitting(true)
     setSubmitError('')
     try {
+      // Save the future-activity config FIRST: if it fails nothing else is written,
+      // so the user can retry without creating a duplicate treatment
+      let reminderNextDate: string | null = null
+      if (reminderEnabled) {
+        requestNotificationPermission().catch(() => {})
+
+        if (reminderMode === 'fixed') {
+          await setConfig(formType, 0, reminderFixedDate)
+          reminderNextDate = reminderFixedDate
+        } else {
+          const n = parseInt(reminderValue, 10) || 1
+          let totalDays = n
+          if (reminderUnit === 'months') totalDays = n * 30
+          if (reminderUnit === 'years') totalDays = n * 365
+          await setConfig(formType, totalDays, null)
+          // Next occurrence counts from the treatment date, same as the dashboard does
+          const next = new Date(`${formDate}T00:00:00`)
+          next.setDate(next.getDate() + totalDays)
+          reminderNextDate = toLocalDateStr(next)
+        }
+      }
+
       // Create the treatment (with repeat_days if set)
       
 const result = await addTreatment({
@@ -165,30 +188,12 @@ const result = await addTreatment({
         await supabase.from('treatment_logs').update({ photo_id: photoIds[0] }).eq('id', result.id)
       }
 
-      // Save the future activity (reminder) if enabled, and schedule the next occurrence
-      if (reminderEnabled) {
-        requestNotificationPermission().catch(() => {})
-
-        let nextDateStr: string
-        if (reminderMode === 'fixed') {
-          nextDateStr = reminderFixedDate
-          await setConfig(formType, 0, reminderFixedDate)
-        } else {
-          const n = parseInt(reminderValue, 10) || 1
-          let totalDays = n
-          if (reminderUnit === 'months') totalDays = n * 30
-          if (reminderUnit === 'years') totalDays = n * 365
-          await setConfig(formType, totalDays, null)
-          // Next occurrence counts from the treatment date, same as the dashboard does
-          const next = new Date(`${formDate}T00:00:00`)
-          next.setDate(next.getDate() + totalDays)
-          nextDateStr = toLocalDateStr(next)
-        }
-
+      // Schedule the next occurrence as a pending row (unless one already exists for this type)
+      if (reminderNextDate) {
         const existingPending = treatments.find(x => x.treatment_type === formType && x.status === 'pending')
         if (!existingPending) {
           await addTreatment({
-            treatment_date: nextDateStr,
+            treatment_date: reminderNextDate,
             treatment_type: formType,
             status: 'pending',
           })
@@ -398,8 +403,14 @@ const nextDate = new Date()
         }
       }
       setReminderOpenId(null)
+      setReminderToastIsError(false)
       setReminderToast(t('treatment.reminderSaved'))
       setTimeout(() => setReminderToast(null), 3000)
+    } catch (err: unknown) {
+      // Keep the panel open so the user can retry
+      setReminderToastIsError(true)
+      setReminderToast(`${t('common.error')}${err instanceof Error && err.message ? `: ${err.message}` : ''}`)
+      setTimeout(() => setReminderToast(null), 5000)
     } finally {
       setReminderSaving(false)
     }
@@ -1147,7 +1158,7 @@ type="checkbox"
 
       {/* Reminder saved toast */}
       {reminderToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#2d6a4f] text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg">
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg ${reminderToastIsError ? 'bg-red-600' : 'bg-[#2d6a4f]'}`}>
           {reminderToast}
         </div>
       )}
